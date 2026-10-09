@@ -1,5 +1,6 @@
 import { createBrowserRouter, type RouteObject } from 'react-router'
 import { ForbiddenPage } from '@/app/pages/forbidden-page'
+import { NotFoundPage } from '@/app/pages/not-found-page'
 import { RequireRole } from '@/app/guards'
 import { AppShell } from '@/app/layouts/app-shell'
 import { AdminShell } from '@/features/admin/layouts/admin-shell'
@@ -49,6 +50,7 @@ export const routes: RouteObject[] = [
           { path: 'pengguna', element: <AdminPenggunaPage /> },
         ],
       },
+      { path: '*', element: <NotFoundPage /> },
     ],
   },
 ]

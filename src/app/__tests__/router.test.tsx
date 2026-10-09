@@ -25,6 +25,16 @@ describe('peta rute', () => {
     localStorage.clear()
   })
 
+  it('menampilkan halaman tidak ditemukan untuk jalur tak dikenal', async () => {
+    renderRute('/tidak-ada')
+
+    expect(await screen.findByRole('heading', { name: 'Halaman tidak ditemukan' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Kembali ke beranda' })).toHaveAttribute('href', '/')
+    /* Tetap di dalam kerangka aplikasi, bukan layar galat mentah React Router. */
+    expect(screen.getByRole('link', { name: 'Beranda' })).toBeInTheDocument()
+    expect(screen.queryByText(/Unexpected Application Error/)).not.toBeInTheDocument()
+  })
+
   it('menampilkan beranda publik tanpa memaksa masuk', async () => {
     renderRute('/')
 
