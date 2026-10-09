@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { apiFetch } from '@/api/client'
-import type { Unit } from '@/api/types'
+import type { Unit, UnitInput } from '@/api/types'
 import { useSession } from '@/features/auth/api'
 import { parseAmount } from '@/lib/format'
 
@@ -39,7 +39,7 @@ export function useUnit(id: number) {
 export function useCreateUnit() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async (nilai: Omit<Unit, 'id' | 'owner_id'>) => {
+    mutationFn: async (nilai: UnitInput) => {
       const hasil = await apiFetch<{ data: Unit }>('/units', {
         method: 'POST',
         body: { ...nilai, price: parseAmount(nilai.price) },
@@ -53,7 +53,7 @@ export function useCreateUnit() {
 export function useUpdateUnit() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async ({ id, ...nilai }: { id: number } & Partial<Omit<Unit, 'id' | 'owner_id'>>) => {
+    mutationFn: async ({ id, ...nilai }: { id: number } & Partial<UnitInput>) => {
       const hasil = await apiFetch<{ data: Unit }>(`/units/${id}`, {
         method: 'PATCH',
         body: { ...nilai, price: nilai.price === undefined ? undefined : parseAmount(nilai.price) },

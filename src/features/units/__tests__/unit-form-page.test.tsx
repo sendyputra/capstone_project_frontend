@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest'
 import { UnitFormPage } from '@/features/units/pages/unit-form-page'
 import { RequireRole } from '@/app/guards'
 import { readSession, writeSession } from '@/features/auth/session'
-import { aktifkanSimulasi } from '@/api/mocks/handlers/units'
+import { aktifkanSimulasi } from '@/api/mocks/handlers/simulasi'
 import { units } from '@/api/mocks/data/units'
 import { renderWithProviders } from '@/test/render'
 
