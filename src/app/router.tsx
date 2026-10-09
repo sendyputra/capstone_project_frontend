@@ -4,7 +4,10 @@ import { RequireRole } from '@/app/guards'
 import { AppShell } from '@/app/layouts/app-shell'
 import { LoginPage } from '@/features/auth/pages/login-page'
 import { LandingPage } from '@/features/landing/pages/landing-page'
+import { TagihanPage } from '@/features/billing/pages/tagihan-page'
 import { OwnerDashboardPage } from '@/features/dashboard/pages/owner-dashboard-page'
+import { KatalogPage } from '@/features/units/pages/katalog-page'
+import { UnitDetailPage } from '@/features/units/pages/unit-detail-page'
 import { UnitFormPage } from '@/features/units/pages/unit-form-page'
 import { UnitListPage } from '@/features/units/pages/unit-list-page'
 
@@ -18,7 +21,9 @@ export const routes: RouteObject[] = [
       { path: '/masuk', element: <LoginPage /> },
       { path: '/403', element: <ForbiddenPage /> },
       { path: '/', element: <LandingPage /> },
-      { path: '/katalog', element: <RequireRole role="penyewa"><p className="p-8">Katalog menyusul.</p></RequireRole> },
+      { path: '/katalog', element: <RequireRole role="penyewa"><KatalogPage /></RequireRole> },
+      { path: '/katalog/:id', element: <RequireRole role="penyewa"><UnitDetailPage /></RequireRole> },
+      { path: '/tagihan', element: <RequireRole role="penyewa"><TagihanPage /></RequireRole> },
       { path: '/pemilik', element: <RequireRole role="pemilik"><OwnerDashboardPage /></RequireRole> },
       { path: '/pemilik/unit', element: <RequireRole role="pemilik"><UnitListPage /></RequireRole> },
       { path: '/pemilik/unit/baru', element: <RequireRole role="pemilik"><UnitFormPage /></RequireRole> },

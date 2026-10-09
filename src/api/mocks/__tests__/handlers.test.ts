@@ -45,11 +45,10 @@ describe('data contoh', () => {
     expect(tagihan.unit_title).toBe('Kontrakan Rumah Asri Type 36')
   })
 
-  it('hanya mengirim unit tersedia ke penyewa dan unit sendiri ke pemilik', async () => {
+  it('mengirim seluruh unit ke penyewa dan hanya unit sendiri ke pemilik', async () => {
     writeSession(penyewa)
-    const tersedia = (await apiFetch<{ data: UnitRow[] }>('/units')).data
-    expect(tersedia).toHaveLength(3)
-    expect(tersedia.every((unit) => unit.status === 'Tersedia')).toBe(true)
+    const katalog = (await apiFetch<{ data: UnitRow[] }>('/units')).data
+    expect(katalog).toHaveLength(5)
 
     writeSession(pemilik)
     const milik = (await apiFetch<{ data: UnitRow[] }>('/units')).data

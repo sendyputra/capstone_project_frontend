@@ -40,7 +40,7 @@ describe('peta rute', () => {
   it('membuka katalog untuk peran penyewa', async () => {
     writeSession(sesiPenyewa)
     renderRute('/katalog')
-    expect(await screen.findByText('Katalog menyusul.')).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Daftar Unit Sewa Tersedia' })).toBeInTheDocument()
   })
 
   it('membuka dashboard pemilik untuk peran pemilik', async () => {
