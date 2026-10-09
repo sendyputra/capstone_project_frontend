@@ -16,9 +16,10 @@ function normalisasi(unit: UnitRow): UnitRow {
 export function useUnits() {
   const { session } = useSession()
   const userId = session?.user.id ?? 0
+  /* Katalog terbuka untuk pengunjung, jadi kueri tidak menunggu sesi; cakupan
+     barisnya tetap ditentukan server dari token. */
   return useQuery({
     queryKey: unitKeys.list(userId),
-    enabled: Boolean(session),
     queryFn: async (): Promise<UnitRow[]> => {
       const hasil = await apiFetch<{ data: UnitRow[] }>('/units')
       return hasil.data.map(normalisasi)

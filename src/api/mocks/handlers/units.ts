@@ -17,12 +17,15 @@ function subPemanggil(otorisasi: string | null) {
 
 export const unitHandlers = [
   http.get('/units', ({ request }) => {
-    const sub = subPemanggil(request.headers.get('Authorization'))
-    const peran = penggunaById(sub)?.role
+    const otorisasi = request.headers.get('Authorization')
+    /* Tanpa token = pengunjung, jadi seluruh unit (katalog publik). Token ada
+       tetapi tak terbaca — token uji yang dipalsukan — diperlakukan sebagai
+       pemilik bawaan, supaya tes punya cakupan yang jelas. */
+    const sub = subDariToken(otorisasi) ?? (otorisasi ? PEMILIK_BAWAAN : null)
+    const peran = sub === null ? null : penggunaById(sub)?.role
 
     /* Cakupan dibaca dari token, seperti backend asli: pemilik hanya unitnya,
-       sedangkan katalog penyewa dan panel admin melihat seluruh unit lintas
-       pemilik — purwarupa menampilkan lencana status di katalog. */
+       sedangkan katalog dan panel admin melihat seluruh unit lintas pemilik. */
     let data = units
     if (peran === 'pemilik') data = units.filter((unit) => unit.owner_id === sub)
 

@@ -51,19 +51,18 @@ export function AppShell() {
           </Link>
 
           <nav className="ml-auto hidden items-center gap-5 md:flex" aria-label="Navigasi utama">
-            {session &&
-              TAUTAN[session.user.role].map((tautan) => (
-                <NavLink
-                  key={tautan.ke}
-                  to={tautan.ke}
-                  end={tautan.ke === '/'}
-                  className={({ isActive }) =>
-                    isActive ? 'text-ui font-semibold text-brand-accent' : 'text-ui font-medium text-brand-text-muted'
-                  }
-                >
-                  {tautan.label}
-                </NavLink>
-              ))}
+            {(session ? TAUTAN[session.user.role] : [{ ke: '/', label: 'Beranda' }, { ke: '/katalog', label: 'Cari Unit' }]).map((tautan) => (
+              <NavLink
+                key={tautan.ke}
+                to={tautan.ke}
+                end={tautan.ke === '/'}
+                className={({ isActive }) =>
+                  isActive ? 'text-ui font-semibold text-brand-accent' : 'text-ui font-medium text-brand-text-muted'
+                }
+              >
+                {tautan.label}
+              </NavLink>
+            ))}
             <Link to="/bantuan" className="text-ui font-medium text-brand-text-muted">
               Bantuan &amp; Layanan
             </Link>

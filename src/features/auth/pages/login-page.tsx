@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { useNavigate } from 'react-router'
+import { useNavigate, useLocation } from 'react-router'
 import { ApiError, type Role } from '@/api/types'
 import { useLogin } from '@/features/auth/api'
 import { bacaSesiKedaluwarsa, bersihkanSesiKedaluwarsa } from '@/features/auth/session'
@@ -21,6 +21,8 @@ function ruteAwal(role: Role): string {
 export function LoginPage() {
   const masuk = useLogin()
   const navigate = useNavigate()
+  const lokasi = useLocation()
+  const dari = (lokasi.state as { dari?: string } | null)?.dari
   const [kedaluwarsa] = useState(bacaSesiKedaluwarsa)
   useEffect(() => {
     bersihkanSesiKedaluwarsa()
@@ -29,7 +31,7 @@ export function LoginPage() {
 
   const onSubmit = form.handleSubmit((nilai) => {
     masuk.mutate(nilai, {
-      onSuccess: (hasil) => navigate(ruteAwal(hasil.user.role), { replace: true }),
+      onSuccess: (hasil) => navigate(dari ?? ruteAwal(hasil.user.role), { replace: true }),
       onError: (galat) => {
         if (galat instanceof ApiError && galat.kind === 'validation' && galat.fields) {
           Object.entries(galat.fields).forEach(([bidang, pesan]) => {

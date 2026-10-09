@@ -27,6 +27,7 @@ describe('PreviewBar', () => {
   })
 
   it('tidak muncul di luar mode mock', () => {
+    vi.stubEnv('VITE_API_MOCK', 'off')
     renderBar()
     expect(screen.queryByLabelText('Pratinjau peran')).not.toBeInTheDocument()
   })

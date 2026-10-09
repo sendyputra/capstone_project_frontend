@@ -49,6 +49,8 @@ diisi"; tanda itu dari fase desain dan tidak lagi menggambarkan repo ini.
   hanya memastikan token masih berlaku; ia tidak menimpa identitas.
 - Rute dijaga `RequireRole`; `<html>` menerima `data-role` bernilai `renter`, `owner`,
   atau `admin` lewat `toDataRole` — purwarupa dan `tokens.css` mengenali ketiganya.
+  `/`, `/katalog`, `/katalog/:id`, `/masuk`, `/daftar`, `/bantuan`, dan `/403` terbuka
+  untuk pengunjung; yang menuntut akun hanya pengajuannya dan `/tagihan`.
 - Tulis tes **merah** dulu, baru kode. Suite hijau adalah gerbangnya: `typecheck`, `lint`,
   `test`, `check:styles`, `check:tokens`, `build`. `renderWithProviders`
   (`src/test/render.tsx`) sudah membungkus QueryClient, ToastProvider, dan ConfirmProvider;

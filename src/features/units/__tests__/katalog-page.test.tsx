@@ -19,6 +19,18 @@ function renderKatalog() {
 }
 
 describe('KatalogPage', () => {
+  it('menampilkan seluruh unit kepada pengunjung tanpa akun', async () => {
+    localStorage.clear()
+    renderWithProviders(
+      <MemoryRouter initialEntries={['/katalog']}>
+        <KatalogPage />
+      </MemoryRouter>,
+    )
+
+    expect(await screen.findByText('5 Unit Ditemukan')).toBeInTheDocument()
+    expect(screen.getByText('Kos Putri Melati Kamar B2')).toBeInTheDocument()
+  })
+
   it('menampilkan seluruh unit dengan lencana status dan jumlahnya', async () => {
     renderKatalog()
 

@@ -32,9 +32,28 @@ describe('peta rute', () => {
     expect(screen.queryByRole('heading', { name: 'Masuk' })).not.toBeInTheDocument()
   })
 
-  it('mengantar katalog penyewa ke layar masuk bila belum ada sesi', async () => {
-    renderRute('/katalog')
+  it('mengantar tamu dari tagihan ke layar masuk', async () => {
+    renderRute('/tagihan')
     expect(await screen.findByRole('heading', { name: 'Masuk' })).toBeInTheDocument()
+  })
+
+  it('membuka katalog untuk pengunjung tanpa memaksa masuk', async () => {
+    renderRute('/katalog')
+    expect(await screen.findByRole('heading', { name: 'Daftar Unit Sewa Tersedia' })).toBeInTheDocument()
+    expect(await screen.findByText('Kos Kamar 01')).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Masuk' })).not.toBeInTheDocument()
+  })
+
+  it('menaruh katalog di beranda publik', async () => {
+    renderRute('/')
+    expect(await screen.findByRole('heading', { name: /Langsung Dari Pemilik UMKM/ })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Daftar Unit Sewa Tersedia' })).toBeInTheDocument()
+  })
+
+  it('membuka detail unit untuk pengunjung', async () => {
+    renderRute('/katalog/1')
+    expect(await screen.findByRole('heading', { name: 'Kos Kamar 01' })).toBeInTheDocument()
+    expect(screen.getByText('Kalender Ketersediaan Tanggal:')).toBeInTheDocument()
   })
 
   it('membuka katalog untuk peran penyewa', async () => {
