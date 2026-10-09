@@ -40,6 +40,19 @@ describe('KatalogPage', () => {
     expect(kartu.querySelector('svg.lucide-map-pin')).toBeTruthy()
   })
 
+  it('memakai kendali seukuran purwarupa pada kartu cari', async () => {
+    renderKatalog()
+    await screen.findByText('Kos Kamar 01')
+
+    expect(screen.getByLabelText(/Cari Nama atau Lokasi Properti/)).toHaveClass('py-3')
+    expect(screen.getByLabelText('Tipe Properti')).toHaveClass('p-3')
+    expect(document.querySelector('label[for="cari-properti"] svg.lucide-search')).toBeTruthy()
+
+    const reset = screen.getByRole('button', { name: 'Reset Filter' })
+    expect(reset).toHaveClass('bg-brand-surface-sunken')
+    expect(reset.querySelector('svg.lucide-rotate-ccw')).toBeTruthy()
+  })
+
   it('menampilkan seluruh unit dengan lencana status dan jumlahnya', async () => {
     renderKatalog()
 
