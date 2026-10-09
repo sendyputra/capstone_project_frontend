@@ -10,6 +10,11 @@ const sesiPemilik: Session = {
   user: { id: 402, name: 'Pak Wahyu', email: 'wahyu@umkm.id', role: 'pemilik' },
 }
 
+const sesiPenyewa: Session = {
+  token: 'mock.abc.tanda',
+  user: { id: 404, name: 'Rian', email: 'rian@mail.com', role: 'penyewa' },
+}
+
 function renderRute(awal: string) {
   const router = createMemoryRouter(routes, { initialEntries: [awal] })
   return renderWithProviders(<RouterProvider router={router} />)
@@ -20,9 +25,22 @@ describe('peta rute', () => {
     localStorage.clear()
   })
 
-  it('mengantar pengunjung tanpa sesi dari beranda ke layar masuk', async () => {
+  it('menampilkan beranda publik tanpa memaksa masuk', async () => {
     renderRute('/')
+
+    expect(await screen.findByRole('heading', { name: /Langsung Dari Pemilik UMKM/ })).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Masuk' })).not.toBeInTheDocument()
+  })
+
+  it('mengantar katalog penyewa ke layar masuk bila belum ada sesi', async () => {
+    renderRute('/katalog')
     expect(await screen.findByRole('heading', { name: 'Masuk' })).toBeInTheDocument()
+  })
+
+  it('membuka katalog untuk peran penyewa', async () => {
+    writeSession(sesiPenyewa)
+    renderRute('/katalog')
+    expect(await screen.findByText('Katalog menyusul.')).toBeInTheDocument()
   })
 
   it('membuka dashboard pemilik untuk peran pemilik', async () => {

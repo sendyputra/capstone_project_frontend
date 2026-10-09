@@ -21,7 +21,10 @@
   --color-brand-blue-800: var(--nb-blue-800);
   --color-brand-blue-900: var(--nb-blue-900);
   --color-brand-teal-50: var(--nb-teal-50);
+  --color-brand-teal-100: var(--nb-teal-100);
   --color-brand-teal-200: var(--nb-teal-200);
+  --color-brand-teal-300: var(--nb-teal-300);
+  --color-brand-teal-400: var(--nb-teal-400);
   --color-brand-teal-700: var(--nb-teal-700);
   --color-brand-teal-800: var(--nb-teal-800);
   --color-brand-neutral-50: var(--nb-neutral-50);
@@ -125,6 +128,7 @@
   --shadow-xl: var(--shadow-xl);
   --container-container: var(--container-max);
   --spacing-appbar: var(--appbar-height);
+  --background-image-hero: var(--gradient-hero);
 }
 
 @layer base {
