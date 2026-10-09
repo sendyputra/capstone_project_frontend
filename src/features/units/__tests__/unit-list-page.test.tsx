@@ -32,14 +32,14 @@ describe('UnitListPage', () => {
 
   it('menghapus unit hanya setelah disetujui, dan batal tidak mengubah apa pun', async () => {
     renderHalaman()
-    const baris = (await screen.findByText('Kos Kamar 02')).closest('tr')!
+    const baris = (await screen.findByText('Kontrakan Rumah Asri Type 36')).closest('tr')!
     await userEvent.click(within(baris).getByRole('button', { name: /Hapus/i }))
     await userEvent.click(await screen.findByRole('button', { name: 'Batal' }))
-    expect(screen.getByText('Kos Kamar 02')).toBeInTheDocument()
+    expect(screen.getByText('Kontrakan Rumah Asri Type 36')).toBeInTheDocument()
 
     await userEvent.click(within(baris).getByRole('button', { name: /Hapus/i }))
     await userEvent.click(await screen.findByRole('button', { name: 'Hapus unit' }))
-    await waitFor(() => expect(screen.queryByText('Kos Kamar 02')).not.toBeInTheDocument())
+    await waitFor(() => expect(screen.queryByText('Kontrakan Rumah Asri Type 36')).not.toBeInTheDocument())
   })
 
   it('menampilkan sebab saat ubah status gagal, bukan diam saja', async () => {

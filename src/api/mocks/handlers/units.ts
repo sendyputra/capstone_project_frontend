@@ -1,54 +1,42 @@
 import { http, HttpResponse } from 'msw'
 import { units } from '@/api/mocks/data/units'
 import { subDariToken } from '@/api/mocks/token'
+import { gagalSekali } from '@/api/mocks/handlers/simulasi'
+import { barisUnit, penggunaById } from '@/api/mocks/join'
 import type { Unit } from '@/api/types'
 
 /* Pemilik pertama pada data contoh; dipakai hanya bila token tidak membawa sub
    yang bisa dibaca (mis. token uji yang dipalsukan). */
 const PEMILIK_BAWAAN = 402
 
-/* Kegagalan disimulasikan sekali per kombinasi aksi supaya jalur galat dan
-   tombol coba ulang bisa didemokan tanpa backend — sama seperti purwarupa.
-   Simulasi default mati supaya tes jalur berhasil tidak ikut gagal; peramban
-   menyalakannya lewat `aktifkanSimulasi()` saat worker mock menyala, dan tes
-   yang memang ingin kegagalan pertama menyalakannya sendiri. */
-let simulasiAktif = false
-const sudahGagal = new Set<string>()
-
-function gagalSekali(kunci: string) {
-  if (!simulasiAktif) return false
-  if (sudahGagal.has(kunci)) return false
-  sudahGagal.add(kunci)
-  return true
-}
-
-export function aktifkanSimulasi() {
-  simulasiAktif = true
-}
-
-export function resetSimulasi() {
-  sudahGagal.clear()
-  simulasiAktif = false
-}
-
 let urutan = units.length
+
+function subPemanggil(otorisasi: string | null) {
+  return subDariToken(otorisasi) ?? PEMILIK_BAWAAN
+}
 
 export const unitHandlers = [
   http.get('/units', ({ request }) => {
-    /* Peran dibaca dari token: pemilik hanya menerima unitnya sendiri.
-       Ini juga yang menahan kebocoran unit milik pemilik lain. */
-    const pemilik = subDariToken(request.headers.get('Authorization')) ?? PEMILIK_BAWAAN
-    return HttpResponse.json({ data: units.filter((unit) => unit.owner_id === pemilik) })
+    const sub = subPemanggil(request.headers.get('Authorization'))
+    const peran = penggunaById(sub)?.role
+
+    /* Cakupan dibaca dari token, seperti backend asli: pemilik hanya unitnya,
+       penyewa hanya yang tersedia, admin seluruh unit lintas pemilik. */
+    let data = units
+    if (peran === 'pemilik') data = units.filter((unit) => unit.owner_id === sub)
+    else if (peran === 'penyewa') data = units.filter((unit) => unit.status === 'Tersedia')
+
+    return HttpResponse.json({ data: data.map(barisUnit) })
   }),
 
   http.get('/units/:id', ({ params }) => {
     const unit = units.find((kandidat) => kandidat.id === Number(params.id))
     if (!unit) return HttpResponse.json({ message: 'Unit tidak ditemukan.' }, { status: 404 })
-    return HttpResponse.json({ data: unit })
+    return HttpResponse.json({ data: barisUnit(unit) })
   }),
 
   http.post('/units', async ({ request }) => {
-    const muatan = (await request.json()) as Omit<Unit, 'id' | 'owner_id'>
+    const muatan = (await request.json()) as Partial<Unit>
     if (gagalSekali('POST /units')) {
       return HttpResponse.json({ message: 'Unit gagal disimpan karena koneksi terputus.' }, { status: 500 })
     }
@@ -58,9 +46,28 @@ export const unitHandlers = [
         { status: 422 },
       )
     }
-    const unit: Unit = { id: ++urutan, owner_id: subDariToken(request.headers.get('Authorization')) ?? PEMILIK_BAWAAN, ...muatan, price: Number(muatan.price) }
+    const unit: Unit = {
+      id: ++urutan,
+      owner_id: subPemanggil(request.headers.get('Authorization')),
+      name: muatan.name,
+      address: muatan.address ?? '',
+      price: Number(muatan.price ?? 0),
+      status: muatan.status ?? 'Tersedia',
+      type: muatan.type ?? 'Kamar Kos',
+      facilities: muatan.facilities ?? [],
+      image: muatan.image ?? '/demo/kos.jpg',
+      booked_dates: [],
+    }
     units.push(unit)
-    return HttpResponse.json({ data: unit }, { status: 201 })
+    return HttpResponse.json({ data: barisUnit(unit) }, { status: 201 })
+  }),
+
+  http.patch('/units/:id/status', async ({ params, request }) => {
+    const unit = units.find((kandidat) => kandidat.id === Number(params.id))
+    if (!unit) return HttpResponse.json({ message: 'Unit tidak ditemukan.' }, { status: 404 })
+    const { status } = (await request.json()) as Pick<Unit, 'status'>
+    unit.status = status
+    return HttpResponse.json({ data: barisUnit(unit) })
   }),
 
   http.patch('/units/:id', async ({ params, request }) => {
@@ -68,7 +75,7 @@ export const unitHandlers = [
     if (!unit) return HttpResponse.json({ message: 'Unit tidak ditemukan.' }, { status: 404 })
     const muatan = (await request.json()) as Partial<Unit>
     Object.assign(unit, muatan, { price: muatan.price === undefined ? unit.price : Number(muatan.price) })
-    return HttpResponse.json({ data: unit })
+    return HttpResponse.json({ data: barisUnit(unit) })
   }),
 
   http.delete('/units/:id', ({ params }) => {
