@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useEffect, useState, type ReactNode } from 'react'
+import { ConfirmProvider } from '@/ui/confirm-dialog'
 import { ToastProvider } from '@/ui/toast'
 
 const queryClient = new QueryClient({
@@ -25,7 +26,9 @@ export function Providers({ children }: { children: ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <ToastProvider>{children}</ToastProvider>
+      <ToastProvider>
+        <ConfirmProvider>{children}</ConfirmProvider>
+      </ToastProvider>
     </QueryClientProvider>
   )
 }

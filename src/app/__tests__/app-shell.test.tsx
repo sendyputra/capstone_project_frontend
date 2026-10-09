@@ -47,4 +47,22 @@ describe('AppShell', () => {
     await userEvent.click(await screen.findByRole('button', { name: 'Keluar' }))
     expect(readSession()).toBeNull()
   })
+
+  it('menampilkan tautan kerja sesuai peran yang masuk', async () => {
+    writeSession(sesi)
+    renderShell()
+
+    expect(await screen.findByRole('link', { name: /Dashboard/ })).toHaveAttribute('href', '/pemilik')
+    expect(screen.getByRole('link', { name: /Unit Saya/ })).toHaveAttribute('href', '/pemilik/unit')
+    expect(screen.getByRole('link', { name: /Pengajuan Sewa/ })).toHaveAttribute('href', '/pemilik/pengajuan')
+    expect(screen.getByRole('link', { name: /Bantuan/ })).toHaveAttribute('href', '/bantuan')
+    expect(screen.queryByRole('link', { name: /Tagihan Saya/ })).not.toBeInTheDocument()
+  })
+
+  it('menawarkan masuk dan daftar kepada tamu', async () => {
+    renderShell()
+
+    expect(await screen.findByRole('link', { name: 'Masuk' })).toHaveAttribute('href', '/masuk')
+    expect(screen.getByRole('link', { name: /Daftar/ })).toHaveAttribute('href', '/daftar')
+  })
 })
