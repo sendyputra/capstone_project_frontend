@@ -23,6 +23,10 @@ describe('LandingPage', () => {
 
     expect(within(hero()).getByText('Sistem Reservasi & Pengelolaan Properti Terpadu')).toBeInTheDocument()
     expect(within(hero()).getByRole('heading', { level: 1, name: /Langsung Dari Pemilik UMKM/ })).toBeInTheDocument()
+    /* Judul memakai tangga display purwarupa, dua baris dengan pemisah tegas. */
+    const judul = within(hero()).getByRole('heading', { level: 1 })
+    expect(judul).toHaveClass('md:text-5xl')
+    expect(judul.querySelector('br')).toBeTruthy()
     expect(within(hero()).getByText(/tanpa komisi tersembunyi/)).toBeInTheDocument()
     expect(within(hero()).getByLabelText(/Cari Nama atau Lokasi Properti/)).toBeInTheDocument()
     expect(within(hero()).getByLabelText('Tipe Properti')).toBeInTheDocument()
