@@ -49,6 +49,7 @@ export function writeSession(sesi: Session) {
 
 export function clearSession() {
   localStorage.removeItem(KUNCI)
+  tersimpan = null
   terakhirDibaca = null
   beritahu()
 }

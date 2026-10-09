@@ -30,6 +30,12 @@ describe('penyimpanan sesi', () => {
     expect(readSession()).toBe(readSession())
   })
 
+  it('membuang sesi sehingga bacaan berikutnya benar-benar null', () => {
+    writeSession(sesi)
+    clearSession()
+    expect(readSession()).toBeNull()
+  })
+
   it('membersihkan kunci yang rusak supaya tidak dibaca berulang', () => {
     localStorage.setItem('nb.session', '{bukan json')
     readSession()
