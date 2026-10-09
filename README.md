@@ -20,7 +20,7 @@ Tanpa `VITE_API_MOCK=on`, aplikasi akan memanggil API sungguhan di `VITE_API_BAS
 
 | Rute | Peran | Isi |
 |---|---|---|
-| `/`, `/katalog`, `/katalog/:id` | publik | Beranda (hero + katalog), katalog berfilter, detail unit + kalender. Mengajukan sewa perlu masuk dulu. |
+| `/`, `/katalog`, `/katalog/:id` | publik | Beranda (hero bersisi kartu cari + katalog), katalog berfilter, detail unit + kalender. Mengajukan sewa perlu masuk dulu. |
 | `/masuk`, `/daftar` | publik | Masuk dan pendaftaran (blok OCR KTP) |
 | `/bantuan` | publik | Kanal Instagram dan WhatsApp |
 | `/403` | publik | Peran tidak cocok |
@@ -31,7 +31,7 @@ Tanpa `VITE_API_MOCK=on`, aplikasi akan memanggil API sungguhan di `VITE_API_BAS
 | `/admin/unit` | admin | Unit lintas pemilik |
 | `/admin/kontrak` | admin | Kontrak sewa |
 | `/admin/pembayaran` | admin | Verifikasi bukti bayar |
-| `/admin/pengguna` | admin | Akun, peran, penghapusan |
+| `/admin/pengguna` | admin | Akun, peran, verifikasi KTP, penghapusan |
 
 ## Perintah
 

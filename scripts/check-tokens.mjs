@@ -7,8 +7,8 @@ const indexCss = readFileSync(join(repoIni, 'src', 'styles', 'index.css'), 'utf8
 
 /* Kelas yang dipakai purwarupa dan harus punya pemetaan di blok `@theme`.
    Kiri variabel tema, kanan utilitas yang mengharapkannya. Purwarupa menunjuk
-   beberapa token yang memang tidak ada di tokens.css (…-tint, …-sunken-hover);
-   yang tidak ada sengaja tidak didaftarkan di sini. */
+   beberapa token lewat perantara (…-tint -> --nb-*-100, …-sunken-hover ->
+   --border); perantaranya ada, jadi dipetakan apa adanya. */
 const wajib = [
   ['--background-image-hero', 'bg-hero'],
   ['--background-image-panel', 'bg-panel'],
@@ -27,6 +27,29 @@ const wajib = [
   ['--color-brand-danger-hover', 'hover:bg-brand-danger-hover'],
   ['--color-brand-scrim', 'bg-brand-scrim'],
   ['--color-brand-text-inverse', 'text-brand-text-inverse'],
+
+  /* Paritas dengan tokens.tailwind.js purwarupa: setiap kunci yang ia petakan
+     juga harus punya padanannya di sini, supaya kedua proyeksi tidak menyimpang. */
+  ['--color-brand-blue-300', 'text-brand-blue-300'],
+  ['--color-brand-blue-400', 'text-brand-blue-400'],
+  ['--color-brand-blue-500', 'text-brand-blue-500'],
+  ['--color-brand-blue-950', 'bg-brand-blue-950'],
+  ['--color-brand-teal-600', 'bg-brand-teal-600'],
+  ['--color-brand-teal-950', 'bg-brand-teal-950'],
+  ['--color-brand-neutral-400', 'text-brand-neutral-400'],
+  ['--color-brand-neutral-500', 'text-brand-neutral-500'],
+  ['--color-brand-surface-sunken-hover', 'hover:bg-brand-surface-sunken-hover'],
+  ['--color-brand-success-400', 'text-brand-success-400'],
+  ['--color-brand-success-700', 'text-brand-success-700'],
+  ['--color-brand-success-800', 'text-brand-success-800'],
+  ['--color-brand-success-tint', 'bg-brand-success-tint'],
+  ['--color-brand-danger-tint', 'bg-brand-danger-tint'],
+  ['--radius-xs', 'rounded-xs'],
+  ['--duration-base', 'duration-base'],
+  ['--duration-slow', 'duration-slow'],
+  ['--ease-out', 'ease-out'],
+  ['--ease-in', 'ease-in'],
+  ['--ease-inout', 'ease-inout'],
 ]
 
 const hilang = wajib.filter(([token]) => !new RegExp('^\\s*' + token + ':', 'm').test(indexCss))

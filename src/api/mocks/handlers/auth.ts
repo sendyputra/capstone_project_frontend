@@ -47,6 +47,8 @@ export const authHandlers = [
       role: 'penyewa',
       phone: '',
       city: '',
+      /* Akun baru menunggu admin memeriksa KTP-nya. */
+      ktp: 'Menunggu',
       joined: '9 Okt 2026',
     }
     users.push(user)

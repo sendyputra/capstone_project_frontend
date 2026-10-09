@@ -3,6 +3,7 @@ import { useHapusPengguna, useUbahPeranPengguna, useUsers } from '@/features/adm
 import { inisial } from '@/lib/format'
 import { ErrorState } from '@/ui/error-state'
 import { Skeleton } from '@/ui/skeleton'
+import { StatusChip } from '@/ui/status-chip'
 import { Tabel } from '@/ui/tabel'
 import { useKonfirmasi } from '@/ui/confirm-dialog'
 import { useToast } from '@/ui/toast'
@@ -52,7 +53,7 @@ export function AdminPenggunaPage() {
       {pengguna.isPending && <Skeleton className="h-40" />}
       {pengguna.isError && <ErrorState message={(pengguna.error as Error).message} onRetry={() => pengguna.refetch()} />}
       {pengguna.isSuccess && (
-        <Tabel kolom={['Pengguna', 'Kontak', 'Peran', 'Terdaftar', 'Aksi']}>
+        <Tabel kolom={['Pengguna', 'Kontak', 'Peran', 'Verifikasi KTP', 'Terdaftar', 'Aksi']}>
           {daftar.map((baris) => (
             <tr key={baris.id}>
               <td className="p-4">
@@ -62,7 +63,7 @@ export function AdminPenggunaPage() {
                   </span>
                   <div>
                     <span className="block font-bold text-brand-text">{baris.name}</span>
-                    <span className="text-micro text-brand-text-subtle">{baris.city || 'Tanpa kota'}</span>
+                    <span className="text-micro text-brand-text-subtle">{baris.id === 401 ? 'Akun Anda' : baris.city || 'Tanpa kota'}</span>
                   </div>
                 </div>
               </td>
@@ -81,6 +82,9 @@ export function AdminPenggunaPage() {
                   <option value="pemilik">Pemilik</option>
                   <option value="admin">Admin</option>
                 </select>
+              </td>
+              <td className="p-4">
+                <StatusChip nilai={baris.ktp} />
               </td>
               <td className="p-4 text-brand-text-muted">{baris.joined}</td>
               <td className="p-4 text-right">

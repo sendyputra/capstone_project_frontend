@@ -1,7 +1,8 @@
+import { Moon, Sun } from 'lucide-react'
 import { useEffect } from 'react'
 import { Link, NavLink, Outlet, ScrollRestoration } from 'react-router'
 import type { Role } from '@/api/types'
-import { labelPeran, toDataRole } from '@/features/auth/roles'
+import { jabatanPeran, toDataRole } from '@/features/auth/roles'
 import { useLogout, useSession } from '@/features/auth/api'
 import { PreviewBar } from '@/features/preview/components/preview-bar'
 import { inisial } from '@/lib/format'
@@ -26,6 +27,14 @@ const TAUTAN: Record<Role, { ke: string; label: string }[]> = {
     { ke: '/admin/pembayaran', label: 'Pembayaran' },
     { ke: '/admin/pengguna', label: 'Pengguna' },
   ],
+}
+
+/* Warna cakram inisial mengikuti peran, seperti purwarupa: aksen untuk penyewa,
+   teal pemilik untuk pemilik, dan netral untuk admin. */
+function gayaInisial(role: Role) {
+  if (role === 'admin') return 'bg-brand-neutral-700 text-brand-text-inverse'
+  if (role === 'pemilik') return 'bg-brand-owner text-brand-text-inverse'
+  return 'bg-brand-accent text-brand-accent-fg'
 }
 
 /* Tata letak akar: memasang atribut tema dan peran pada elemen <html>, nav
@@ -69,19 +78,25 @@ export function AppShell() {
           </nav>
 
           <div className="ml-auto flex items-center gap-3 md:ml-0">
-            <Button variant="ghost" onClick={toggle} aria-label={theme === 'dark' ? 'Aktifkan tema terang' : 'Aktifkan tema gelap'}>
-              {theme === 'dark' ? 'Terang' : 'Gelap'}
-            </Button>
+            <button
+              type="button"
+              onClick={toggle}
+              aria-label={theme === 'dark' ? 'Aktifkan tema terang' : 'Aktifkan tema gelap'}
+              aria-pressed={theme === 'dark'}
+              className="rounded-lg p-2 text-brand-text-muted hover:bg-brand-surface-sunken hover:text-brand-text"
+            >
+              {theme === 'dark' ? <Sun className="h-5 w-5" aria-hidden="true" /> : <Moon className="h-5 w-5" aria-hidden="true" />}
+            </button>
 
             {session ? (
               <>
                 <span className="hidden items-center gap-2 rounded-xl border border-brand-border bg-brand-surface-sunken px-3 py-1.5 sm:flex">
-                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-owner text-micro font-bold text-brand-text-inverse">
+                  <span className={`flex h-8 w-8 items-center justify-center rounded-full text-micro font-bold ${gayaInisial(session.user.role)}`}>
                     {inisial(session.user.name)}
                   </span>
                   <span className="text-left">
                     <span className="block text-micro font-bold text-brand-text">{session.user.name}</span>
-                    <span className="block text-micro text-brand-text-muted">{labelPeran(session.user.role)}</span>
+                    <span className="block text-micro text-brand-text-muted">{jabatanPeran(session.user.role)}</span>
                   </span>
                 </span>
                 <Button variant="outline" onClick={keluar}>
