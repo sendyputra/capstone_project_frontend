@@ -25,10 +25,13 @@
   --color-brand-teal-200: var(--nb-teal-200);
   --color-brand-teal-300: var(--nb-teal-300);
   --color-brand-teal-400: var(--nb-teal-400);
+  --color-brand-teal-500: var(--nb-teal-500);
   --color-brand-teal-700: var(--nb-teal-700);
   --color-brand-teal-800: var(--nb-teal-800);
+  --color-brand-teal-900: var(--nb-teal-900);
   --color-brand-neutral-50: var(--nb-neutral-50);
   --color-brand-neutral-100: var(--nb-neutral-100);
+  --color-brand-neutral-200: var(--nb-neutral-200);
   --color-brand-neutral-300: var(--nb-neutral-300);
   --color-brand-neutral-600: var(--nb-neutral-600);
   --color-brand-neutral-700: var(--nb-neutral-700);
@@ -47,6 +50,7 @@
   --color-brand-ink-hover: var(--surface-inverse-hover);
   --color-brand-border: var(--border);
   --color-brand-border-strong: var(--border-strong);
+  --color-brand-scrim: var(--scrim);
   --color-brand-text: var(--text);
   --color-brand-text-muted: var(--text-muted);
   --color-brand-text-subtle: var(--text-subtle);
@@ -65,6 +69,7 @@
 
   /* Status */
   --color-brand-success: var(--success-solid);
+  --color-brand-success-hover: var(--success-solid-hover);
   --color-brand-success-soft: var(--success-soft);
   --color-brand-success-soft-fg: var(--success-soft-fg);
   --color-brand-success-border: var(--success-border);
@@ -79,6 +84,10 @@
   --color-brand-danger-fg: var(--danger-fg);
   --color-brand-info-soft: var(--info-soft);
   --color-brand-info-soft-fg: var(--info-soft-fg);
+
+  /* Sosial: hanya dipakai layar Bantuan. */
+  --color-brand-instagram: var(--nb-instagram);
+  --color-brand-whatsapp: var(--nb-whatsapp);
 
   /* Nama yang diharapkan komponen shadcn, diarahkan ke token yang sama.
      `accent` di sini adalah permukaan hover bawaan shadcn, bukan aksen merek;
@@ -129,6 +138,7 @@
   --container-container: var(--container-max);
   --spacing-appbar: var(--appbar-height);
   --background-image-hero: var(--gradient-hero);
+  --background-image-panel: var(--gradient-panel);
 }
 
 @layer base {
