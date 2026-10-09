@@ -1,0 +1,37 @@
+name: Deploy ke Firebase Hosting
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      # Alamat API Laravel; kosong berarti jalur relatif.
+      VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
+      # Laman demo memakai data contoh; setel variabel VITE_API_MOCK=off begitu
+      # backend sungguhan tersedia.
+      VITE_API_MOCK: ${{ vars.VITE_API_MOCK || 'on' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - run: bun install --frozen-lockfile
+
+      - run: bun run lint
+      - run: bun run test
+      - run: bun run check:styles
+      - run: bun run check:tokens
+      - run: bun run build
+
+      - uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          projectId: nusantara-booking
+          channelId: live
