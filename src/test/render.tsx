@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, type RenderOptions } from '@testing-library/react'
 import { type ReactElement } from 'react'
+import { ToastProvider } from '@/ui/toast'
 
 export function renderWithProviders(ui: ReactElement, options?: RenderOptions) {
   const queryClient = new QueryClient({
@@ -8,6 +9,11 @@ export function renderWithProviders(ui: ReactElement, options?: RenderOptions) {
   })
   return {
     queryClient,
-    ...render(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>, options),
+    ...render(
+      <QueryClientProvider client={queryClient}>
+        <ToastProvider>{ui}</ToastProvider>
+      </QueryClientProvider>,
+      options,
+    ),
   }
 }
