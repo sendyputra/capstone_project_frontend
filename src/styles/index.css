@@ -70,6 +70,8 @@
   /* Status */
   --color-brand-success: var(--success-solid);
   --color-brand-success-hover: var(--success-solid-hover);
+  --color-brand-warning: var(--warning-solid);
+  --color-brand-info: var(--info-solid);
   --color-brand-success-soft: var(--success-soft);
   --color-brand-success-soft-fg: var(--success-soft-fg);
   --color-brand-success-border: var(--success-border);

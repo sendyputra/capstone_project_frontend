@@ -4,7 +4,12 @@ import { ToastProvider, useToast } from '@/ui/toast'
 
 function Pemuncul() {
   const { tampilkan } = useToast()
-  return <button onClick={() => tampilkan('Unit baru tersimpan.', 'success')}>Munculkan</button>
+  return (
+    <>
+      <button onClick={() => tampilkan('Unit baru tersimpan.', 'success')}>Munculkan</button>
+      <button onClick={() => tampilkan('Bukti bayar ditolak.', 'warning')}>Peringatkan</button>
+    </>
+  )
 }
 
 describe('ToastProvider', () => {
@@ -45,6 +50,34 @@ describe('ToastProvider', () => {
 
     await act(async () => {
       vi.advanceTimersByTime(4500)
+    })
+    expect(screen.getByRole('status')).toBeEmptyDOMElement()
+  })
+
+  it('mendukung tone peringatan dengan tepi dan ikonnya sendiri', async () => {
+    render(
+      <ToastProvider>
+        <Pemuncul />
+      </ToastProvider>,
+    )
+    await act(async () => {
+      screen.getByRole('button', { name: 'Peringatkan' }).click()
+    })
+    expect(screen.getByText('Bukti bayar ditolak.')).toBeInTheDocument()
+    expect(document.querySelector('.border-l-brand-warning')).not.toBeNull()
+  })
+
+  it('bisa ditutup lebih awal lewat tombolnya', async () => {
+    render(
+      <ToastProvider>
+        <Pemuncul />
+      </ToastProvider>,
+    )
+    await act(async () => {
+      screen.getByRole('button', { name: 'Munculkan' }).click()
+    })
+    await act(async () => {
+      screen.getByRole('button', { name: 'Tutup notifikasi' }).click()
     })
     expect(screen.getByRole('status')).toBeEmptyDOMElement()
   })

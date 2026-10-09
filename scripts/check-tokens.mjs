@@ -22,6 +22,8 @@ const wajib = [
   ['--color-brand-instagram', 'bg-brand-instagram'],
   ['--color-brand-whatsapp', 'bg-brand-whatsapp'],
   ['--color-brand-success-hover', 'hover:bg-brand-success-hover'],
+  ['--color-brand-warning', 'border-l-brand-warning'],
+  ['--color-brand-info', 'text-brand-info'],
   ['--color-brand-danger-hover', 'hover:bg-brand-danger-hover'],
   ['--color-brand-scrim', 'bg-brand-scrim'],
   ['--color-brand-text-inverse', 'text-brand-text-inverse'],
