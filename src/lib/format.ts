@@ -13,3 +13,13 @@ export function formatTanggal(value: string | Date): string {
   if (Number.isNaN(tanggal.getTime())) return '—'
   return new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }).format(tanggal)
 }
+
+/* Dua inisial pertama untuk avatar bulat — sama seperti purwarupa. */
+export function inisial(nama: string): string {
+  return nama
+    .split(' ')
+    .slice(0, 2)
+    .map((kata) => kata.charAt(0))
+    .join('')
+    .toUpperCase()
+}
