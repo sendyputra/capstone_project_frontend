@@ -18,6 +18,15 @@ describe('useUnits', () => {
     expect(result.current.data).toHaveLength(3)
     expect(result.current.data?.every((unit) => unit.owner_id === 402)).toBe(true)
   })
+
+  it('tidak menampilkan unit milik pemilik lain saat token menunjuk pemilik berbeda', async () => {
+    const token = `mock.${btoa(JSON.stringify({ sub: 403 }))}.tanda`
+    writeSession({ token, user: { id: 403, name: 'Bu Rina', email: 'rina@umkm.id', role: 'pemilik' } })
+    const { result } = renderHook(() => useUnits(), { wrapper: pembungkus() })
+    await waitFor(() => expect(result.current.isSuccess).toBe(true))
+    expect(result.current.data).toHaveLength(2)
+    expect(result.current.data?.every((unit) => unit.owner_id === 403)).toBe(true)
+  })
 })
 
 describe('useCreateUnit', () => {

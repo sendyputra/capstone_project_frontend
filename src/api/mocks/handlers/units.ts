@@ -1,6 +1,11 @@
 import { http, HttpResponse } from 'msw'
 import { units } from '@/api/mocks/data/units'
+import { subDariToken } from '@/api/mocks/token'
 import type { Unit } from '@/api/types'
+
+/* Pemilik pertama pada data contoh; dipakai hanya bila token tidak membawa sub
+   yang bisa dibaca (mis. token uji yang dipalsukan). */
+const PEMILIK_BAWAAN = 402
 
 /* Kegagalan disimulasikan sekali per kombinasi aksi supaya jalur galat dan
    tombol coba ulang bisa didemokan tanpa backend — sama seperti purwarupa.
@@ -29,10 +34,10 @@ export function resetSimulasi() {
 let urutan = units.length
 
 export const unitHandlers = [
-  http.get('/units', () => {
+  http.get('/units', ({ request }) => {
     /* Peran dibaca dari token: pemilik hanya menerima unitnya sendiri.
        Ini juga yang menahan kebocoran unit milik pemilik lain. */
-    const pemilik = 402
+    const pemilik = subDariToken(request.headers.get('Authorization')) ?? PEMILIK_BAWAAN
     return HttpResponse.json({ data: units.filter((unit) => unit.owner_id === pemilik) })
   }),
 
@@ -53,7 +58,7 @@ export const unitHandlers = [
         { status: 422 },
       )
     }
-    const unit: Unit = { id: ++urutan, owner_id: 402, ...muatan, price: Number(muatan.price) }
+    const unit: Unit = { id: ++urutan, owner_id: subDariToken(request.headers.get('Authorization')) ?? PEMILIK_BAWAAN, ...muatan, price: Number(muatan.price) }
     units.push(unit)
     return HttpResponse.json({ data: unit }, { status: 201 })
   }),

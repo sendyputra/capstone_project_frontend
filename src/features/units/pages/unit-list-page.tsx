@@ -44,10 +44,14 @@ export function UnitListPage() {
       {daftar.isSuccess && daftar.data.length > 0 && (
         <UnitTable
           units={daftar.data}
+          sibuk={ubah.isPending || hapus.isPending}
           onUbahStatus={(unit) => {
             ubah.mutate(
               { id: unit.id, status: unit.status === 'Tersedia' ? 'Terisi' : 'Tersedia' },
-              { onSuccess: () => tampilkan('Status unit diperbarui.', 'success') },
+              {
+                onSuccess: () => tampilkan('Status unit diperbarui.', 'success'),
+                onError: (galat) => tampilkan((galat as Error).message, 'danger'),
+              },
             )
           }}
           onHapus={(unit) => setDihapus(unit)}

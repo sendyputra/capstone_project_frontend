@@ -59,6 +59,22 @@ export function subscribeSession(fn: () => void) {
   return () => pendengar.delete(fn)
 }
 
+/* Penanda bahwa sesi baru saja dibuang karena server menolaknya (401), supaya
+   layar masuk bisa menjelaskan kenapa pengguna tiba kembali di sana. */
+let kedaluwarsa = false
+
+export function tandaiSesiKedaluwarsa() {
+  kedaluwarsa = true
+}
+
+export function bacaSesiKedaluwarsa() {
+  return kedaluwarsa
+}
+
+export function bersihkanSesiKedaluwarsa() {
+  kedaluwarsa = false
+}
+
 export function useStoredSession(): Session | null {
   return useSyncExternalStore(subscribeSession, readSession, () => null)
 }

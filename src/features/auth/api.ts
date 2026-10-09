@@ -1,10 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { apiFetch } from '@/api/client'
-import { ApiError, type User } from '@/api/types'
+import type { User } from '@/api/types'
 import { clearSession, useStoredSession, writeSession, type Session } from '@/features/auth/session'
 
 export function useSession(): { session: Session | null; isLoading: boolean } {
   const tersimpan = useStoredSession()
+  /* Panggilan ini hanya memastikan token masih berlaku: 401 ditangani sekali di
+     `apiFetch` (sesi dibuang + penanda kedaluwarsa), sehingga tidak ada efek
+     samping di dalam render. */
   const query = useQuery({
     queryKey: ['auth', 'me', tersimpan?.user.id ?? 0],
     enabled: Boolean(tersimpan),
@@ -17,10 +20,6 @@ export function useSession(): { session: Session | null; isLoading: boolean } {
   })
 
   if (!tersimpan) return { session: null, isLoading: false }
-  if (query.isError && query.error instanceof ApiError && query.error.kind === 'unauthorized') {
-    clearSession()
-    return { session: null, isLoading: false }
-  }
   return { session: tersimpan, isLoading: query.isPending }
 }
 

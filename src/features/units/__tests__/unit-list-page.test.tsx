@@ -42,6 +42,16 @@ describe('UnitListPage', () => {
     await waitFor(() => expect(screen.queryByText('Kos Kamar 02')).not.toBeInTheDocument())
   })
 
+  it('menampilkan sebab saat ubah status gagal, bukan diam saja', async () => {
+    const { server } = await import('@/api/mocks/server')
+    const { http, HttpResponse } = await import('msw')
+    server.use(http.patch('/units/:id', () => HttpResponse.error()))
+    renderHalaman()
+    const baris = (await screen.findByText('Kos Kamar 01')).closest('tr')!
+    await userEvent.click(within(baris).getByRole('button', { name: /Ubah status/i }))
+    expect(await screen.findByText(/Koneksi terputus/i)).toBeInTheDocument()
+  })
+
   it('menampilkan galat bersebab dan coba ulang saat jaringan gagal', async () => {
     const { server } = await import('@/api/mocks/server')
     const { http, HttpResponse } = await import('msw')

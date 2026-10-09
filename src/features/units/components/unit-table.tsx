@@ -2,7 +2,7 @@ import type { Unit } from '@/api/types'
 import { Button } from '@/ui/button'
 import { formatRupiah } from '@/lib/format'
 
-export function UnitTable({ units, onUbahStatus, onHapus }: { units: Unit[]; onUbahStatus: (unit: Unit) => void; onHapus: (unit: Unit) => void }) {
+export function UnitTable({ units, sibuk, onUbahStatus, onHapus }: { units: Unit[]; sibuk?: boolean; onUbahStatus: (unit: Unit) => void; onHapus: (unit: Unit) => void }) {
   return (
     <div className="overflow-x-auto rounded-xl border border-brand-border bg-brand-surface">
       <table className="w-full min-w-[44rem] border-collapse text-ui">
@@ -28,10 +28,10 @@ export function UnitTable({ units, onUbahStatus, onHapus }: { units: Unit[]; onU
               </td>
               <td className="px-4 py-3">
                 <div className="flex justify-end gap-2">
-                  <Button variant="outline" onClick={() => onUbahStatus(unit)}>
+                  <Button variant="outline" disabled={sibuk} onClick={() => onUbahStatus(unit)}>
                     Ubah status
                   </Button>
-                  <Button variant="destructive" onClick={() => onHapus(unit)}>
+                  <Button variant="destructive" disabled={sibuk} onClick={() => onHapus(unit)}>
                     Hapus
                   </Button>
                 </div>
