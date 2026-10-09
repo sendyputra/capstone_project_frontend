@@ -1,35 +1,91 @@
-# React + TypeScript + Vite
+# Nusantara Booking — Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Aplikasi React untuk Nusantara Booking (pengelolaan & sewa properti UMKM). Repo ini
+terpisah dari backend Laravel dan berbicara lewat REST. Potongan ini berisi kerangka
+aplikasi plus satu alur utuh: masuk → kelola unit pemilik.
 
-Currently, two official plugins are available:
+## Menjalankan
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
-
-## React Compiler
-
-The React Compiler is enabled on this template. See [this documentation](https://react.dev/learn/react-compiler) for more information.
-
-Note: This will impact Vite dev & build performances.
-You can also try [the experimental native React Compiler support in plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md#rust-react-compiler) by using `compiler: true` in the plugin options instead of using the Babel plugin.
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```bash
+bun install
+VITE_API_MOCK=on bun run dev
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+Buka `http://localhost:5173/masuk`.
+
+Tanpa `VITE_API_MOCK=on`, aplikasi akan memanggil API sungguhan di `VITE_API_BASE_URL`.
+
+## Perintah
+
+| Perintah | Kegunaan |
+|---|---|
+| `bun run dev` | Server pengembangan Vite |
+| `bun run build` | `tsc -b` lalu `vite build` |
+| `bun run lint` | oxlint |
+| `bun run typecheck` | `tsc -b --noEmit` |
+| `bun run test` | Vitest sekali jalan |
+| `bun run test:watch` | Vitest mode pantau |
+| `bun run tokens:sync` | Menyalin token desain dari repo naskah |
+| `bun run check:styles` | Menolak kelas warna mentah di `src/` |
+
+## Akun demo
+
+Kata sandi apa pun diterima asalkan panjangnya minimal 8 karakter.
+
+| Email | Peran |
+|---|---|
+| `wahyu@umkm.id` | Pemilik |
+| `rina@umkm.id` | Pemilik |
+| `admin@nusantarabooking.id` | Admin |
+
+## Variabel lingkungan
+
+Disalin dari `.env.example` ke `.env.local` bila perlu.
+
+| Variabel | Isi |
+|---|---|
+| `VITE_API_BASE_URL` | Alamat API Laravel. Kosongkan untuk memakai jalur relatif. |
+| `VITE_API_MOCK` | `on` = data contoh lewat MSW; `off` = memanggil API sungguhan. |
+
+Berpindah ke API asli cukup dengan mematikan `VITE_API_MOCK` dan mengisi
+`VITE_API_BASE_URL`; tidak ada berkas fitur yang perlu disentuh. Handler mock boleh
+ditinggalkan sebagai alat demo.
+
+## Token desain
+
+Bahasa visual berasal dari repo naskah (`capstone_project_6/opendesign`). Berkas
+`src/styles/tokens.css` dan `src/styles/assets/plus-jakarta-sans-latin.woff2` adalah
+**salinan turunan** — jangan disunting di repo ini. Sunting berkas kanoniknya di
+`opendesign/`, lalu jalankan:
+
+```bash
+bun run tokens:sync
+```
+
+Jalur repo naskah bisa ditimpa lewat variabel `CAPSTONE_NASKAH`. `src/styles/index.css`
+memetakan token itu ke kelas utilitas Tailwind v4 dan ke nama variabel yang diharapkan
+komponen shadcn. Pagar `bun run check:styles` menolak kelas warna mentah supaya aturan
+tersebut tidak bisa dilanggar tanpa ketahuan.
+
+## Kontrak API
+
+Kontrak API potongan ini hidup di repo ini saja (belum disepakati dengan backend) dan
+diperlakukan sebagai usulan yang bisa dibawa ke backend saat integrasi dimulai. Handler
+MSW di `src/api/mocks/handlers/` dan klien bertipe di `src/api/client.ts` adalah bentuk
+kontrak berjalan.
+
+```
+POST   /auth/login   { email, password }                 -> { token, user }
+GET    /auth/me                                          -> { user }
+GET    /units                                            -> { data: Unit[] }
+POST   /units        { name, address, price, status }    -> { data: Unit }
+GET    /units/:id                                        -> { data: Unit }
+PATCH  /units/:id    { name?, address?, price?, status? } -> { data: Unit }
+DELETE /units/:id                                        -> 204
+
+User { id, name, email, role }   role: "penyewa" | "pemilik" | "admin"
+Unit { id, owner_id, name, address, price, status }   status: "Tersedia" | "Terisi"
+```
+
+Nilai uang dikirim sebagai angka rupiah utuh; string desimal dari kolom `decimal(15,2)`
+dinormalisasi di `src/lib/format.ts`.
