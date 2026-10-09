@@ -22,3 +22,10 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Kunci layanan dan berkas rahasia — jangan pernah masuk repo
+*-firebase-adminsdk-*.json
+service-account*.json
+.env
+.env.*
+!.env.example
