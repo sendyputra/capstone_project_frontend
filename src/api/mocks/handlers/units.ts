@@ -21,10 +21,10 @@ export const unitHandlers = [
     const peran = penggunaById(sub)?.role
 
     /* Cakupan dibaca dari token, seperti backend asli: pemilik hanya unitnya,
-       penyewa hanya yang tersedia, admin seluruh unit lintas pemilik. */
+       sedangkan katalog penyewa dan panel admin melihat seluruh unit lintas
+       pemilik — purwarupa menampilkan lencana status di katalog. */
     let data = units
     if (peran === 'pemilik') data = units.filter((unit) => unit.owner_id === sub)
-    else if (peran === 'penyewa') data = units.filter((unit) => unit.status === 'Tersedia')
 
     return HttpResponse.json({ data: data.map(barisUnit) })
   }),

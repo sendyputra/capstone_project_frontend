@@ -1,6 +1,8 @@
 import { http, HttpResponse } from 'msw'
 import { bookings } from '@/api/mocks/data/bookings'
+import { tenants } from '@/api/mocks/data/tenants'
 import { subDariToken } from '@/api/mocks/token'
+import { gagalSekali } from '@/api/mocks/handlers/simulasi'
 import { tenantById, unitById } from '@/api/mocks/join'
 import type { Booking, BookingRow } from '@/api/types'
 
@@ -28,5 +30,23 @@ export const bookingHandlers = [
     const { status } = (await request.json()) as Pick<Booking, 'status'>
     pengajuan.status = status
     return HttpResponse.json({ data: barisPengajuan(pengajuan) })
+  }),
+
+  http.post('/bookings', async ({ request }) => {
+    const { unit_id, duration } = (await request.json()) as { unit_id: number; duration?: string }
+    if (gagalSekali('POST /bookings')) {
+      return HttpResponse.json({ message: 'Pengajuan gagal terkirim karena koneksi terputus. Periksa jaringan, lalu coba lagi.' }, { status: 500 })
+    }
+    const sub = subDariToken(request.headers.get('Authorization'))
+    const tenant = tenants.find((kandidat) => kandidat.user_id === sub)
+    const pengajuan: Booking = {
+      id: 100 + bookings.length + 1,
+      unit_id,
+      tenant_id: tenant?.id ?? 1,
+      duration: duration ?? '1 Bulan',
+      status: 'Menunggu Persetujuan',
+    }
+    bookings.push(pengajuan)
+    return HttpResponse.json({ data: barisPengajuan(pengajuan) }, { status: 201 })
   }),
 ]
