@@ -27,7 +27,7 @@ export function UnitDetailPage({ mode = 'penyewa' }: { mode?: 'penyewa' | 'pemil
     setGalat('')
     ajukan.mutate(unitId, {
       onSuccess: () => {
-        tampilkan('Pengajuan sewa telah diteruskan ke WhatsApp pemilik properti.', 'success')
+        tampilkan('Pengajuan sewa terkirim dan masuk daftar pengajuan pemilik.', 'success')
         navigate('/katalog')
       },
       onError: (eror) => setGalat((eror as Error).message),
@@ -90,7 +90,7 @@ export function UnitDetailPage({ mode = 'penyewa' }: { mode?: 'penyewa' | 'pemil
                 disabled={ajukan.isPending}
                 className="w-full rounded-xl bg-brand-accent py-3 text-ui font-bold text-brand-accent-fg shadow-lg disabled:opacity-70"
               >
-                {ajukan.isPending ? 'Mengirim pengajuan…' : galat ? 'Coba Lagi' : 'Ajukan Sewa via WhatsApp'}
+                {ajukan.isPending ? 'Mengirim pengajuan…' : galat ? 'Coba Lagi' : 'Ajukan Sewa'}
               </button>
             )}
           </div>
