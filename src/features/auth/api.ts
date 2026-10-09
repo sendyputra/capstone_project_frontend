@@ -35,6 +35,18 @@ export function useLogin() {
   })
 }
 
+export function useRegister() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (masukan: { email: string; password: string }) =>
+      apiFetch<{ token: string; user: User }>('/auth/register', { method: 'POST', body: masukan }),
+    onSuccess: (hasil) => {
+      writeSession({ token: hasil.token, user: hasil.user })
+      queryClient.setQueryData(['auth', 'me', hasil.user.id], hasil.user)
+    },
+  })
+}
+
 export function useLogout() {
   const queryClient = useQueryClient()
   return () => {
