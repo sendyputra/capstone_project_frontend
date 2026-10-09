@@ -11,5 +11,10 @@ export default defineConfig({
     setupFiles: ['./src/test/setup.ts'],
     css: false,
     env: { NODE_ENV: 'test' },
+    /* Layar katalog, kalender, dan tabel membuat jsdom berat; worker yang
+       terlalu banyak membuat tes yang cepat di luar menjadi kehabisan waktu. */
+    maxWorkers: 2,
+    testTimeout: 20000,
+    hookTimeout: 20000,
   },
 })
