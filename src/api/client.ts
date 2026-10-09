@@ -1,5 +1,5 @@
 import { ApiError } from '@/api/types'
-import { readSession } from '@/features/auth/session'
+import { clearSession, readSession, tandaiSesiKedaluwarsa } from '@/features/auth/session'
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? ''
 
@@ -51,6 +51,13 @@ export async function apiFetch<T>(
 
   if (!respons.ok) {
     const kind = jenisGalat(respons.status)
+    /* Permintaan bertoken yang ditolak berarti sesinya tidak berlaku lagi —
+       buang sekali di sini supaya penjaga rute mengantar kembali ke /masuk.
+       Permintaan tanpa sesi (mis. login gagal) tidak mengubah apa pun. */
+    if (kind === 'unauthorized' && sesi) {
+      clearSession()
+      tandaiSesiKedaluwarsa()
+    }
     const fields = kind === 'validation' ? (muatan.errors as Record<string, string>) : undefined
     throw new ApiError(kind, respons.status, muatan.message ?? pesanUmum[kind], fields)
   }

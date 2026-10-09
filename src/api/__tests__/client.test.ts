@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { apiFetch } from '@/api/client'
 import { ApiError } from '@/api/types'
 import { server } from '@/api/mocks/server'
-import { writeSession } from '@/features/auth/session'
+import { readSession, writeSession } from '@/features/auth/session'
 
 describe('apiFetch', () => {
   it('menyisipkan token dari sesi', async () => {
@@ -36,6 +36,13 @@ describe('apiFetch', () => {
     const galat = (await apiFetch('/percobaan').catch((e: unknown) => e)) as ApiError
     expect(galat).toBeInstanceOf(ApiError)
     expect(galat.kind).toBe('unauthorized')
+  })
+
+  it('membuang sesi saat permintaan bertoken dijawab 401', async () => {
+    writeSession({ token: 'mock.abc.tanda', user: { id: 402, name: 'Pak Wahyu', email: 'wahyu@umkm.id', role: 'pemilik' } })
+    server.use(http.get('/percobaan', () => HttpResponse.json({ message: 'Sesi tidak sah.' }, { status: 401 })))
+    await apiFetch('/percobaan').catch(() => undefined)
+    expect(readSession()).toBeNull()
   })
 
   it('memetakan 500 menjadi galat server yang bisa diulang', async () => {

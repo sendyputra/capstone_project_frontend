@@ -1,6 +1,6 @@
 import { screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { MemoryRouter } from 'react-router'
+import { MemoryRouter, Route, Routes } from 'react-router'
 import { describe, expect, it } from 'vitest'
 import { LoginPage } from '@/features/auth/pages/login-page'
 import { readSession } from '@/features/auth/session'
@@ -38,5 +38,21 @@ describe('LoginPage', () => {
     await userEvent.type(screen.getByLabelText('Kata sandi'), 'rahasia123')
     await userEvent.click(screen.getByRole('button', { name: 'Masuk' }))
     expect(await screen.findByRole('alert')).toHaveTextContent(/tidak cocok/i)
+  })
+
+  it('mengantar tiap peran ke rute awalnya sendiri', async () => {
+    renderWithProviders(
+      <MemoryRouter initialEntries={['/masuk']}>
+        <Routes>
+          <Route path="/masuk" element={<LoginPage />} />
+          <Route path="/pemilik" element={<p>Dashboard pemilik</p>} />
+          <Route path="/admin/unit" element={<p>Area admin</p>} />
+        </Routes>
+      </MemoryRouter>,
+    )
+    await userEvent.type(screen.getByLabelText('Email / Nomor WhatsApp'), 'admin@nusantarabooking.id')
+    await userEvent.type(screen.getByLabelText('Kata sandi'), 'rahasia123')
+    await userEvent.click(screen.getByRole('button', { name: 'Masuk' }))
+    expect(await screen.findByText('Area admin')).toBeInTheDocument()
   })
 })

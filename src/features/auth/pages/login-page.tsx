@@ -1,21 +1,35 @@
 import { zodResolver } from '@hookform/resolvers/zod'
+import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useNavigate } from 'react-router'
-import { ApiError } from '@/api/types'
+import { ApiError, type Role } from '@/api/types'
 import { useLogin } from '@/features/auth/api'
+import { bacaSesiKedaluwarsa, bersihkanSesiKedaluwarsa } from '@/features/auth/session'
 import { loginSchema, type LoginValues } from '@/features/auth/schema'
 import { Button } from '@/ui/button'
 import { Input } from '@/ui/input'
 import { Label } from '@/ui/label'
 
+/* Tiap peran mendarat di rute awalnya sendiri; admin belum punya beranda
+   penuh, jadi diarahkan ke halaman admin pertama yang ada di peta rute. */
+function ruteAwal(role: Role): string {
+  if (role === 'pemilik') return '/pemilik'
+  if (role === 'admin') return '/admin/unit'
+  return '/'
+}
+
 export function LoginPage() {
   const masuk = useLogin()
   const navigate = useNavigate()
+  const [kedaluwarsa] = useState(bacaSesiKedaluwarsa)
+  useEffect(() => {
+    bersihkanSesiKedaluwarsa()
+  }, [])
   const form = useForm<LoginValues>({ resolver: zodResolver(loginSchema), defaultValues: { email: '', password: '' } })
 
   const onSubmit = form.handleSubmit((nilai) => {
     masuk.mutate(nilai, {
-      onSuccess: () => navigate('/pemilik', { replace: true }),
+      onSuccess: (hasil) => navigate(ruteAwal(hasil.user.role), { replace: true }),
       onError: (galat) => {
         if (galat instanceof ApiError && galat.kind === 'validation' && galat.fields) {
           Object.entries(galat.fields).forEach(([bidang, pesan]) => {
@@ -32,6 +46,12 @@ export function LoginPage() {
       <p className="mt-1 text-body text-brand-text-muted">Kelola unit, kontrak, dan tagihan dari satu tempat.</p>
 
       <form onSubmit={onSubmit} noValidate className="mt-6 space-y-4 rounded-xl border border-brand-border bg-brand-surface p-6 shadow-sm">
+        {kedaluwarsa && (
+          <p role="alert" className="rounded-md border border-brand-danger-border bg-brand-danger-soft p-3 text-ui text-brand-danger-soft-fg">
+            Sesi Anda berakhir. Silakan masuk kembali.
+          </p>
+        )}
+
         {masuk.isError && !form.formState.errors.email && (
           <p role="alert" className="rounded-md border border-brand-danger-border bg-brand-danger-soft p-3 text-ui text-brand-danger-soft-fg">
             {(masuk.error as Error).message}

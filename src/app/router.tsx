@@ -19,6 +19,7 @@ export const router = createBrowserRouter([
       { path: '/pemilik', element: <RequireRole role="pemilik"><OwnerDashboardPage /></RequireRole> },
       { path: '/pemilik/unit', element: <RequireRole role="pemilik"><UnitListPage /></RequireRole> },
       { path: '/pemilik/unit/baru', element: <RequireRole role="pemilik"><UnitFormPage /></RequireRole> },
+      { path: '/admin/unit', element: <RequireRole role="admin"><p className="p-8">Area admin menyusul.</p></RequireRole> },
     ],
   },
 ])
