@@ -1,0 +1,160 @@
+/* Bahasa visual berasal dari repo naskah. tokens.css adalah salinan turunan;
+   sunting berkas kanoniknya di opendesign/ lalu jalankan `bun run tokens:sync`.
+   Berkas ini yang memetakan token ke kelas utilitas Tailwind dan ke nama
+   variabel yang diharapkan komponen shadcn. */
+@import 'tailwindcss';
+@import './tokens.css';
+
+@theme inline {
+  /* Palet bawaan Tailwind dimatikan supaya kelas warna mentah tidak bisa
+     dipakai sama sekali; semua warna harus lewat token. */
+  --color-*: initial;
+
+  /* Ramps */
+  --color-brand-blue-50: var(--nb-blue-50);
+  --color-brand-blue-100: var(--nb-blue-100);
+  --color-brand-blue-200: var(--nb-blue-200);
+  --color-brand-blue-600: var(--nb-blue-600);
+  --color-brand-blue-700: var(--nb-blue-700);
+  --color-brand-blue-800: var(--nb-blue-800);
+  --color-brand-blue-900: var(--nb-blue-900);
+  --color-brand-teal-50: var(--nb-teal-50);
+  --color-brand-teal-200: var(--nb-teal-200);
+  --color-brand-teal-700: var(--nb-teal-700);
+  --color-brand-teal-800: var(--nb-teal-800);
+  --color-brand-neutral-50: var(--nb-neutral-50);
+  --color-brand-neutral-100: var(--nb-neutral-100);
+  --color-brand-neutral-300: var(--nb-neutral-300);
+  --color-brand-neutral-600: var(--nb-neutral-600);
+  --color-brand-neutral-700: var(--nb-neutral-700);
+  --color-brand-neutral-800: var(--nb-neutral-800);
+  --color-brand-neutral-900: var(--nb-neutral-900);
+  --color-brand-neutral-950: var(--nb-neutral-950);
+
+  /* Semantik — mengikuti tema dan peran yang aktif */
+  --color-brand-bg: var(--bg);
+  --color-brand-surface: var(--surface);
+  --color-brand-surface-raised: var(--surface-raised);
+  --color-brand-surface-sunken: var(--surface-sunken);
+  --color-brand-surface-inverse: var(--surface-inverse);
+  --color-brand-text-inverse: var(--text-inverse);
+  --color-brand-ink: var(--surface-inverse);
+  --color-brand-ink-hover: var(--surface-inverse-hover);
+  --color-brand-border: var(--border);
+  --color-brand-border-strong: var(--border-strong);
+  --color-brand-text: var(--text);
+  --color-brand-text-muted: var(--text-muted);
+  --color-brand-text-subtle: var(--text-subtle);
+
+  /* Aksen: satu peran. `data-role="owner"` menggantinya ke teal. */
+  --color-brand-accent: var(--accent);
+  --color-brand-accent-hover: var(--accent-hover);
+  --color-brand-accent-active: var(--accent-active);
+  --color-brand-accent-soft: var(--accent-soft);
+  --color-brand-accent-soft-fg: var(--accent-soft-fg);
+  --color-brand-accent-border: var(--accent-border);
+  --color-brand-accent-track: var(--accent-track);
+  --color-brand-accent-fg: var(--accent-fg);
+  --color-brand-owner: var(--nb-teal-700);
+  --color-brand-owner-hover: var(--accent-hover);
+
+  /* Status */
+  --color-brand-success: var(--success-solid);
+  --color-brand-success-soft: var(--success-soft);
+  --color-brand-success-soft-fg: var(--success-soft-fg);
+  --color-brand-success-border: var(--success-border);
+  --color-brand-success-fg: var(--success-fg);
+  --color-brand-warning-soft: var(--warning-soft);
+  --color-brand-warning-soft-fg: var(--warning-soft-fg);
+  --color-brand-danger: var(--danger-solid);
+  --color-brand-danger-hover: var(--danger-solid-hover);
+  --color-brand-danger-soft: var(--danger-soft);
+  --color-brand-danger-soft-fg: var(--danger-soft-fg);
+  --color-brand-danger-border: var(--danger-border);
+  --color-brand-danger-fg: var(--danger-fg);
+  --color-brand-info-soft: var(--info-soft);
+  --color-brand-info-soft-fg: var(--info-soft-fg);
+
+  /* Nama yang diharapkan komponen shadcn, diarahkan ke token yang sama.
+     `accent` di sini adalah permukaan hover bawaan shadcn, bukan aksen merek;
+     aksen merek dipakai lewat `primary`. */
+  --color-background: var(--bg);
+  --color-foreground: var(--text);
+  --color-card: var(--surface);
+  --color-card-foreground: var(--text);
+  --color-popover: var(--surface-raised);
+  --color-popover-foreground: var(--text);
+  --color-primary: var(--accent);
+  --color-primary-foreground: var(--accent-fg);
+  --color-secondary: var(--surface-sunken);
+  --color-secondary-foreground: var(--text);
+  --color-muted: var(--surface-sunken);
+  --color-muted-foreground: var(--text-muted);
+  --color-accent: var(--surface-sunken);
+  --color-accent-foreground: var(--text);
+  --color-destructive: var(--danger-solid);
+  --color-destructive-foreground: var(--danger-fg);
+  --color-border: var(--border);
+  --color-input: var(--border-strong);
+  --color-ring: var(--ring);
+
+  /* Tipe, radius, elevasi, gerak, dan struktur */
+  --font-sans: var(--font-body);
+  --font-heading: var(--font-display);
+  --font-mono: var(--font-mono);
+  --text-micro: var(--text-micro);
+  --text-label: var(--text-label);
+  --text-ui: var(--text-ui);
+  --text-body: var(--text-body);
+  --text-heading-s: var(--text-heading-s);
+  --text-heading-m: var(--text-heading-m);
+  --text-heading-l: var(--text-heading-l);
+  --tracking-label: var(--tracking-label);
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+  --radius-xl: var(--radius-xl);
+  --radius-2xl: var(--radius-2xl);
+  --radius-full: var(--radius-full);
+  --shadow-xs: var(--shadow-xs);
+  --shadow-sm: var(--shadow-sm);
+  --shadow-md: var(--shadow-md);
+  --shadow-lg: var(--shadow-lg);
+  --shadow-xl: var(--shadow-xl);
+  --container-container: var(--container-max);
+  --spacing-appbar: var(--appbar-height);
+}
+
+@layer base {
+  :root {
+    --radius: var(--radius-md);
+    --background: var(--bg);
+    --foreground: var(--text);
+    --card: var(--surface);
+    --card-foreground: var(--text);
+    --popover: var(--surface-raised);
+    --popover-foreground: var(--text);
+    --primary: var(--accent);
+    --primary-foreground: var(--accent-fg);
+    --secondary: var(--surface-sunken);
+    --secondary-foreground: var(--text);
+    --muted: var(--surface-sunken);
+    --muted-foreground: var(--text-muted);
+    --accent: var(--surface-sunken);
+    --accent-foreground: var(--text);
+    --destructive: var(--danger-solid);
+    --destructive-foreground: var(--danger-fg);
+    --input: var(--border-strong);
+  }
+
+  html {
+    font-family: var(--font-body);
+    background: var(--bg);
+    color: var(--text);
+  }
+
+  :focus-visible {
+    outline: var(--ring-width) solid var(--ring);
+    outline-offset: var(--ring-offset);
+  }
+}
