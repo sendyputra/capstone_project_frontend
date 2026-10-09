@@ -8,6 +8,8 @@ import { AdminPembayaranPage } from '@/features/admin/pages/admin-pembayaran-pag
 import { AdminPenggunaPage } from '@/features/admin/pages/admin-pengguna-page'
 import { AdminUnitPage } from '@/features/admin/pages/admin-unit-page'
 import { LoginPage } from '@/features/auth/pages/login-page'
+import { RegisterPage } from '@/features/auth/pages/register-page'
+import { BantuanPage } from '@/features/help/pages/bantuan-page'
 import { LandingPage } from '@/features/landing/pages/landing-page'
 import { TagihanPage } from '@/features/billing/pages/tagihan-page'
 import { PengajuanPage } from '@/features/bookings/pages/pengajuan-page'
@@ -25,6 +27,8 @@ export const routes: RouteObject[] = [
     element: <AppShell />,
     children: [
       { path: '/masuk', element: <LoginPage /> },
+      { path: '/daftar', element: <RegisterPage /> },
+      { path: '/bantuan', element: <BantuanPage /> },
       { path: '/403', element: <ForbiddenPage /> },
       { path: '/', element: <LandingPage /> },
       { path: '/katalog', element: <RequireRole role="penyewa"><KatalogPage /></RequireRole> },
