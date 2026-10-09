@@ -3,6 +3,8 @@
    Berkas ini yang memetakan token ke kelas utilitas Tailwind dan ke nama
    variabel yang diharapkan komponen shadcn. */
 @import 'tailwindcss';
+@import 'tw-animate-css';
+@import 'shadcn/tailwind.css';
 @import './tokens.css';
 
 @theme inline {
@@ -147,10 +149,18 @@
     --input: var(--border-strong);
   }
 
+  * {
+    @apply border-border outline-ring/50;
+  }
+
   html {
     font-family: var(--font-body);
     background: var(--bg);
     color: var(--text);
+  }
+
+  body {
+    @apply bg-background text-foreground;
   }
 
   :focus-visible {
