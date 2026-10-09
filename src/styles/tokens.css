@@ -1,0 +1,472 @@
+/* ==========================================================================
+   Nusantara Booking — Design Tokens
+   Version 1.0.0 · source: existing-artifact
+   --------------------------------------------------------------------------
+   Extracted from the shipped Nusantara Booking prototypes (index.html,
+   pengalih-peran.html) and the NB monogram mark. This file is the single source of
+   truth for colour, type, space, radius, elevation and motion.
+
+   Nothing in here sets layout or component structure. Components consume
+   these custom properties; no component hard-codes a raw value.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. Typeface
+   One humanist family with a wide weight range carries both display and body.
+   The variable face keeps 400–800 in a single 27 KB download.
+   -------------------------------------------------------------------------- */
+
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  src: url('assets/plus-jakarta-sans-latin.woff2') format('woff2');
+  font-weight: 400 800;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+                 U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193,
+                 U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+:root {
+  /* ------------------------------------------------------------------------
+     2. Base palette
+     Two brand ramps generated from the source literals #1b4b9b (Nusantara
+     Blue, the primary CTA and heading colour in both prototypes) and
+     #00a3ad (Nusantara Teal, the owner-side accent). The 500 step is the
+     brand literal itself in each case.
+     ------------------------------------------------------------------------ */
+
+  --nb-blue-50:  #eef4fc;
+  --nb-blue-100: #d9e6f8;
+  --nb-blue-200: #b3ccf1;
+  --nb-blue-300: #85ade6;
+  --nb-blue-400: #5489d8;
+  --nb-blue-500: #2f6ac4;
+  --nb-blue-600: #1b4b9b;  /* brand literal */
+  --nb-blue-700: #163d80;
+  --nb-blue-800: #122f63;
+  --nb-blue-900: #0d2247;
+  --nb-blue-950: #07152c;
+
+  --nb-teal-50:  #e6f8f9;
+  --nb-teal-100: #c2eef1;
+  --nb-teal-200: #8bdfe4;
+  --nb-teal-300: #4fcbd3;
+  --nb-teal-400: #1ab3bd;
+  --nb-teal-500: #00a3ad;  /* brand literal */
+  --nb-teal-600: #00848f;
+  --nb-teal-700: #066972;
+  --nb-teal-800: #0b535a;
+  --nb-teal-900: #0d444a;
+  --nb-teal-950: #032a2e;
+
+  /* Neutral ramp. The 950 step is the source page ground; the rest is a
+     cool grey that keeps company with both brand ramps. */
+  --nb-neutral-50:  #f7f9fb;
+  --nb-neutral-100: #eef2f6;
+  --nb-neutral-200: #dfe6ee;
+  --nb-neutral-300: #c6d1de;
+  --nb-neutral-400: #93a3b8;
+  --nb-neutral-500: #6b7c92;
+  --nb-neutral-600: #4f5f75;
+  --nb-neutral-700: #3c4a5d;
+  --nb-neutral-800: #2a3546;
+  --nb-neutral-900: #1a2333;
+  --nb-neutral-950: #0f172a;
+
+  /* Status ramps. Step 700 is the solid fill in every case because steps
+     500 and 600 of these hues fail 4.5:1 against white text. */
+  --nb-success-50:  #ecfdf5;
+  --nb-success-100: #d1fae5;
+  --nb-success-200: #a7f3d0;
+  --nb-success-400: #34d399;
+  --nb-success-500: #10b981;
+  --nb-success-600: #059669;
+  --nb-success-700: #047857;  /* solid fill, 5.55:1 on white */
+  --nb-success-800: #065f46;
+
+  --nb-warning-50:  #fffbeb;
+  --nb-warning-100: #fef3c7;
+  --nb-warning-200: #fde68a;
+  --nb-warning-400: #fbbf24;
+  --nb-warning-500: #f59e0b;
+  --nb-warning-600: #d97706;
+  --nb-warning-700: #b45309;  /* solid fill, 5.02:1 on white */
+  --nb-warning-800: #92400e;
+
+  --nb-danger-50:  #fff1f2;
+  --nb-danger-100: #ffe4e6;
+  --nb-danger-200: #fecdd3;
+  --nb-danger-400: #fb7185;
+  --nb-danger-500: #f43f5e;
+  --nb-danger-600: #e11d48;
+  --nb-danger-700: #be123c;  /* solid fill, 6.20:1 on white */
+  --nb-danger-800: #9f1239;
+
+  /* Third-party marks. Used only inside their own brand chip, never as a
+     surface or an accent. */
+  --nb-instagram: #e1306c;
+  --nb-whatsapp:  #25d366;
+
+  /* ------------------------------------------------------------------------
+     3. Semantic aliases — light theme
+     Components reference these, never the ramp steps directly.
+     ------------------------------------------------------------------------ */
+
+  --bg:              var(--nb-neutral-50);
+  --bg-subtle:       var(--nb-neutral-100);
+  --surface:         #ffffff;
+  --surface-raised:  #ffffff;
+  --surface-sunken:  var(--nb-neutral-100);
+  --surface-inverse: var(--nb-neutral-950);
+  --surface-inverse-hover: var(--nb-neutral-800);
+
+  --border:          var(--nb-neutral-200);
+  --border-strong:   var(--nb-neutral-300);
+  --border-inverse:  var(--nb-neutral-800);
+
+  --text:            var(--nb-neutral-950);   /* 15.9:1 on --bg */
+  --text-muted:      var(--nb-neutral-600);   /*  6.4:1 on --bg */
+  --text-subtle:     var(--nb-neutral-500);   /*  4.9:1 on --bg, large text only */
+  --text-inverse:    var(--nb-neutral-50);
+
+  --success-solid:  var(--nb-success-700);
+  --success-solid-hover: var(--nb-success-800);
+  --success-fg:     #ffffff;
+  --success-soft:   var(--nb-success-50);
+  --success-soft-fg: var(--nb-success-800);
+  --success-border: var(--nb-success-200);
+
+  --warning-solid:  var(--nb-warning-700);
+  --warning-fg:     #ffffff;
+  --warning-soft:   var(--nb-warning-50);
+  --warning-soft-fg: var(--nb-warning-800);
+  --warning-border: var(--nb-warning-200);
+
+  --danger-solid:   var(--nb-danger-700);
+  --danger-solid-hover: var(--nb-danger-800);
+  --danger-fg:      #ffffff;
+  --danger-soft:    var(--nb-danger-50);
+  --danger-soft-fg: var(--nb-danger-800);
+  --danger-border:  var(--nb-danger-200);
+
+  --info-solid:     var(--nb-blue-700);
+  --info-fg:        #ffffff;
+  --info-soft:      var(--nb-blue-50);
+  --info-soft-fg:   var(--nb-blue-800);
+  --info-border:    var(--nb-blue-200);
+
+  --ring:           var(--nb-blue-600);
+  --ring-width:     2px;
+  --ring-offset:    2px;
+
+  /* ------------------------------------------------------------------------
+     4. Role accents
+     The product carries two roles. Each gets one accent, swapped by a single
+     attribute on the root — no duplicated component classes.
+     ------------------------------------------------------------------------ */
+
+  --accent:        var(--nb-blue-600);   /* 8.66:1 with white */
+  --accent-hover:  var(--nb-blue-700);
+  --accent-active: var(--nb-blue-800);
+  --accent-soft:   var(--nb-blue-50);
+  --accent-soft-fg: var(--nb-blue-800);
+  --accent-border: var(--nb-blue-200);
+  --accent-fg:     #ffffff;
+  --accent-track:  var(--nb-blue-100);
+}
+
+/* Owner role — teal accent, everything else unchanged. */
+[data-role='owner'] {
+  --accent:        var(--nb-teal-700);   /* 6.33:1 with white */
+  --accent-hover:  var(--nb-teal-800);
+  --accent-active: var(--nb-teal-900);
+  --accent-soft:   var(--nb-teal-50);
+  --accent-soft-fg: var(--nb-teal-800);
+  --accent-border: var(--nb-teal-200);
+  --ring:          var(--nb-teal-700);
+  --accent-track:  var(--nb-teal-100);
+}
+
+/* Admin role — deliberately no block: the system carries two accent families
+   (renter blue, owner teal), so the admin console keeps the default accent and
+   sets itself apart with its own header band instead of a third hue. */
+
+/* ------------------------------------------------------------------------
+   5. Semantic aliases — dark theme
+   Chosen independently from the light theme, not derived by inversion.
+   Every text pair below was measured against its own ground.
+   ------------------------------------------------------------------------ */
+
+[data-theme='dark'] {
+  --bg:              #0b1220;
+  --bg-subtle:       #101a2c;
+  --surface:         #131c2e;
+  --surface-raised:  #1b2740;
+  --surface-sunken:  #0b1220;
+  --surface-inverse: var(--nb-neutral-100);
+  --surface-inverse-hover: var(--nb-neutral-300);
+
+  --border:          #27334a;
+  --border-strong:   #3a4864;
+  --border-inverse:  var(--nb-neutral-300);
+
+  --text:            #e8edf6;   /* 14.5:1 on --surface */
+  --text-muted:      #9aa8bf;   /*  7.8:1 on --bg */
+  --text-subtle:     #7e8ca3;   /*  5.3:1 on --bg, large text only */
+  --text-inverse:    var(--nb-neutral-950);
+
+  --success-solid:  var(--nb-success-600);
+  --success-solid-hover: var(--nb-success-500);
+  --success-fg:     #052e1f;
+  --success-soft:   #062e24;
+  --success-soft-fg: var(--nb-success-400);
+  --success-border: #0f5140;
+
+  --warning-solid:  var(--nb-warning-600);
+  --warning-fg:     #2b1a02;
+  --warning-soft:   #2c2208;
+  --warning-soft-fg: var(--nb-warning-400);
+  --warning-border: #57400f;
+
+  --danger-solid:   var(--nb-danger-600);
+  --danger-solid-hover: var(--nb-danger-500);
+  --danger-fg:      #2d0410;
+  --danger-soft:    #2e0a17;
+  --danger-soft-fg: var(--nb-danger-400);
+  --danger-border:  #5c1229;
+
+  --info-solid:     var(--nb-blue-500);
+  --info-fg:        #04122b;
+  --info-soft:      #0d1b34;
+  --info-soft-fg:   var(--nb-blue-300);
+  --info-border:    #1d3a68;
+
+  --accent:        #6fa1f2;   /* 7.2:1 on the dark ground */
+  --accent-hover:  #8bb5f5;
+  --accent-active: #a8c8f8;
+  --accent-soft:   #16233c;
+  --accent-soft-fg: #a8c8f8;
+  --accent-border: #2a3f66;
+  --accent-fg:     #07152c;
+  --accent-track:  #1d2f50;
+  --ring:          #6fa1f2;
+}
+
+[data-theme='dark'][data-role='owner'] {
+  --accent:        #3fd0da;   /* 10.1:1 on the dark ground */
+  --accent-hover:  #63dde5;
+  --accent-active: #8ce8ee;
+  --accent-soft:   #072b30;
+  --accent-soft-fg: #8ce8ee;
+  --accent-border: #0f4a51;
+  --accent-fg:     #032a2e;
+  --accent-track:  #0d3b41;
+  --ring:          #3fd0da;
+}
+
+:root {
+  /* ------------------------------------------------------------------------
+     6. Typography
+     One family, a ten-step scale. Nothing below 14px carries prose; 11px is
+     reserved for badges and metadata chips.
+     ------------------------------------------------------------------------ */
+
+  --font-display: 'Plus Jakarta Sans', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --font-body:    'Plus Jakarta Sans', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --font-mono:    ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+
+  --weight-regular:  400;
+  --weight-medium:   500;
+  --weight-semibold: 600;
+  --weight-bold:     700;
+  --weight-black:    800;
+
+  --text-display-xl: 3rem;       /* 48px */
+  --text-display-l:  2.25rem;    /* 36px */
+  --text-display-m:  1.875rem;   /* 30px */
+  --text-heading-l:  1.5rem;     /* 24px */
+  --text-heading-m:  1.25rem;    /* 20px */
+  --text-heading-s:  1.125rem;   /* 18px */
+  --text-body:       1rem;       /* 16px */
+  --text-ui:         0.875rem;   /* 14px — dense data only */
+  --text-label:      0.75rem;    /* 12px */
+  --text-micro:      0.6875rem;  /* 11px — badges only */
+
+  --leading-display-xl: 1.05;
+  --leading-display-l:  1.1;
+  --leading-display-m:  1.15;
+  --leading-heading:    1.3;
+  --leading-body:       1.6;
+  --leading-ui:         1.55;
+  --leading-label:      1.4;
+  --leading-micro:      1.35;
+
+  --tracking-tight:  -0.02em;
+  --tracking-normal: 0;
+  --tracking-wide:   0.04em;
+  --tracking-label:  0.06em;
+  --tracking-wider:  0.1em;
+
+  /* ------------------------------------------------------------------------
+     7. Space — 4px base, 4/8 grid only
+     ------------------------------------------------------------------------ */
+
+  --space-0:  0;
+  --space-1:  0.25rem;   /*  4px */
+  --space-2:  0.5rem;    /*  8px */
+  --space-3:  0.75rem;   /* 12px */
+  --space-4:  1rem;      /* 16px */
+  --space-5:  1.25rem;   /* 20px */
+  --space-6:  1.5rem;    /* 24px */
+  --space-8:  2rem;      /* 32px */
+  --space-10: 2.5rem;    /* 40px */
+  --space-12: 3rem;      /* 48px */
+  --space-16: 4rem;      /* 64px */
+  --space-20: 5rem;      /* 80px */
+  --space-24: 6rem;      /* 96px */
+
+  --density-relaxed-gap: var(--space-6);
+  --density-standard-gap: var(--space-4);
+  --density-compact-gap: var(--space-2);
+
+  /* ------------------------------------------------------------------------
+     8. Radius — semantic, not decorative
+     ------------------------------------------------------------------------ */
+
+  --radius-xs:   4px;    /* chips, tags */
+  --radius-sm:   6px;    /* small controls */
+  --radius-md:   8px;    /* buttons, inputs, selects */
+  --radius-lg:   12px;   /* inner cards, in-page CTA blocks */
+  --radius-xl:   16px;   /* outer cards, panels */
+  --radius-2xl:  24px;   /* feature panels, modal shells */
+  --radius-full: 9999px; /* circles only — avatars, dots, pills */
+
+  --border-width:        1px;
+  --border-width-strong: 2px;
+
+  /* ------------------------------------------------------------------------
+     9. Elevation
+     Flat is the default. Shadow marks a layer that genuinely floats.
+     ------------------------------------------------------------------------ */
+
+  --shadow-none: none;
+  --shadow-xs: 0 1px 2px 0 rgb(15 23 42 / 0.05);
+  --shadow-sm: 0 1px 3px 0 rgb(15 23 42 / 0.08), 0 1px 2px -1px rgb(15 23 42 / 0.06);
+  --shadow-md: 0 4px 12px -2px rgb(15 23 42 / 0.10), 0 2px 6px -2px rgb(15 23 42 / 0.06);
+  --shadow-lg: 0 12px 28px -6px rgb(15 23 42 / 0.14), 0 4px 10px -4px rgb(15 23 42 / 0.08);
+  --shadow-xl: 0 24px 56px -12px rgb(15 23 42 / 0.22), 0 8px 20px -8px rgb(15 23 42 / 0.12);
+
+  --scrim: rgb(15 23 42 / 0.6);
+
+  /* ------------------------------------------------------------------------
+     9b. Gradient
+     Three surfaces in the source prototypes carried a gradient. They were
+     measured one stop at a time, against the text that actually sits on
+     them, and the result was not uniform:
+
+       hero              from-blue-900 via-sky-800 to-teal-800
+                         stops 10.36 / 7.56 / 7.58 : 1 on white  -> kept
+       dashboard header  from-slate-900 via-blue-950 to-slate-900
+                         stops 17.85 / 14.69 / 17.85 : 1 on white -> kept
+       primary button    from-blue-700 to-cyan-500
+                         blue-700 6.70 : 1, cyan-500 2.43 : 1 on white
+                                                            -> removed
+
+     Only the button failed. Its cyan end sits far too light for a white
+     label, so the label passed on the left of the button and failed on the
+     right. The button is a flat accent surface here.
+
+     The two kept gradients are not the source values: each stop is a step
+     from the brand ramps above, so nothing outside this file defines a
+     colour. A three-stop shape is preserved so the surfaces still read the
+     way they were designed to.
+
+     Measurement rule: check every stop, not the midpoint and not an average.
+     A gradient passes only when its worst stop passes, against the lightest
+     and the darkest text that sits on it.
+
+     The loading shimmer is the third gradient and the only non-surface one.
+     It is composed from aliases, so it re-derives itself in the dark theme
+     with no override.
+
+     Extending the system: a gradient is allowed only when every stop is
+     already a token, it is not redundant with a size, weight or spacing cue,
+     and each stop clears 4.5:1 against its text. Otherwise it is decoration
+     and does not ship.
+     ------------------------------------------------------------------------ */
+
+  --gradient-hero: linear-gradient(
+    100deg,
+    var(--nb-blue-900) 0%,
+    var(--nb-blue-700) 52%,
+    var(--nb-teal-800) 100%
+  );
+
+  --gradient-panel: linear-gradient(
+    100deg,
+    var(--nb-neutral-950) 0%,
+    var(--nb-blue-900) 50%,
+    var(--nb-neutral-950) 100%
+  );
+
+  --gradient-shimmer: linear-gradient(
+    90deg,
+    var(--surface-sunken) 25%,
+    var(--border) 50%,
+    var(--surface-sunken) 75%
+  );
+  --gradient-shimmer-size: 200% 100%;
+
+  /* ------------------------------------------------------------------------
+     10. Motion
+     ------------------------------------------------------------------------ */
+
+  --duration-instant: 100ms;
+  --duration-fast:    150ms;
+  --duration-base:    200ms;
+  --duration-slow:    300ms;
+  --duration-max:     400ms;
+
+  --ease-out:   cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in:    cubic-bezier(0.7, 0, 0.84, 0);
+  --ease-inout: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-linear: linear;
+
+  --stagger-step: 40ms;
+  --exit-ratio:   0.65;   /* exits run at 65% of the matching entrance */
+
+  /* ------------------------------------------------------------------------
+     11. Structure
+     ------------------------------------------------------------------------ */
+
+  --container-max: 80rem;
+  --sidebar-width: 17rem;
+  --appbar-height: 4rem;
+  --control-height-sm: 2rem;
+  --control-height-md: 2.5rem;
+  --control-height-lg: 3rem;
+  --tap-target: 44px;
+
+  --z-base: 0;
+  --z-sticky: 10;
+  --z-drawer: 40;
+  --z-modal: 50;
+  --z-toast: 60;
+}
+
+/* --------------------------------------------------------------------------
+   12. Reduced motion
+   Durations collapse; nothing is removed, so state changes stay legible.
+   -------------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-instant: 1ms;
+    --duration-fast:    1ms;
+    --duration-base:    1ms;
+    --duration-slow:    1ms;
+    --duration-max:     1ms;
+    --stagger-step:     0ms;
+  }
+}
