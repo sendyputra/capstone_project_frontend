@@ -67,6 +67,15 @@ export function useUpdateUnit() {
   })
 }
 
+export function useUbahStatusUnit() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, status }: { id: number; status: UnitRow['status'] }) =>
+      apiFetch<{ data: UnitRow }>(`/units/${id}/status`, { method: 'PATCH', body: { status } }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['units'] }),
+  })
+}
+
 export function useDeleteUnit() {
   const queryClient = useQueryClient()
   return useMutation({

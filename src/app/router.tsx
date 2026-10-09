@@ -5,6 +5,7 @@ import { AppShell } from '@/app/layouts/app-shell'
 import { LoginPage } from '@/features/auth/pages/login-page'
 import { LandingPage } from '@/features/landing/pages/landing-page'
 import { TagihanPage } from '@/features/billing/pages/tagihan-page'
+import { PengajuanPage } from '@/features/bookings/pages/pengajuan-page'
 import { OwnerDashboardPage } from '@/features/dashboard/pages/owner-dashboard-page'
 import { KatalogPage } from '@/features/units/pages/katalog-page'
 import { UnitDetailPage } from '@/features/units/pages/unit-detail-page'
@@ -27,6 +28,8 @@ export const routes: RouteObject[] = [
       { path: '/pemilik', element: <RequireRole role="pemilik"><OwnerDashboardPage /></RequireRole> },
       { path: '/pemilik/unit', element: <RequireRole role="pemilik"><UnitListPage /></RequireRole> },
       { path: '/pemilik/unit/baru', element: <RequireRole role="pemilik"><UnitFormPage /></RequireRole> },
+      { path: '/pemilik/unit/:id', element: <RequireRole role="pemilik"><UnitDetailPage mode="pemilik" /></RequireRole> },
+      { path: '/pemilik/pengajuan', element: <RequireRole role="pemilik"><PengajuanPage /></RequireRole> },
       { path: '/admin/unit', element: <RequireRole role="admin"><p className="p-8">Area admin menyusul.</p></RequireRole> },
     ],
   },

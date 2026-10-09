@@ -1,45 +1,59 @@
-import type { Unit } from '@/api/types'
-import { Button } from '@/ui/button'
+import { Link } from 'react-router'
+import type { UnitRow } from '@/api/types'
 import { formatRupiah } from '@/lib/format'
+import { StatusChip } from '@/ui/status-chip'
+import { Tabel } from '@/ui/tabel'
 
-export function UnitTable({ units, sibuk, onUbahStatus, onHapus }: { units: Unit[]; sibuk?: boolean; onUbahStatus: (unit: Unit) => void; onHapus: (unit: Unit) => void }) {
+export function UnitTable({
+  units,
+  sibuk,
+  onUbahStatus,
+  onHapus,
+  tampilkanPemilik = false,
+}: {
+  units: UnitRow[]
+  sibuk?: boolean
+  onUbahStatus: (unit: UnitRow) => void
+  onHapus: (unit: UnitRow) => void
+  tampilkanPemilik?: boolean
+}) {
+  const kolom = ['Info Unit', ...(tampilkanPemilik ? ['Pemilik'] : []), 'Tipe & Lokasi', 'Harga / Bulan', 'Status Unit', 'Kelola Kalender', 'Aksi']
+
   return (
-    <div className="overflow-x-auto rounded-xl border border-brand-border bg-brand-surface">
-      <table className="w-full min-w-[44rem] border-collapse text-ui">
-        <thead className="bg-brand-surface-sunken text-micro uppercase tracking-label text-brand-text-muted">
-          <tr>
-            <th className="px-4 py-3 text-left">Nama unit</th>
-            <th className="px-4 py-3 text-left">Lokasi</th>
-            <th className="px-4 py-3 text-right">Harga / bulan</th>
-            <th className="px-4 py-3 text-left">Status</th>
-            <th className="px-4 py-3 text-right">Aksi</th>
+    <div className="rounded-2xl border border-brand-border bg-brand-surface shadow-sm">
+      <Tabel kolom={kolom}>
+        {units.map((unit) => (
+          <tr key={unit.id} className="hover:bg-brand-bg">
+            <td className="p-4">
+              <div className="flex items-center gap-3">
+                <img src={unit.image} alt="" className="h-12 w-12 rounded-lg border border-brand-border object-cover" />
+                <span className="text-ui font-bold text-brand-text">{unit.name}</span>
+              </div>
+            </td>
+            {tampilkanPemilik && <td className="p-4 font-medium text-brand-text-muted">{unit.owner_name}</td>}
+            <td className="p-4">
+              <span className="block font-semibold text-brand-text">{unit.type}</span>
+              <span className="text-micro text-brand-text-subtle">{unit.address}</span>
+            </td>
+            <td className="p-4 font-extrabold text-brand-accent">{formatRupiah(unit.price)}</td>
+            <td className="p-4">
+              <button type="button" disabled={sibuk} onClick={() => onUbahStatus(unit)} aria-label={`Ubah status ${unit.name}`} className="flex items-center gap-1 rounded-full px-3 py-1 text-micro font-bold shadow-sm disabled:opacity-60">
+                <StatusChip nilai={unit.status} />
+              </button>
+            </td>
+            <td className="p-4 text-center">
+              <Link to={`/pemilik/unit/${unit.id}`} className="inline-block rounded-lg border border-brand-accent-border bg-brand-accent-soft px-3 py-2 text-ui font-semibold text-brand-accent">
+                Set Kalender
+              </Link>
+            </td>
+            <td className="p-4 text-right">
+              <button type="button" disabled={sibuk} onClick={() => onHapus(unit)} className="rounded-lg p-2 text-brand-danger disabled:opacity-60" title="Hapus Unit" aria-label="Hapus">
+                Hapus
+              </button>
+            </td>
           </tr>
-        </thead>
-        <tbody>
-          {units.map((unit) => (
-            <tr key={unit.id} className="border-t border-brand-border">
-              <td className="px-4 py-3 font-semibold text-brand-text">{unit.name}</td>
-              <td className="px-4 py-3 text-brand-text-muted">{unit.address}</td>
-              <td className="px-4 py-3 text-right text-brand-text">{formatRupiah(unit.price)}</td>
-              <td className="px-4 py-3">
-                <span className={unit.status === 'Tersedia' ? 'rounded-full bg-brand-success-soft px-3 py-1 text-micro font-bold text-brand-success-soft-fg' : 'rounded-full bg-brand-danger-soft px-3 py-1 text-micro font-bold text-brand-danger-soft-fg'}>
-                  {unit.status}
-                </span>
-              </td>
-              <td className="px-4 py-3">
-                <div className="flex justify-end gap-2">
-                  <Button variant="outline" disabled={sibuk} onClick={() => onUbahStatus(unit)}>
-                    Ubah status
-                  </Button>
-                  <Button variant="destructive" disabled={sibuk} onClick={() => onHapus(unit)}>
-                    Hapus
-                  </Button>
-                </div>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+        ))}
+      </Tabel>
     </div>
   )
 }
