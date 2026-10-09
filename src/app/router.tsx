@@ -1,4 +1,4 @@
-import { createBrowserRouter } from 'react-router'
+import { createBrowserRouter, type RouteObject } from 'react-router'
 import { ForbiddenPage } from '@/app/pages/forbidden-page'
 import { RequireRole } from '@/app/guards'
 import { AppShell } from '@/app/layouts/app-shell'
@@ -8,8 +8,9 @@ import { UnitFormPage } from '@/features/units/pages/unit-form-page'
 import { UnitListPage } from '@/features/units/pages/unit-list-page'
 
 /* AppShell adalah tata letak akar: semua rute berada di dalamnya, sehingga
-   bilah atas, tombol tema, dan atribut peran terpasang di setiap layar. */
-export const router = createBrowserRouter([
+   bilah atas, tombol tema, dan atribut peran terpasang di setiap layar. Dipisah
+   dari peramban perutean supaya peta rutenya bisa diuji lewat memori perutean. */
+export const routes: RouteObject[] = [
   {
     element: <AppShell />,
     children: [
@@ -22,4 +23,6 @@ export const router = createBrowserRouter([
       { path: '/admin/unit', element: <RequireRole role="admin"><p className="p-8">Area admin menyusul.</p></RequireRole> },
     ],
   },
-])
+]
+
+export const router = createBrowserRouter(routes)
