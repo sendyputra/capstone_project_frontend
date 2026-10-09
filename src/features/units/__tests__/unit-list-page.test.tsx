@@ -3,11 +3,11 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router'
 import { describe, expect, it } from 'vitest'
 import { UnitListPage } from '@/features/units/pages/unit-list-page'
-import { writeSession } from '@/features/auth/session'
+import { masukSebagai } from '@/test/sesi'
 import { renderWithProviders } from '@/test/render'
 
 function renderHalaman() {
-  writeSession({ token: 'mock.abc.tanda', user: { id: 402, name: 'Pak Wahyu', email: 'wahyu@umkm.id', role: 'pemilik' } })
+  masukSebagai(402, 'pemilik', 'Pak Wahyu')
   return renderWithProviders(
     <MemoryRouter initialEntries={['/pemilik/unit']}>
       <UnitListPage />
@@ -19,15 +19,23 @@ describe('UnitListPage', () => {
   it('menampilkan rangka bayangan lebih dulu, lalu daftar unit milik pemilik', async () => {
     renderHalaman()
     expect(screen.getAllByTestId('baris-rangka').length).toBeGreaterThan(0)
-    await waitFor(() => expect(screen.getByText('Kos Kamar 01')).toBeInTheDocument())
-    expect(screen.queryByText('Kos Kamar 04')).not.toBeInTheDocument()
+    const baris = (await screen.findByText('Kos Kamar 01')).closest('tr')!
+    expect(within(baris).getByText('Kamar Kos')).toBeInTheDocument()
+    expect(within(baris).getByText('Bandung Barat')).toBeInTheDocument()
+    expect(screen.queryByText('Kos Putri Melati Kamar B2')).not.toBeInTheDocument()
   })
 
-  it('mengubah status unit dan memperbarui barisnya', async () => {
+  it('menukar status unit lewat endpoint status', async () => {
     renderHalaman()
     const baris = (await screen.findByText('Kos Kamar 01')).closest('tr')!
     await userEvent.click(within(baris).getByRole('button', { name: /Ubah status/i }))
     await waitFor(() => expect(within(baris).getByText('Terisi')).toBeInTheDocument())
+  })
+
+  it('menyediakan jalan ke kalender unit', async () => {
+    renderHalaman()
+    const baris = (await screen.findByText('Kos Kamar 01')).closest('tr')!
+    expect(within(baris).getByRole('link', { name: /Set Kalender/i })).toHaveAttribute('href', '/pemilik/unit/1')
   })
 
   it('menghapus unit hanya setelah disetujui, dan batal tidak mengubah apa pun', async () => {
@@ -45,7 +53,7 @@ describe('UnitListPage', () => {
   it('menampilkan sebab saat ubah status gagal, bukan diam saja', async () => {
     const { server } = await import('@/api/mocks/server')
     const { http, HttpResponse } = await import('msw')
-    server.use(http.patch('/units/:id', () => HttpResponse.error()))
+    server.use(http.patch('/units/:id/status', () => HttpResponse.error()))
     renderHalaman()
     const baris = (await screen.findByText('Kos Kamar 01')).closest('tr')!
     await userEvent.click(within(baris).getByRole('button', { name: /Ubah status/i }))

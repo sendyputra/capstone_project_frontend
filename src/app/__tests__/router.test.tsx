@@ -46,7 +46,7 @@ describe('peta rute', () => {
   it('membuka dashboard pemilik untuk peran pemilik', async () => {
     writeSession(sesiPemilik)
     renderRute('/pemilik')
-    expect(await screen.findByText('Total Unit')).toBeInTheDocument()
+    expect(await screen.findByText('Total Unit Dikelola')).toBeInTheDocument()
   })
 
   it('mengantar pemilik ke 403 saat membuka rute admin', async () => {

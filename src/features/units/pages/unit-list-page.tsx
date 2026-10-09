@@ -1,14 +1,11 @@
-import { useState } from 'react'
 import { Link } from 'react-router'
-import type { Unit } from '@/api/types'
-import { DeleteUnitDialog } from '@/features/units/components/delete-unit-dialog'
 import { UnitTable } from '@/features/units/components/unit-table'
-import { useDeleteUnit, useUnits, useUpdateUnit } from '@/features/units/api'
+import { useDeleteUnit, useUbahStatusUnit, useUnits } from '@/features/units/api'
 import { EmptyState } from '@/ui/empty-state'
 import { ErrorState } from '@/ui/error-state'
 import { Skeleton } from '@/ui/skeleton'
+import { useKonfirmasi } from '@/ui/confirm-dialog'
 import { useToast } from '@/ui/toast'
-import { Button } from '@/ui/button'
 
 function RangkaTabel() {
   return (
@@ -24,16 +21,34 @@ function RangkaTabel() {
 
 export function UnitListPage() {
   const daftar = useUnits()
-  const ubah = useUpdateUnit()
+  const status = useUbahStatusUnit()
   const hapus = useDeleteUnit()
+  const konfirmasi = useKonfirmasi()
   const { tampilkan } = useToast()
-  const [dihapus, setDihapus] = useState<Unit | null>(null)
+
+  async function mintaHapus(id: number, nama: string) {
+    const setuju = await konfirmasi({
+      judul: 'Hapus unit ini?',
+      pesan: `Unit ${nama} tidak dapat dikembalikan.`,
+      labelKonfirmasi: 'Hapus unit',
+    })
+    if (!setuju) return
+    hapus.mutate(id, {
+      onSuccess: () => tampilkan('Unit dihapus.', 'success'),
+      onError: (galat) => tampilkan((galat as Error).message, 'danger'),
+    })
+  }
 
   return (
     <section className="mx-auto max-w-container space-y-6 px-4 py-8">
-      <div className="flex items-center justify-between gap-4">
-        <h2 className="text-heading-m font-bold text-brand-text">Unit Saya</h2>
-        <Button nativeButton={false} render={<Link to="/pemilik/unit/baru" />}>Tambah Unit Baru</Button>
+      <div className="flex flex-col justify-between gap-2 border-b border-brand-border pb-4 sm:flex-row sm:items-center">
+        <div>
+          <h1 className="text-heading-m font-bold text-brand-text">Unit Saya</h1>
+          <p className="text-micro text-brand-text-muted">Ubah status unit secara instan atau kelola jadwal terisi bulanan.</p>
+        </div>
+        <Link to="/pemilik/unit/baru" className="rounded-lg bg-brand-accent px-4 py-2 text-ui font-semibold text-brand-accent-fg">
+          Tambah Unit Baru
+        </Link>
       </div>
 
       {daftar.isPending && <RangkaTabel />}
@@ -44,9 +59,9 @@ export function UnitListPage() {
       {daftar.isSuccess && daftar.data.length > 0 && (
         <UnitTable
           units={daftar.data}
-          sibuk={ubah.isPending || hapus.isPending}
+          sibuk={status.isPending || hapus.isPending}
           onUbahStatus={(unit) => {
-            ubah.mutate(
+            status.mutate(
               { id: unit.id, status: unit.status === 'Tersedia' ? 'Terisi' : 'Tersedia' },
               {
                 onSuccess: () => tampilkan('Status unit diperbarui.', 'success'),
@@ -54,22 +69,9 @@ export function UnitListPage() {
               },
             )
           }}
-          onHapus={(unit) => setDihapus(unit)}
+          onHapus={(unit) => mintaHapus(unit.id, unit.name)}
         />
       )}
-
-      <DeleteUnitDialog
-        open={Boolean(dihapus)}
-        nama={dihapus?.name ?? ''}
-        onBatal={() => setDihapus(null)}
-        onSetuju={() => {
-          if (!dihapus) return
-          hapus.mutate(dihapus.id, {
-            onSuccess: () => { tampilkan('Unit dihapus.', 'success'); setDihapus(null) },
-            onError: (galat) => tampilkan((galat as Error).message, 'danger'),
-          })
-        }}
-      />
     </section>
   )
 }

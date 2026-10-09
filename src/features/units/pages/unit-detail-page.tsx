@@ -7,7 +7,7 @@ import { formatRupiah } from '@/lib/format'
 import { useToast } from '@/ui/toast'
 import { Skeleton } from '@/ui/skeleton'
 
-export function UnitDetailPage() {
+export function UnitDetailPage({ mode = 'penyewa' }: { mode?: 'penyewa' | 'pemilik' }) {
   const { id } = useParams()
   const unitId = Number(id)
   const unit = useUnit(unitId)
@@ -76,14 +76,16 @@ export function UnitDetailPage() {
                 {galat}
               </p>
             )}
-            <button
-              type="button"
-              onClick={kirim}
-              disabled={ajukan.isPending}
-              className="w-full rounded-xl bg-brand-accent py-3 text-ui font-bold text-brand-accent-fg shadow-lg disabled:opacity-70"
-            >
-              {ajukan.isPending ? 'Mengirim pengajuan…' : galat ? 'Coba Lagi' : 'Ajukan Sewa via WhatsApp'}
-            </button>
+            {mode === 'penyewa' && (
+              <button
+                type="button"
+                onClick={kirim}
+                disabled={ajukan.isPending}
+                className="w-full rounded-xl bg-brand-accent py-3 text-ui font-bold text-brand-accent-fg shadow-lg disabled:opacity-70"
+              >
+                {ajukan.isPending ? 'Mengirim pengajuan…' : galat ? 'Coba Lagi' : 'Ajukan Sewa via WhatsApp'}
+              </button>
+            )}
           </div>
         </div>
       )}
