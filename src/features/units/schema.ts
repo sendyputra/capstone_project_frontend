@@ -10,3 +10,7 @@ export const unitFormSchema = z.object({
 })
 
 export type UnitFormValues = z.infer<typeof unitFormSchema>
+
+/* Bentuk mentah yang masuk dari bidang formulir (`price` masih `unknown`
+   sebelum dipaksa jadi angka oleh `z.coerce`). */
+export type UnitFormInput = z.input<typeof unitFormSchema>
