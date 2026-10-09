@@ -23,6 +23,7 @@ describe('Providers', () => {
   })
 
   it('langsung menampilkan aplikasi saat mode mock mati', () => {
+    vi.stubEnv('VITE_API_MOCK', 'off')
     render(
       <Providers>
         <p>Isi aplikasi</p>

@@ -1,4 +1,4 @@
-import { screen, waitFor } from '@testing-library/react'
+import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { createMemoryRouter, RouterProvider } from 'react-router'
 import { afterEach, describe, expect, it } from 'vitest'
@@ -27,8 +27,9 @@ describe('AppShell', () => {
     writeSession(sesi)
     renderShell()
 
+    const header = document.querySelector('header')!
     expect(await screen.findByText('Pak Wahyu')).toBeInTheDocument()
-    expect(screen.getByText('Pemilik')).toBeInTheDocument()
+    expect(within(header).getByText('Pemilik')).toBeInTheDocument()
     await waitFor(() => expect(document.documentElement.dataset.role).toBe('owner'))
   })
 
@@ -59,10 +60,13 @@ describe('AppShell', () => {
     expect(screen.queryByRole('link', { name: /Tagihan Saya/ })).not.toBeInTheDocument()
   })
 
-  it('menawarkan masuk dan daftar kepada tamu', async () => {
+  it('menawarkan masuk dan daftar kepada tamu, plus jalan ke katalog', async () => {
     renderShell()
 
     expect(await screen.findByRole('link', { name: 'Masuk' })).toHaveAttribute('href', '/masuk')
     expect(screen.getByRole('link', { name: /Daftar/ })).toHaveAttribute('href', '/daftar')
+    expect(screen.getByRole('link', { name: 'Beranda' })).toHaveAttribute('href', '/')
+    expect(screen.getByRole('link', { name: 'Cari Unit' })).toHaveAttribute('href', '/katalog')
+    expect(screen.queryByRole('link', { name: /Tagihan Saya/ })).not.toBeInTheDocument()
   })
 })

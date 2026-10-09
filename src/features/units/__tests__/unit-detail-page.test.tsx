@@ -42,4 +42,19 @@ describe('UnitDetailPage', () => {
     await userEvent.click(screen.getByRole('button', { name: /Coba Lagi/ }))
     expect(await screen.findByText('Katalog unit')).toBeInTheDocument()
   })
+
+  it('mengantar pengunjung tanpa sesi ke layar masuk, bukan ke galat', async () => {
+    const router = createMemoryRouter(
+      [
+        { path: '/masuk', element: <p>Layar masuk</p> },
+        { path: '/katalog', element: <p>Katalog unit</p> },
+        { path: '/katalog/:id', element: <UnitDetailPage /> },
+      ],
+      { initialEntries: ['/katalog/1'] },
+    )
+    renderWithProviders(<RouterProvider router={router} />)
+
+    await userEvent.click(await screen.findByRole('button', { name: /Ajukan Sewa via WhatsApp/ }))
+    expect(await screen.findByText('Layar masuk')).toBeInTheDocument()
+  })
 })

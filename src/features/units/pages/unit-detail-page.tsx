@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
 import { useAjukanSewa } from '@/features/bookings/api'
+import { useSession } from '@/features/auth/api'
 import { useUnit } from '@/features/units/api'
 import { KalenderKetersediaan } from '@/features/units/components/kalender-ketersediaan'
 import { formatRupiah } from '@/lib/format'
@@ -12,11 +13,17 @@ export function UnitDetailPage({ mode = 'penyewa' }: { mode?: 'penyewa' | 'pemil
   const unitId = Number(id)
   const unit = useUnit(unitId)
   const ajukan = useAjukanSewa()
+  const { session } = useSession()
   const navigate = useNavigate()
   const { tampilkan } = useToast()
   const [galat, setGalat] = useState('')
 
   function kirim() {
+    /* Katalog terbuka untuk pengunjung; yang menuntut akun hanya pengajuannya. */
+    if (!session) {
+      navigate('/masuk', { state: { dari: `/katalog/${unitId}` } })
+      return
+    }
     setGalat('')
     ajukan.mutate(unitId, {
       onSuccess: () => {

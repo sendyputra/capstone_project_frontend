@@ -20,11 +20,10 @@ Tanpa `VITE_API_MOCK=on`, aplikasi akan memanggil API sungguhan di `VITE_API_BAS
 
 | Rute | Peran | Isi |
 |---|---|---|
-| `/` | publik | Beranda publik (hero) |
+| `/`, `/katalog`, `/katalog/:id` | publik | Beranda (hero + katalog), katalog berfilter, detail unit + kalender. Mengajukan sewa perlu masuk dulu. |
 | `/masuk`, `/daftar` | publik | Masuk dan pendaftaran (blok OCR KTP) |
 | `/bantuan` | publik | Kanal Instagram dan WhatsApp |
 | `/403` | publik | Peran tidak cocok |
-| `/katalog`, `/katalog/:id` | penyewa | Katalog berfilter, detail unit + kalender, pengajuan sewa |
 | `/tagihan` | penyewa | Tagihan bulanan dan unggah bukti bayar |
 | `/pemilik` | pemilik | Dashboard: 4 angka termasuk estimasi pendapatan |
 | `/pemilik/unit`, `/pemilik/unit/baru`, `/pemilik/unit/:id` | pemilik | Kelola unit, tambah unit, kalender unit |
