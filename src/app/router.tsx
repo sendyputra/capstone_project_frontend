@@ -2,6 +2,11 @@ import { createBrowserRouter, type RouteObject } from 'react-router'
 import { ForbiddenPage } from '@/app/pages/forbidden-page'
 import { RequireRole } from '@/app/guards'
 import { AppShell } from '@/app/layouts/app-shell'
+import { AdminShell } from '@/features/admin/layouts/admin-shell'
+import { AdminKontrakPage } from '@/features/admin/pages/admin-kontrak-page'
+import { AdminPembayaranPage } from '@/features/admin/pages/admin-pembayaran-page'
+import { AdminPenggunaPage } from '@/features/admin/pages/admin-pengguna-page'
+import { AdminUnitPage } from '@/features/admin/pages/admin-unit-page'
 import { LoginPage } from '@/features/auth/pages/login-page'
 import { LandingPage } from '@/features/landing/pages/landing-page'
 import { TagihanPage } from '@/features/billing/pages/tagihan-page'
@@ -30,7 +35,16 @@ export const routes: RouteObject[] = [
       { path: '/pemilik/unit/baru', element: <RequireRole role="pemilik"><UnitFormPage /></RequireRole> },
       { path: '/pemilik/unit/:id', element: <RequireRole role="pemilik"><UnitDetailPage mode="pemilik" /></RequireRole> },
       { path: '/pemilik/pengajuan', element: <RequireRole role="pemilik"><PengajuanPage /></RequireRole> },
-      { path: '/admin/unit', element: <RequireRole role="admin"><p className="p-8">Area admin menyusul.</p></RequireRole> },
+      {
+        path: '/admin',
+        element: <RequireRole role="admin"><AdminShell /></RequireRole>,
+        children: [
+          { path: 'unit', element: <AdminUnitPage /> },
+          { path: 'kontrak', element: <AdminKontrakPage /> },
+          { path: 'pembayaran', element: <AdminPembayaranPage /> },
+          { path: 'pengguna', element: <AdminPenggunaPage /> },
+        ],
+      },
     ],
   },
 ]
