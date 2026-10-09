@@ -20,6 +20,19 @@ function renderDetail(id = '1') {
 }
 
 describe('UnitDetailPage', () => {
+  it('memberi tahu saat unit tidak ada, bukan halaman kosong', async () => {
+    renderDetail('999')
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Unit tidak ditemukan.')
+    expect(screen.getByRole('button', { name: 'Coba Lagi' })).toBeInTheDocument()
+  })
+
+  it('memberi tahu saat id unit bukan angka', async () => {
+    renderDetail('abc')
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Unit tidak ditemukan.')
+  })
+
   it('menampilkan fasilitas dan kalender ketersediaan', async () => {
     renderDetail()
 

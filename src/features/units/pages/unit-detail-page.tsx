@@ -5,6 +5,7 @@ import { useSession } from '@/features/auth/api'
 import { useUnit } from '@/features/units/api'
 import { KalenderKetersediaan } from '@/features/units/components/kalender-ketersediaan'
 import { formatRupiah } from '@/lib/format'
+import { ErrorState } from '@/ui/error-state'
 import { useToast } from '@/ui/toast'
 import { Skeleton } from '@/ui/skeleton'
 
@@ -41,6 +42,9 @@ export function UnitDetailPage({ mode = 'penyewa' }: { mode?: 'penyewa' | 'pemil
       </Link>
 
       {unit.isPending && <Skeleton className="h-96" />}
+
+      {/* Unit yang tidak ada menjawab 404; tanpa cabang ini halamannya kosong. */}
+      {unit.isError && <ErrorState message={(unit.error as Error).message} onRetry={() => unit.refetch()} />}
 
       {unit.data && (
         <div className="space-y-4 rounded-2xl border border-brand-border bg-brand-surface p-6 shadow-sm">
