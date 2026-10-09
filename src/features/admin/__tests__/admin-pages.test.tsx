@@ -88,6 +88,22 @@ describe('AdminPembayaranPage', () => {
 })
 
 describe('AdminPenggunaPage', () => {
+  it('menampilkan kolom Verifikasi KTP beserta status tiap pengguna', async () => {
+    renderAdmin('/admin/pengguna')
+
+    expect(await screen.findByText('Verifikasi KTP')).toBeInTheDocument()
+
+    const rian = screen.getByText('Rian Pratama').closest('tr')!
+    expect(within(rian).getByText('Menunggu')).toBeInTheDocument()
+
+    const sarah = screen.getByText('Siti Sarah').closest('tr')!
+    expect(within(sarah).getByText('Terverifikasi')).toBeInTheDocument()
+
+    /* Purwarupa menandai baris sendiri dengan "Akun Anda", bukan nama kota. */
+    const sendiri = screen.getByText('Admin Nusantara').closest('tr')!
+    expect(within(sendiri).getByText('Akun Anda')).toBeInTheDocument()
+  })
+
   it('mengubah peran pengguna', async () => {
     renderAdmin('/admin/pengguna')
     const baris = (await screen.findByText('Siti Sarah')).closest('tr')!

@@ -23,22 +23,34 @@ describe('AppShell', () => {
     localStorage.clear()
   })
 
-  it('menampilkan nama pengguna, label peran, dan atribut data-role', async () => {
+  it('menampilkan nama pengguna, jabatan peran, dan atribut data-role', async () => {
     writeSession(sesi)
     renderShell()
 
     const header = document.querySelector('header')!
     expect(await screen.findByText('Pak Wahyu')).toBeInTheDocument()
-    expect(within(header).getByText('Pemilik')).toBeInTheDocument()
+    expect(within(header).getByText('Pemilik Kos & Kontrakan')).toBeInTheDocument()
     await waitFor(() => expect(document.documentElement.dataset.role).toBe('owner'))
+  })
+
+  it('memakai jabatan pengelola sistem pada avatar admin', async () => {
+    writeSession({ ...sesi, user: { ...sesi.user, id: 401, name: 'Admin Nusantara', role: 'admin' } })
+    renderShell()
+
+    const header = document.querySelector('header')!
+    expect(await within(header).findByText('Pengelola Sistem')).toBeInTheDocument()
   })
 
   it('mengganti tema saat tombolnya ditekan', async () => {
     writeSession(sesi)
     renderShell()
 
-    await userEvent.click(await screen.findByRole('button', { name: 'Aktifkan tema gelap' }))
+    const tombol = await screen.findByRole('button', { name: 'Aktifkan tema gelap' })
+    expect(tombol).toHaveAttribute('aria-pressed', 'false')
+
+    await userEvent.click(tombol)
     expect(document.documentElement.dataset.theme).toBe('dark')
+    expect(screen.getByRole('button', { name: 'Aktifkan tema terang' })).toHaveAttribute('aria-pressed', 'true')
   })
 
   it('membuang sesi saat keluar ditekan', async () => {

@@ -1,11 +1,12 @@
-import { Link } from 'react-router'
+import { FormCariUnit } from '@/features/units/components/form-cari-unit'
+import type { FilterUnit } from '@/features/units/use-filter-unit'
 
-/* Beranda publik: satu-satunya layar yang boleh dibuka tanpa sesi, sesuai
-   purwarupa (hero). Katalognya menyusul di bawah, juga untuk pengunjung. */
-export function HeroBeranda() {
+/* Hero beranda, seperti purwarupa: lencana, judul, paragraf, lalu kartu cari di
+   dalam hero. Pengunjung tanpa akun pun melihatnya. */
+export function HeroBeranda({ filter }: { filter: FilterUnit }) {
   return (
-    <section className="bg-hero text-brand-text-inverse">
-      <div className="mx-auto max-w-4xl space-y-6 px-4 py-16 text-center">
+    <section id="hero" className="bg-hero px-4 py-16 text-brand-text-inverse shadow-inner">
+      <div className="mx-auto max-w-4xl space-y-6 text-center">
         <span className="inline-block rounded-full border border-brand-teal-400 bg-brand-text-inverse/10 px-4 py-2 text-micro font-semibold uppercase tracking-wider text-brand-teal-200">
           Sistem Reservasi &amp; Pengelolaan Properti Terpadu
         </span>
@@ -16,11 +17,8 @@ export function HeroBeranda() {
         <p className="mx-auto max-w-2xl text-body font-light text-brand-teal-100">
           Kemudahan pemesanan dengan informasi ketersediaan tanggal real-time dan transparansi harga tanpa komisi tersembunyi.
         </p>
-        <div className="pt-2">
-          <Link to="/masuk" className="inline-block rounded-lg bg-brand-accent px-6 py-3 text-ui font-bold text-brand-accent-fg shadow-lg">
-            Masuk
-          </Link>
-        </div>
+
+        <FormCariUnit filter={filter} className="mx-auto mt-8 max-w-3xl text-left shadow-2xl" />
       </div>
     </section>
   )

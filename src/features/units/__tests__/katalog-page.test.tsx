@@ -31,6 +31,15 @@ describe('KatalogPage', () => {
     expect(screen.getByText('Kos Putri Melati Kamar B2')).toBeInTheDocument()
   })
 
+  it('menampilkan judul katalog sebagai h2 dan menandai alamat dengan ikon peta', async () => {
+    renderKatalog()
+
+    const kartu = (await screen.findByText('Kos Kamar 01')).closest('article')!
+    expect(await screen.findByRole('heading', { level: 2, name: 'Daftar Unit Sewa Tersedia' })).toBeInTheDocument()
+    expect(within(kartu).getByText('Kos Kamar 01')).toHaveClass('text-lg')
+    expect(kartu.querySelector('svg.lucide-map-pin')).toBeTruthy()
+  })
+
   it('menampilkan seluruh unit dengan lencana status dan jumlahnya', async () => {
     renderKatalog()
 

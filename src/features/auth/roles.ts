@@ -13,3 +13,11 @@ export function labelPeran(role: Role): string {
   if (role === 'pemilik') return 'Pemilik'
   return 'Admin'
 }
+
+/* Subjudul avatar di bilah atas, seperti purwarupa: sebutan pekerjaan, bukan
+   sekadar nama peran. */
+export function jabatanPeran(role: Role): string {
+  if (role === 'penyewa') return 'Penyewa'
+  if (role === 'pemilik') return 'Pemilik Kos & Kontrakan'
+  return 'Pengelola Sistem'
+}
