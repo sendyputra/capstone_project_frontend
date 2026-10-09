@@ -36,11 +36,12 @@ describe('UnitDetailPage', () => {
     renderDetail()
     await screen.findByRole('heading', { name: 'Kos Kamar 01' })
 
-    await userEvent.click(screen.getByRole('button', { name: /Ajukan Sewa via WhatsApp/ }))
+    await userEvent.click(screen.getByRole('button', { name: 'Ajukan Sewa' }))
     expect(await screen.findByRole('alert')).toHaveTextContent(/koneksi terputus/i)
 
-    await userEvent.click(screen.getByRole('button', { name: /Coba Lagi/ }))
+    await userEvent.click(screen.getByRole('button', { name: 'Coba Lagi' }))
     expect(await screen.findByText('Katalog unit')).toBeInTheDocument()
+    expect(await screen.findByText('Pengajuan sewa terkirim dan masuk daftar pengajuan pemilik.')).toBeInTheDocument()
   })
 
   it('mengantar pengunjung tanpa sesi ke layar masuk, bukan ke galat', async () => {
@@ -54,7 +55,7 @@ describe('UnitDetailPage', () => {
     )
     renderWithProviders(<RouterProvider router={router} />)
 
-    await userEvent.click(await screen.findByRole('button', { name: /Ajukan Sewa via WhatsApp/ }))
+    await userEvent.click(await screen.findByRole('button', { name: 'Ajukan Sewa' }))
     expect(await screen.findByText('Layar masuk')).toBeInTheDocument()
   })
 })
