@@ -28,8 +28,9 @@ Peta lengkap dokumen naskah ada di `../capstone_project_6/AGENTS.md`. Yang dipak
 | `docs/superpowers/specs/2026-10-09-frontend-shell-design.md` | Meragukan lingkup atau aturan potongan ini; ia yang mengikat |
 | `notion/09-teknis.md` | Butuh URL backend, rute, atau skema data |
 
-Katalog penyewa, detail unit, tagihan, transaksi, bantuan, dan seluruh layar admin bertanda
-**belum diisi** di wireframe. Bangun hanya bila diminta.
+Purwarupa `opendesign/prototype/index.html` sudah disalin utuh ke repo ini — layar
+penyewa, pemilik, dan admin. Wireframe naskah masih menandai beberapa layar "belum
+diisi"; tanda itu dari fase desain dan tidak lagi menggambarkan repo ini.
 
 ## Konvensi yang tidak terbaca dari berkas lain
 
@@ -37,7 +38,8 @@ Katalog penyewa, detail unit, tagihan, transaksi, bantuan, dan seluruh layar adm
   `bun run tokens:sync` — skripnya menolak bila salinan menyimpang dari sumber.
 - Warna hanya lewat token. `bun run check:styles` menolak kelas mentah seperti
   `bg-blue-600` atau `text-slate-500`. Token sah bila dipetakan di blok `@theme`
-  `src/styles/index.css`; token baru berarti menambah pemetaan di sana lebih dulu.
+  `src/styles/index.css`; token baru berarti menambah pemetaan di sana lebih dulu, dan
+  `bun run check:tokens` menjaga daftar pemetaan yang wajib ada.
 - Seluruh permintaan lewat `src/api/client.ts` — ia pemilik auth header, pemetaan galat
   (`ApiError.kind`), dan aturan 401: sesi dibuang, layar masuk menjelaskan sebabnya.
   Endpoint baru: tambah handler di `src/api/mocks/handlers/` lebih dulu — itu pengganti
@@ -48,8 +50,10 @@ Katalog penyewa, detail unit, tagihan, transaksi, bantuan, dan seluruh layar adm
 - Rute dijaga `RequireRole`; `<html>` menerima `data-role` bernilai `renter`, `owner`,
   atau `admin` lewat `toDataRole` — purwarupa dan `tokens.css` mengenali ketiganya.
 - Tulis tes **merah** dulu, baru kode. Suite hijau adalah gerbangnya: `typecheck`, `lint`,
-  `test`, `check:styles`, `build`. `renderWithProviders` (`src/test/render.tsx`) sudah
-  membungkus QueryClient dan ToastProvider.
+  `test`, `check:styles`, `check:tokens`, `build`. `renderWithProviders`
+  (`src/test/render.tsx`) sudah membungkus QueryClient, ToastProvider, dan ConfirmProvider;
+  `masukSebagai` (`src/test/sesi.ts`) menulis sesi uji ber-token asli — token palsu akan
+  jatuh ke pemilik bawaan dan menyamarkan peran yang sedang diuji.
 
 ## Jebakan
 
