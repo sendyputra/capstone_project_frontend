@@ -1,6 +1,7 @@
 import { createBrowserRouter, type RouteObject } from 'react-router'
 import { ForbiddenPage } from '@/app/pages/forbidden-page'
 import { NotFoundPage } from '@/app/pages/not-found-page'
+import { RouteErrorPage } from '@/app/pages/route-error-page'
 import { RequireRole } from '@/app/guards'
 import { AppShell } from '@/app/layouts/app-shell'
 import { AdminShell } from '@/features/admin/layouts/admin-shell'
@@ -26,6 +27,9 @@ import { UnitListPage } from '@/features/units/pages/unit-list-page'
 export const routes: RouteObject[] = [
   {
     element: <AppShell />,
+    /* Galat render di layar mana pun berhenti di halaman ramah ini, bukan di
+       layar bawaan React Router. */
+    errorElement: <RouteErrorPage />,
     children: [
       { path: '/masuk', element: <LoginPage /> },
       { path: '/daftar', element: <RegisterPage /> },
