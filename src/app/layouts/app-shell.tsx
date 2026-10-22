@@ -4,7 +4,6 @@ import { Link, NavLink, Outlet, ScrollRestoration } from 'react-router'
 import type { Role } from '@/api/types'
 import { jabatanPeran, toDataRole } from '@/features/auth/roles'
 import { useLogout, useSession } from '@/features/auth/api'
-import { PreviewBar } from '@/features/preview/components/preview-bar'
 import { inisial } from '@/lib/format'
 import { useTheme } from '@/lib/use-theme'
 import { Button } from '@/ui/button'
@@ -120,7 +119,6 @@ export function AppShell() {
         © 2026 Nusantara Booking — Sistem Pengelolaan & Sewa Properti Terpadu UMKM
       </footer>
 
-      <PreviewBar />
       <ScrollRestoration />
     </div>
   )
