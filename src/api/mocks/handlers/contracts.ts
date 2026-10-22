@@ -64,11 +64,18 @@ const buatKontrak: HttpResponseResolver = async ({ request }) => {
 }
 
 export const contractHandlers = [
-  /* Cakupan dari token, sama seperti `GET /units`: pemilik hanya kontrak yang
-     unitnya miliknya, sedangkan pengunjung dan penyewa melihat seluruhnya. */
+  /* Cakupan dari token, sama seperti `GET /payments`: pemilik hanya kontrak yang
+     unitnya miliknya, penyewa hanya kontrak atas namanya sendiri. Cakupan penyewa
+     bukan hiasan — tagihan diturunkan dari kontrak, jadi kontrak yang bocor ikut
+     membocorkan tagihan penyewa lain. Pengunjung melihat seluruhnya. */
   http.get('/contracts', ({ request }) => {
     const { sub, peran } = pemanggil(request)
-    const data = peran === 'pemilik' ? contracts.filter((kontrak) => unitById(kontrak.unit_id)?.owner_id === sub) : contracts
+    const data =
+      peran === 'pemilik'
+        ? contracts.filter((kontrak) => unitById(kontrak.unit_id)?.owner_id === sub)
+        : peran === 'penyewa'
+          ? contracts.filter((kontrak) => kontrak.tenant_id === tenantByUserId(sub)?.id)
+          : contracts
     return HttpResponse.json({ data: data.map(barisKontrak) })
   }),
 

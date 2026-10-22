@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { formatRupiah, parseAmount } from '@/lib/format'
+import { formatBulan, formatRupiah, parseAmount } from '@/lib/format'
 
 describe('parseAmount', () => {
   it('menerima angka utuh', () => {
@@ -23,5 +23,21 @@ describe('formatRupiah', () => {
 
   it('memformat string desimal dari backend', () => {
     expect(formatRupiah('1200000.00')).toBe('Rp 1.200.000')
+  })
+})
+
+describe('formatBulan', () => {
+  it('menulis bulan ERD sebagai label tampilan', () => {
+    expect(formatBulan('2026-10')).toBe('Oktober 2026')
+    expect(formatBulan('2027-01')).toBe('Januari 2027')
+  })
+
+  it('tidak menggeser bulan di zona waktu mana pun', () => {
+    expect(formatBulan('2026-12')).toBe('Desember 2026')
+  })
+
+  it('meneruskan nilai yang bukan YYYY-MM apa adanya', () => {
+    expect(formatBulan('')).toBe('')
+    expect(formatBulan('Oktober 2026')).toBe('Oktober 2026')
   })
 })

@@ -56,6 +56,16 @@ describe('adaptor kontrak', () => {
     expect(keKontrak({ ...dto, start_date: '', end_date: '' })).toMatchObject({ term: '0 bulan', monthly: 4_500_000 })
   })
 
+  /* Data contoh memakai akhir bulan sebagai tanggal selesai: 1 Sep 2026 –
+     28 Feb 2027 adalah enam bulan sewa, dan tagihan bulanan yang diturunkan
+     dari kontrak harus sama dengan harga bulanan unit (Rp 2.500.000). */
+  it('membulatkan sisa hari menjadi bulan penuh', () => {
+    expect(keKontrak({ ...dto, start_date: '2026-09-01', end_date: '2027-02-28', total_price: '15000000' })).toMatchObject({
+      term: '6 bulan',
+      monthly: 2_500_000,
+    })
+  })
+
   it('memberi nilai aman saat bidang hilang atau bertipe salah', () => {
     expect(keKontrak({})).toMatchObject({
       start_date: '',

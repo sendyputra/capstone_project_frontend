@@ -81,6 +81,13 @@ describe('data contoh', () => {
     const milikRina = (await apiFetch<{ data: ContractDtoRow[] }>('/contracts')).data
     expect(milikRina.map((baris) => baris.id)).toEqual([202])
     expect(milikRina[0]).toMatchObject({ owner_name: 'Bu Rina', unit_title: 'Kontrakan Melati Type 45' })
+
+    /* Penyewa juga dibatasi token: 405 → tenant 2, yaitu kontrak 201 dan 205.
+       Tanpa ini, tagihan yang diturunkan dari kontrak memuat unit penyewa lain. */
+    writeSession(penyewa)
+    const milikSiti = (await apiFetch<{ data: ContractDtoRow[] }>('/contracts')).data
+    expect(milikSiti.map((baris) => baris.id)).toEqual([201, 205])
+    expect(milikSiti.every((baris) => baris.tenant_id === 2)).toBe(true)
   })
 
   it('mengirim seluruh unit ke penyewa dan hanya unit sendiri ke pemilik', async () => {
