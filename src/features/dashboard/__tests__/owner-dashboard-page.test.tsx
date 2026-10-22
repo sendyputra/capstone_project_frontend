@@ -37,8 +37,8 @@ describe('OwnerDashboardPage', () => {
 
     expect(await screen.findByRole('heading', { name: 'Selamat Datang, Pak Wahyu!' })).toBeInTheDocument()
     expect(await screen.findByText('Total Unit Dikelola')).toBeInTheDocument()
-    expect(screen.getByText('3 Unit')).toBeInTheDocument()
+    expect(screen.getByText('6 Unit')).toBeInTheDocument()
     expect(screen.getByText('Unit Kosong / Siap Huni')).toBeInTheDocument()
-    expect(screen.getByText('Rp 2.500.000')).toBeInTheDocument()
+    expect(screen.getByText('Rp 3.800.000')).toBeInTheDocument()
   })
 })

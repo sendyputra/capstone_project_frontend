@@ -36,11 +36,11 @@ describe('LandingPage', () => {
 
   it('menyaring katalog di bawah hero dari isian hero', async () => {
     renderBeranda()
-    expect(await screen.findByText('5 Unit Ditemukan')).toBeInTheDocument()
+    expect(await screen.findByText('24 Unit Ditemukan')).toBeInTheDocument()
 
     await userEvent.type(within(hero()).getByLabelText(/Cari Nama atau Lokasi Properti/), 'ruko')
 
-    expect(await screen.findByText('1 Unit Ditemukan')).toBeInTheDocument()
+    expect(await screen.findByText('4 Unit Ditemukan')).toBeInTheDocument()
     expect(screen.getByText('Ruang Usaha Ruko Strategis')).toBeInTheDocument()
   })
 

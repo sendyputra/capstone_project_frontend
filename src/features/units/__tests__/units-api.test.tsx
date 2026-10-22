@@ -39,7 +39,7 @@ describe('useMyUnits', () => {
     writeSession({ token: 'mock.abc.tanda', user: { id: 402, name: 'Pak Wahyu', email: 'wahyu@umkm.id', role: 'pemilik' } })
     const { result } = renderHook(() => useMyUnits(), { wrapper: pembungkus() })
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
-    expect(result.current.data).toHaveLength(3)
+    expect(result.current.data).toHaveLength(6)
     expect(result.current.data?.every((unit) => unit.owner_id === 402)).toBe(true)
   })
 
@@ -48,7 +48,7 @@ describe('useMyUnits', () => {
     writeSession({ token, user: { id: 403, name: 'Bu Rina', email: 'rina@umkm.id', role: 'pemilik' } })
     const { result } = renderHook(() => useMyUnits(), { wrapper: pembungkus() })
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
-    expect(result.current.data).toHaveLength(2)
+    expect(result.current.data).toHaveLength(5)
     expect(result.current.data?.every((unit) => unit.owner_id === 403)).toBe(true)
   })
 })

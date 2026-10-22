@@ -28,8 +28,10 @@ describe('OwnerPaymentsPage', () => {
     masukSebagai(402, 'pemilik', 'Pak Wahyu')
     renderWithProviders(<OwnerPaymentsPage />)
 
-    const baris = (await screen.findByText('Tagihan September 2026')).closest('tr')!
-    expect(within(baris).getByText('bukti-transfer-sep.jpg')).toBeInTheDocument()
+    const baris = (await screen.findAllByText('Tagihan September 2026'))
+      .map((el) => el.closest('tr')!)
+      .find((tr) => within(tr).queryByText('bukti-transfer-201-sep.jpg'))!
+    expect(within(baris).getByText('bukti-transfer-201-sep.jpg')).toBeInTheDocument()
     expect(screen.queryByText(/2026-09/)).not.toBeInTheDocument()
   })
 
