@@ -58,8 +58,12 @@ describe('pendaftaran multipart', () => {
     expect(Object.prototype.toString.call(ktp)).toBe('[object File]')
     expect({ name: (ktp as File).name, type: (ktp as File).type }).toEqual({ name: 'ktp.png', type: 'image/png' })
     /* Isian lain ikut terkirim, bukan hanya berkasnya. Nama yang terkirim adalah
-       hasil OCR (`BUDI SANTOSO`), yang menimpa ketikan — perilaku Task 11. */
+       hasil OCR (`BUDI SANTOSO`), yang menimpa ketikan — perilaku Task 11.
+       `email` dan `password` ikut diuji: tanpa keduanya, badan multipart yang
+       kehilangan salah satunya masih lolos. */
     expect(badan!.get('name')).toBe('BUDI SANTOSO')
+    expect(badan!.get('email')).toBe('budi@mail.com')
+    expect(badan!.get('password')).toBe('rahasia123')
     expect(badan!.get('password_confirmation')).toBe('rahasia123')
   })
 

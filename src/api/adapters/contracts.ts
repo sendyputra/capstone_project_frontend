@@ -36,11 +36,18 @@ function keKtp(nilai: unknown): KtpStatus | undefined {
   return STATUS_KTP.find((status) => status === String(nilai ?? ''))
 }
 
+/* Dua ejaan bidang diterima, sama seperti adaptor sesi: DTO lama menamainya
+   `ktp`, DTO baru `ktp_status`. Menerima keduanya membuat kolom "KTP" tetap
+   terisi di tengah migrasi; nilai asing tetap ditolak. */
+function bacaKtp(baris: Record<string, unknown>): KtpStatus | undefined {
+  return keKtp(baris.ktp ?? baris.ktp_status)
+}
+
 export function keKontrak(dto: unknown): ContractRow {
   const k = (dto ?? {}) as Record<string, unknown>
   const total = keAngka(k.total_price)
   const bulan = hitungBulan(String(k.start_date ?? ''), String(k.end_date ?? ''))
-  const ktp = keKtp(k.ktp)
+  const ktp = bacaKtp(k)
   return {
     id: Number(k.id),
     unit_id: Number(k.unit_id),
