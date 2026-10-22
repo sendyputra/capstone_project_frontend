@@ -5,9 +5,12 @@ import type { KtpStatus, Role, User } from '@/api/types'
 const PERAN: Role[] = ['penyewa', 'pemilik']
 const STATUS_KTP: KtpStatus[] = ['Terverifikasi', 'Menunggu', 'Belum']
 
-/* Peran di luar dua nilai berarti backend mengirim akun yang tidak dikenal klien
-   ini — dulu peran `admin`. Dilempar sebagai galat, bukan dipetakan diam-diam,
-   supaya sesi setengah sah tidak pernah tersimpan. */
+/* Adaptor ini hanya memeriksa bentuk data yang baru datang dari API: peran di
+   luar dua nilai (mis. `admin`) dilempar sebagai galat, bukan dipetakan
+   diam-diam, supaya DTO tak dikenal tidak menyamar jadi pengguna yang sah.
+   Sesi yang sudah tersimpan tidak dijaga di sini — `readSession()` di
+   `features/auth/session.ts` yang menolak peran di luar dua nilai saat membaca
+   localStorage, dan permintaan yang gagal karena jaringan tidak menghapus sesi. */
 function kePeran(nilai: unknown): Role {
   const peran = String(nilai) as Role
   if (!PERAN.includes(peran)) throw new ApiError('server', 0, 'Peran akun tidak dikenali.')
