@@ -12,6 +12,15 @@ export function useContracts() {
   })
 }
 
+export function useBuatKontrak() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (masukan: { unit_id: number; start_date: string; end_date: string; total_price: number }) =>
+      apiFetch<{ data: ContractRow }>('/contracts', { method: 'POST', body: masukan }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['contracts'] }),
+  })
+}
+
 export function useUbahStatusKontrak() {
   const queryClient = useQueryClient()
   return useMutation({
