@@ -52,7 +52,7 @@ describe('RequireRole', () => {
   it('sesi kedaluwarsa saat aplikasi terbuka diantar kembali ke layar masuk', async () => {
     const { server } = await import('@/api/mocks/server')
     const { http, HttpResponse } = await import('msw')
-    server.use(http.get('/auth/me', () => HttpResponse.json({ message: 'Sesi tidak sah.' }, { status: 401 })))
+    server.use(http.get('/me', () => HttpResponse.json({ message: 'Sesi tidak sah.' }, { status: 401 })))
     renderDenganPenjaga('pemilik')
     expect(await screen.findByText('Layar masuk')).toBeInTheDocument()
   })

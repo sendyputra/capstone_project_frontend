@@ -1,12 +1,12 @@
 import { Link } from 'react-router'
 import { useSession } from '@/features/auth/api'
-import { useUnits } from '@/features/units/api'
+import { useMyUnits } from '@/features/units/api'
 import { OwnerStats } from '@/features/dashboard/components/owner-stats'
 import { ErrorState } from '@/ui/error-state'
 import { Skeleton } from '@/ui/skeleton'
 
 export function OwnerDashboardPage() {
-  const daftar = useUnits()
+  const daftar = useMyUnits()
   const { session } = useSession()
 
   return (

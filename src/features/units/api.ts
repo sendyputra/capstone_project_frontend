@@ -1,52 +1,47 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { apiFetch } from '@/api/client'
+import { apiFetch, buka } from '@/api/client'
+import { keDaftarUnit, keUnit } from '@/api/adapters/units'
 import type { UnitInput, UnitRow } from '@/api/types'
 import { useSession } from '@/features/auth/api'
-import { parseAmount } from '@/lib/format'
 
 export const unitKeys = {
   list: (userId: number) => ['units', { userId }] as const,
+  publik: ['units', 'publik'] as const,
   detail: (id: number) => ['unit', id] as const,
 }
 
-function normalisasi(unit: UnitRow): UnitRow {
-  return { ...unit, price: parseAmount(unit.price) }
+/* Katalog terbuka untuk pengunjung: rutenya tidak memeriksa token, dan cakupan
+   barisnya tidak bergantung pada sesi. */
+export function usePublicUnits() {
+  return useQuery({
+    queryKey: unitKeys.publik,
+    queryFn: async () => keDaftarUnit(await apiFetch('/public/units')),
+  })
 }
 
-export function useUnits() {
+/* Panel pemilik: server membatasi baris dari token, jadi kueri baru berjalan
+   setelah sesi ada. */
+export function useMyUnits() {
   const { session } = useSession()
   const userId = session?.user.id ?? 0
-  /* Katalog terbuka untuk pengunjung, jadi kueri tidak menunggu sesi; cakupan
-     barisnya tetap ditentukan server dari token. */
   return useQuery({
     queryKey: unitKeys.list(userId),
-    queryFn: async (): Promise<UnitRow[]> => {
-      const hasil = await apiFetch<{ data: UnitRow[] }>('/units')
-      return hasil.data.map(normalisasi)
-    },
+    enabled: Boolean(session),
+    queryFn: async () => keDaftarUnit(await apiFetch('/units')),
   })
 }
 
 export function useUnit(id: number) {
   return useQuery({
     queryKey: unitKeys.detail(id),
-    queryFn: async (): Promise<UnitRow> => {
-      const hasil = await apiFetch<{ data: UnitRow }>(`/units/${id}`)
-      return normalisasi(hasil.data)
-    },
+    queryFn: async () => keUnit(buka(await apiFetch(`/units/${id}`))),
   })
 }
 
 export function useCreateUnit() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async (nilai: UnitInput) => {
-      const hasil = await apiFetch<{ data: UnitRow }>('/units', {
-        method: 'POST',
-        body: { ...nilai, price: parseAmount(nilai.price) },
-      })
-      return normalisasi(hasil.data)
-    },
+    mutationFn: async (nilai: UnitInput) => keUnit(buka(await apiFetch('/units', { method: 'POST', body: nilai }))),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['units'] }),
   })
 }
@@ -54,13 +49,8 @@ export function useCreateUnit() {
 export function useUpdateUnit() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async ({ id, ...nilai }: { id: number } & Partial<UnitInput>) => {
-      const hasil = await apiFetch<{ data: UnitRow }>(`/units/${id}`, {
-        method: 'PATCH',
-        body: { ...nilai, price: nilai.price === undefined ? undefined : parseAmount(nilai.price) },
-      })
-      return normalisasi(hasil.data)
-    },
+    mutationFn: async ({ id, ...nilai }: { id: number } & Partial<UnitInput>) =>
+      keUnit(buka(await apiFetch(`/units/${id}`, { method: 'PUT', body: nilai }))),
     onSuccess: (_hasil, variabel) => {
       queryClient.invalidateQueries({ queryKey: ['units'] })
       queryClient.invalidateQueries({ queryKey: unitKeys.detail(variabel.id) })
@@ -71,8 +61,8 @@ export function useUpdateUnit() {
 export function useUbahStatusUnit() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, status }: { id: number; status: UnitRow['status'] }) =>
-      apiFetch<{ data: UnitRow }>(`/units/${id}/status`, { method: 'PATCH', body: { status } }),
+    mutationFn: async ({ id, status }: { id: number; status: UnitRow['status'] }) =>
+      keUnit(buka(await apiFetch(`/units/${id}/status`, { method: 'PATCH', body: { status } }))),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['units'] }),
   })
 }
