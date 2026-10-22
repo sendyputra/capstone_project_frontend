@@ -1,5 +1,5 @@
 import { usePayments, useVerifikasiPembayaran } from '@/features/billing/api'
-import { formatRupiah } from '@/lib/format'
+import { formatBulan, formatRupiah, namaBerkas } from '@/lib/format'
 import { ErrorState } from '@/ui/error-state'
 import { Skeleton } from '@/ui/skeleton'
 import { StatusChip } from '@/ui/status-chip'
@@ -15,11 +15,13 @@ export function OwnerPaymentsPage() {
   const daftar = tagihan.data ?? []
   const menunggu = daftar.filter((baris) => baris.status === 'Menunggu Verifikasi').length
 
+  /* `month` datang dari API sebagai `YYYY-MM`; toast dan dialog memakai label
+     bulan yang sama dengan kolom tabel, bukan nilai mentahnya. */
   function setujui(id: number, nama: string, bulan: string) {
     verifikasi.mutate(
       { id, status: 'Lunas' },
       {
-        onSuccess: () => tampilkan(`Bukti bayar ${nama} diterima. Tagihan ${bulan} ditandai lunas.`, 'success'),
+        onSuccess: () => tampilkan(`Bukti bayar ${nama} diterima. Tagihan ${formatBulan(bulan)} ditandai lunas.`, 'success'),
         onError: (galat) => tampilkan((galat as Error).message, 'danger'),
       },
     )
@@ -28,7 +30,7 @@ export function OwnerPaymentsPage() {
   async function tolak(id: number, bulan: string) {
     const setuju = await konfirmasi({
       judul: 'Tolak bukti bayar ini?',
-      pesan: `Penyewa akan diminta mengunggah ulang bukti untuk tagihan ${bulan}.`,
+      pesan: `Penyewa akan diminta mengunggah ulang bukti untuk tagihan ${formatBulan(bulan)}.`,
       labelKonfirmasi: 'Tolak bukti',
     })
     if (!setuju) return
@@ -60,10 +62,12 @@ export function OwnerPaymentsPage() {
               <td className="p-4 font-bold text-brand-text">{baris.renter_name}</td>
               <td className="p-4">
                 <span className="block font-semibold text-brand-text">{baris.unit_title}</span>
-                <span className="text-micro text-brand-text-subtle">Tagihan {baris.month}</span>
+                <span className="text-micro text-brand-text-subtle">Tagihan {formatBulan(baris.month)}</span>
               </td>
               <td className="p-4 font-extrabold text-brand-accent">{formatRupiah(baris.amount)}</td>
-              <td className="p-4 text-brand-text-muted">{baris.proof_url || 'Belum ada berkas'}</td>
+              {/* `proof_url` berisi jalur berkas dari API; layar menampilkan
+                  namanya saja, sama seperti layar tagihan penyewa. */}
+              <td className="p-4 text-brand-text-muted">{namaBerkas(baris.proof_url) || 'Belum ada berkas'}</td>
               <td className="p-4"><StatusChip nilai={baris.status} /></td>
               <td className="p-4 text-right">
                 {baris.status === 'Menunggu Verifikasi' ? (

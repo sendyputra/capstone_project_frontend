@@ -70,7 +70,19 @@ export const paymentHandlers = [
     if (gagalSekali('POST /payments')) {
       return HttpResponse.json({ message: 'Bukti bayar gagal diunggah karena koneksi terputus. Periksa jaringan, lalu coba lagi.' }, { status: 500 })
     }
-    const baris: PaymentDto = { id: payments.length + 1, contract_id: kontrakId, month: bulan, amount: jumlah, status: 'pending', proof_url: `/bukti/${berkas.name}` }
+    /* Id baru dihitung dari id tertinggi yang hidup, bukan panjang array: data
+       contoh ber-id 302–305, sehingga `payments.length + 1` memberi baris baru
+       id 5 dan `susunTagihan` — yang memakai baris ber-id terbesar per bulan —
+       tetap menampilkan baris lama yang ditolak. Unggah ulang jadi tampak tidak
+       terjadi apa-apa. */
+    const baris: PaymentDto = {
+      id: Math.max(0, ...payments.map((kandidat) => kandidat.id)) + 1,
+      contract_id: kontrakId,
+      month: bulan,
+      amount: jumlah,
+      status: 'pending',
+      proof_url: `/bukti/${berkas.name}`,
+    }
     payments.push(baris)
     return HttpResponse.json({ data: baris }, { status: 201 })
   }),

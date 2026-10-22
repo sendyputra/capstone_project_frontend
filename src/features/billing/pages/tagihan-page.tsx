@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { usePayments, useUnggahBukti } from '@/features/billing/api'
 import { useContracts } from '@/features/contracts/api'
-import { formatBulan, formatRupiah } from '@/lib/format'
+import { formatBulan, formatRupiah, namaBerkas } from '@/lib/format'
 import { susunTagihan, type Tagihan } from '@/lib/tagihan'
 import { tanggalHariIni } from '@/lib/tanggal'
 import { ErrorState } from '@/ui/error-state'
@@ -11,12 +11,6 @@ import { Tabel } from '@/ui/tabel'
 import { useToast } from '@/ui/toast'
 
 type MasukanUnggah = { contract_id: number; month: string; amount: number; proof: File }
-
-/* Bukti bayar tersimpan sebagai jalur berkas (`/bukti/…`), sedangkan layar
-   menampilkan nama berkasnya saja. */
-function namaBerkas(jalur: string): string {
-  return jalur.split('/').filter(Boolean).pop() ?? ''
-}
 
 export function TagihanPage() {
   const kontrak = useContracts()
