@@ -7,7 +7,8 @@ export type User = {
   role: Role
   phone: string
   city: string
-  /* Di luar ERD: dipakai kolom "Verifikasi KTP" di panel admin. */
+  /* Di luar ERD: status verifikasi KTP, ditampilkan pada layar pemilik sebagai
+     kolom "Verifikasi KTP" — dulu panel admin. */
   ktp: KtpStatus
   joined: string
 }

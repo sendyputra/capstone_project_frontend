@@ -9,7 +9,8 @@ import { inisial } from '@/lib/format'
 import { useTheme } from '@/lib/use-theme'
 import { Button } from '@/ui/button'
 
-/* Tautan kerja tiap peran — sama dengan nav purwarupa. */
+/* Tautan kerja tiap peran — sama dengan nav purwarupa. Dua peran saja:
+   penyewa dan pemilik; layar admin sudah tidak ada di peta rute. */
 const TAUTAN: Record<Role, { ke: string; label: string }[]> = {
   penyewa: [
     { ke: '/', label: 'Beranda' },
@@ -19,20 +20,14 @@ const TAUTAN: Record<Role, { ke: string; label: string }[]> = {
   pemilik: [
     { ke: '/pemilik', label: 'Dashboard' },
     { ke: '/pemilik/unit', label: 'Unit Saya' },
-    { ke: '/pemilik/pengajuan', label: 'Pengajuan Sewa' },
-  ],
-  admin: [
-    { ke: '/admin/unit', label: 'Unit' },
-    { ke: '/admin/kontrak', label: 'Kontrak' },
-    { ke: '/admin/pembayaran', label: 'Pembayaran' },
-    { ke: '/admin/pengguna', label: 'Pengguna' },
+    { ke: '/pemilik/kontrak', label: 'Kontrak' },
+    { ke: '/pemilik/pembayaran', label: 'Pembayaran' },
   ],
 }
 
-/* Warna cakram inisial mengikuti peran, seperti purwarupa: aksen untuk penyewa,
-   teal pemilik untuk pemilik, dan netral untuk admin. */
+/* Warna cakram inisial mengikuti peran, seperti purwarupa: aksen untuk penyewa
+   dan teal pemilik untuk pemilik. */
 function gayaInisial(role: Role) {
-  if (role === 'admin') return 'bg-brand-neutral-700 text-brand-text-inverse'
   if (role === 'pemilik') return 'bg-brand-owner text-brand-text-inverse'
   return 'bg-brand-accent text-brand-accent-fg'
 }

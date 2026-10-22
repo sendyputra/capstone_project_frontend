@@ -32,6 +32,14 @@ describe('PreviewBar', () => {
     expect(screen.queryByLabelText('Pratinjau peran')).not.toBeInTheDocument()
   })
 
+  it('hanya menawarkan dua peran', () => {
+    vi.stubEnv('VITE_API_MOCK', 'on')
+    renderBar()
+    expect(screen.getByRole('button', { name: 'Penyewa' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Pemilik' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Admin' })).not.toBeInTheDocument()
+  })
+
   it('masuk sebagai akun contoh peran itu lalu menuju rutenya', async () => {
     vi.stubEnv('VITE_API_MOCK', 'on')
     renderBar()

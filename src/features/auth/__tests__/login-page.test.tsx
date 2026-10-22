@@ -40,22 +40,21 @@ describe('LoginPage', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent(/tidak cocok/i)
   })
 
-  it('mengantar tiap peran ke rute awalnya sendiri', async () => {
+  it('mengantar pemilik ke dashboard-nya setelah masuk', async () => {
     renderWithProviders(
       <MemoryRouter initialEntries={['/masuk']}>
         <Routes>
           <Route path="/masuk" element={<LoginPage />} />
           <Route path="/pemilik" element={<p>Dashboard pemilik</p>} />
-          <Route path="/admin/unit" element={<p>Area admin</p>} />
         </Routes>
       </MemoryRouter>,
     )
 
-    await userEvent.type(screen.getByLabelText('Email / Nomor WhatsApp'), 'admin@nusantarabooking.id')
+    await userEvent.type(screen.getByLabelText('Email / Nomor WhatsApp'), 'wahyu@umkm.id')
     await userEvent.type(screen.getByLabelText('Kata sandi'), 'rahasia123')
     await userEvent.click(screen.getByRole('button', { name: 'Masuk' }))
 
-    expect(await screen.findByText('Area admin')).toBeInTheDocument()
+    expect(await screen.findByText('Dashboard pemilik')).toBeInTheDocument()
   })
 
   it('kembali ke tujuan semula setelah masuk, bila layar masuk membawa tujuan', async () => {
