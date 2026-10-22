@@ -120,6 +120,20 @@ describe('UnitDetailPage', () => {
     expect(terkirim).toEqual([{ unit_id: 1, start_date: '2026-11-01', end_date: '2027-05-01', total_price: 7_200_000 }])
   })
 
+  it('menolak tanggal mulai yang kosong dengan pesan, tanpa mengirim apa pun', async () => {
+    renderDetail()
+    await screen.findByRole('heading', { name: 'Kos Kamar 01' })
+
+    /* Pengguna bisa mengosongkan input date (pilih semua lalu hapus); `onChange`
+       mengirim `''` dan dulu itu membuat `hitungSewa` melempar `RangeError`. */
+    fireEvent.change(screen.getByLabelText('Mulai sewa'), { target: { value: '' } })
+
+    await userEvent.click(screen.getByRole('button', { name: 'Ajukan Sewa' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Tanggal mulai sewa wajib diisi.')
+    expect(terkirim).toEqual([])
+  })
+
   it('mengantar pengunjung tanpa sesi ke layar masuk, bukan ke galat', async () => {
     const router = createMemoryRouter(
       [
