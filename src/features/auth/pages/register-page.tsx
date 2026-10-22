@@ -29,8 +29,10 @@ export function RegisterPage() {
     setKtp({ status: 'loading', pesan: '' })
     try {
       const hasil = await bacaBerkasKtp(berkas)
-      form.setValue('nik', hasil.nik)
-      form.setValue('name', hasil.nama)
+      /* Hanya timpa isian yang sudah diketik pengguna bila OCR benar-benar
+         mendapat nilai; hasil kosong tidak boleh menghapus isian manual. */
+      if (hasil.nik) form.setValue('nik', hasil.nik)
+      if (hasil.nama) form.setValue('name', hasil.nama)
       setKtp(
         hasil.yakin
           ? { status: 'sukses', pesan: 'Data KTP terbaca. Periksa hasilnya sebelum mendaftar.' }
@@ -66,6 +68,10 @@ export function RegisterPage() {
             aria-label="Berkas KTP"
             onChange={(e) => {
               const berkas = e.target.files?.[0]
+              /* Kosongkan nilai input supaya berkas yang sama bisa dipilih
+                 lagi setelah percobaan gagal — tanpa ini peramban tidak
+                 memicu `change` untuk berkas yang sama. */
+              e.target.value = ''
               if (berkas) void bacaBerkas(berkas)
             }}
             className="w-full text-micro text-brand-text-muted"
