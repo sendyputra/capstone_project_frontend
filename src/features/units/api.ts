@@ -1,8 +1,15 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { apiFetch, buka } from '@/api/client'
-import { keDaftarUnit, keUnit } from '@/api/adapters/units'
+import { dariStatusUnit, keDaftarUnit, keUnit } from '@/api/adapters/units'
 import type { UnitInput, UnitRow } from '@/api/types'
 import { useSession } from '@/features/auth/api'
+
+/* Formulir memakai label tampilan; API memakai enum backend. Penerjemahan arah
+   keluar dikumpulkan di sini supaya tidak ada mutasi yang mengirim label. */
+function muatanUnit(nilai: Partial<UnitInput>): Record<string, unknown> {
+  const { status, ...sisa } = nilai
+  return status === undefined ? sisa : { ...sisa, status: dariStatusUnit(status) }
+}
 
 export const unitKeys = {
   list: (userId: number) => ['units', { userId }] as const,
@@ -41,7 +48,7 @@ export function useUnit(id: number) {
 export function useCreateUnit() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async (nilai: UnitInput) => keUnit(buka(await apiFetch('/units', { method: 'POST', body: nilai }))),
+    mutationFn: async (nilai: UnitInput) => keUnit(buka(await apiFetch('/units', { method: 'POST', body: muatanUnit(nilai) }))),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['units'] }),
   })
 }
@@ -50,7 +57,7 @@ export function useUpdateUnit() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async ({ id, ...nilai }: { id: number } & Partial<UnitInput>) =>
-      keUnit(buka(await apiFetch(`/units/${id}`, { method: 'PUT', body: nilai }))),
+      keUnit(buka(await apiFetch(`/units/${id}`, { method: 'PUT', body: muatanUnit(nilai) }))),
     onSuccess: (_hasil, variabel) => {
       queryClient.invalidateQueries({ queryKey: ['units'] })
       queryClient.invalidateQueries({ queryKey: unitKeys.detail(variabel.id) })
@@ -62,7 +69,7 @@ export function useUbahStatusUnit() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async ({ id, status }: { id: number; status: UnitRow['status'] }) =>
-      keUnit(buka(await apiFetch(`/units/${id}/status`, { method: 'PATCH', body: { status } }))),
+      keUnit(buka(await apiFetch(`/units/${id}/status`, { method: 'PATCH', body: { status: dariStatusUnit(status) } }))),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['units'] }),
   })
 }

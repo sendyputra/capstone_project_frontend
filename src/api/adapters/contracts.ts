@@ -1,23 +1,29 @@
 import { buka } from '@/api/client'
-import type { ContractRow } from '@/api/types'
+import type { ContractRow, ContractStatusDto } from '@/api/types'
 
-/* Dua penulisan diterima selama transisi: enum backend (`active`) dan enum
-   tampilan lama (`Aktif`) yang masih dikirim dan disimpan mock sampai Task 9
-   menulis ulang data contohnya. Nilai di luar keduanya jatuh ke `Menunggu`,
-   bukan diteruskan mentah — kontrak asing tak boleh menyamar jadi status sah. */
+/* Dua tabel, satu per arah: enum backend ke label tampilan, dan sebaliknya.
+   Nilai di luar enum backend jatuh ke `Menunggu`, bukan diteruskan mentah —
+   kontrak asing tak boleh menyamar jadi status sah. */
 const STATUS: Record<string, ContractRow['status']> = {
   pending: 'Menunggu',
   active: 'Aktif',
   completed: 'Selesai',
   cancelled: 'Dibatalkan',
-  Menunggu: 'Menunggu',
-  Aktif: 'Aktif',
-  Selesai: 'Selesai',
-  Dibatalkan: 'Dibatalkan',
+}
+
+const DARI_STATUS: Record<ContractRow['status'], ContractStatusDto> = {
+  Menunggu: 'pending',
+  Aktif: 'active',
+  Selesai: 'completed',
+  Dibatalkan: 'cancelled',
 }
 
 export function keStatusKontrak(nilai: string): ContractRow['status'] {
   return STATUS[nilai] ?? 'Menunggu'
+}
+
+export function dariStatusKontrak(nilai: ContractRow['status']): ContractStatusDto {
+  return DARI_STATUS[nilai] ?? 'pending'
 }
 
 export function keKontrak(dto: unknown): ContractRow {

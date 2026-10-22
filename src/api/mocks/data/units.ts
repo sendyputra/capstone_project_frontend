@@ -1,16 +1,20 @@
-import type { Unit } from '@/api/types'
+import type { Unit, UnitStatusDto } from '@/api/types'
+
+/* Baris tabel `units` seperti yang dikirim API asli: bentuknya sama dengan
+   `Unit`, hanya statusnya enum backend (`available`), bukan label tampilan. */
+export type UnitDto = Omit<Unit, 'status'> & { status: UnitStatusDto }
 
 /* Data contoh disalin dari purwarupa (`appData().properties`); `owner` berupa
    nama di purwarupa dipetakan ke `owner_id` supaya cocok dengan ERD, dan
    `image` menunjuk aset lokal di `public/demo/` alih-alih URL luar. */
-export const units: Unit[] = [
+export const units: UnitDto[] = [
   {
     id: 1,
     owner_id: 402,
     name: 'Kos Kamar 01',
     address: 'Bandung Barat',
     price: 1200000,
-    status: 'Tersedia',
+    status: 'available',
     type: 'Kamar Kos',
     image: '/demo/kos.jpg',
     facilities: ['KM Dalam', 'Kasur Springbed', 'WiFi Highspeed', 'Lemari Pakaian'],
@@ -22,7 +26,7 @@ export const units: Unit[] = [
     name: 'Kontrakan Rumah Asri Type 36',
     address: 'Cimahi',
     price: 2500000,
-    status: 'Terisi',
+    status: 'rented',
     type: 'Kontrakan',
     image: '/demo/kontrakan.jpg',
     facilities: ['2 Kamar Tidur', 'Dapur', 'Garasi Mobil', 'Air PDAM'],
@@ -34,7 +38,7 @@ export const units: Unit[] = [
     name: 'Ruang Usaha Ruko Strategis',
     address: 'Bandung Kota',
     price: 4500000,
-    status: 'Tersedia',
+    status: 'available',
     type: 'Ruang Usaha',
     image: '/demo/ruko.jpg',
     facilities: ['Akses Pinggir Jalan Utama', 'Listrik 2200W', 'Toilet', 'Parkir Luas'],
@@ -46,7 +50,7 @@ export const units: Unit[] = [
     name: 'Kos Putri Melati Kamar B2',
     address: 'Bandung Kota',
     price: 950000,
-    status: 'Tersedia',
+    status: 'available',
     type: 'Kamar Kos',
     image: '/demo/kos.jpg',
     facilities: ['KM Dalam', 'Kasur', 'WiFi', 'Dapur Bersama'],
@@ -58,7 +62,7 @@ export const units: Unit[] = [
     name: 'Kontrakan Melati Type 45',
     address: 'Cimahi',
     price: 3100000,
-    status: 'Terisi',
+    status: 'rented',
     type: 'Kontrakan',
     image: '/demo/kontrakan.jpg',
     facilities: ['3 Kamar Tidur', 'Dapur', 'Carport', 'Air PAM'],

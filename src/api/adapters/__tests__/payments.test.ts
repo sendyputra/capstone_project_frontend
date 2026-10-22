@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { keDaftarPembayaran, kePembayaran, keStatusBayar } from '@/api/adapters/payments'
+import { dariStatusBayar, keDaftarPembayaran, kePembayaran, keStatusBayar } from '@/api/adapters/payments'
 
 const dto = {
   id: 1, contract_id: 2, month: '2026-10', amount: '1500000',
@@ -17,13 +17,21 @@ describe('adaptor pembayaran', () => {
     expect(keStatusBayar('baru')).toBe('Menunggu Verifikasi')
   })
 
-  /* Mock masih menyimpan enum tampilan lama; kalau tidak diteruskan, tagihan
-     yang baru disetujui kembali tampak menunggu verifikasi. */
-  it('meneruskan enum Indonesia yang masih dikirim selama transisi', () => {
-    expect(keStatusBayar('Belum Bayar')).toBe('Belum Bayar')
-    expect(keStatusBayar('Menunggu Verifikasi')).toBe('Menunggu Verifikasi')
-    expect(keStatusBayar('Lunas')).toBe('Lunas')
-    expect(keStatusBayar('Ditolak')).toBe('Ditolak')
+  /* Mock kini menyimpan enum backend; label Indonesia yang tersisa jatuh ke
+     `Menunggu Verifikasi` seperti status asing lainnya. */
+  it('tidak meneruskan label Indonesia sebagai status', () => {
+    expect(keStatusBayar('Lunas')).toBe('Menunggu Verifikasi')
+    expect(keStatusBayar('Ditolak')).toBe('Menunggu Verifikasi')
+  })
+
+  /* `Belum Bayar` tidak punya padanan di backend: bulan yang belum dibayar tidak
+     punya baris pembayaran sama sekali. Kalau label itu sampai terkirim, satu-
+     satunya status "menunggu" yang sah adalah `pending`. */
+  it('mengirim enum backend untuk tiap status tampilan', () => {
+    expect(dariStatusBayar('Menunggu Verifikasi')).toBe('pending')
+    expect(dariStatusBayar('Lunas')).toBe('paid')
+    expect(dariStatusBayar('Ditolak')).toBe('rejected')
+    expect(dariStatusBayar('Belum Bayar')).toBe('pending')
   })
 
   it('membaca bulan YYYY-MM apa adanya', () => {
@@ -50,6 +58,6 @@ describe('adaptor pembayaran', () => {
       unit_title: '',
     })
     expect(kePembayaran({ ...dto, amount: 'bukan-angka' }).amount).toBe(0)
-    expect(kePembayaran({ ...dto, status: 'Lunas' }).status).toBe('Lunas')
+    expect(kePembayaran({ ...dto, status: 'Lunas' }).status).toBe('Menunggu Verifikasi')
   })
 })

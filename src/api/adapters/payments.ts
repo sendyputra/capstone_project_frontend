@@ -1,23 +1,29 @@
 import { buka } from '@/api/client'
-import type { PaymentRow } from '@/api/types'
+import type { PaymentRow, PaymentStatusDto } from '@/api/types'
 
-/* Seperti adaptor kontrak: enum backend (`paid`) dan enum tampilan lama
-   (`Lunas`) sama-sama diterima selama transisi, karena mock masih menyimpan
-   nilai Indonesia sampai Task 9 menulis ulang data contohnya. `Belum Bayar`
-   hanya datang dari nilai lama — backend memakai `pending` untuk arti yang sama
-   dengan `Menunggu Verifikasi`. */
+/* Dua tabel, satu per arah. `Belum Bayar` hanya ada di tampilan: backend tidak
+   menyimpan status itu — bulan yang belum dibayar tidak punya baris pembayaran —
+   jadi kalau label itu sampai terkirim, satu-satunya status "menunggu" yang sah
+   adalah `pending`. */
 const STATUS: Record<string, PaymentRow['status']> = {
   pending: 'Menunggu Verifikasi',
   paid: 'Lunas',
   rejected: 'Ditolak',
-  'Belum Bayar': 'Belum Bayar',
-  'Menunggu Verifikasi': 'Menunggu Verifikasi',
-  Lunas: 'Lunas',
-  Ditolak: 'Ditolak',
+}
+
+const DARI_STATUS: Record<PaymentRow['status'], PaymentStatusDto> = {
+  'Menunggu Verifikasi': 'pending',
+  'Belum Bayar': 'pending',
+  Lunas: 'paid',
+  Ditolak: 'rejected',
 }
 
 export function keStatusBayar(nilai: string): PaymentRow['status'] {
   return STATUS[nilai] ?? 'Menunggu Verifikasi'
+}
+
+export function dariStatusBayar(nilai: PaymentRow['status']): PaymentStatusDto {
+  return DARI_STATUS[nilai] ?? 'pending'
 }
 
 export function kePembayaran(dto: unknown): PaymentRow {
@@ -26,8 +32,8 @@ export function kePembayaran(dto: unknown): PaymentRow {
   return {
     id: Number(p.id),
     contract_id: Number(p.contract_id),
-    /* `month` dibiarkan apa adanya: ERD memakai `YYYY-MM`, sedangkan handler
-       mock masih mengirim label bulan. Task 9 yang menyeragamkannya. */
+    /* `month` diteruskan apa adanya: ERD memakai `YYYY-MM`, dan label bulan
+       adalah urusan tampilan. */
     month: String(p.month ?? ''),
     amount: Number.isFinite(jumlah) ? jumlah : 0,
     status: keStatusBayar(String(p.status)),

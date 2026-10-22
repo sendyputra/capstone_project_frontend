@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { keDaftarUnit, keUnit } from '@/api/adapters/units'
+import { dariStatusUnit, keDaftarUnit, keStatusUnit, keUnit } from '@/api/adapters/units'
 
 /* Bentuk DTO backend: enum dan harga datang sebagai teks, `booked_dates` bisa
    berisi tanggal ISO. Adaptor yang menormalkannya sekali, bukan tiap komponen. */
@@ -23,9 +23,17 @@ describe('adaptor unit', () => {
     expect(keDaftarUnit([dto])).toHaveLength(1)
   })
 
-  it('menerima enum Indonesia yang masih dikirim selama transisi', () => {
-    expect(keUnit({ ...dto, status: 'Terisi' }).status).toBe('Terisi')
-    expect(keUnit({ ...dto, status: 'Tersedia' }).status).toBe('Tersedia')
+  /* Mock sudah bicara enum backend; label Indonesia yang datang dari luar enum
+     tidak lagi diteruskan (`Terisi` akan menyamar jadi status sah). */
+  it('menolak label Indonesia sebagai status', () => {
+    expect(keStatusUnit('Terisi')).toBe('Tersedia')
+    expect(keStatusUnit('Perawatan')).toBe('Tersedia')
+  })
+
+  it('mengirim enum backend untuk tiap label tampilan', () => {
+    expect(dariStatusUnit('Tersedia')).toBe('available')
+    expect(dariStatusUnit('Terisi')).toBe('rented')
+    expect(dariStatusUnit('Perawatan')).toBe('maintenance')
   })
 
   it('hanya menyimpan tanggal terisi yang berupa angka', () => {

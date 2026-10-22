@@ -25,6 +25,10 @@ export type Tenant = {
 }
 
 export type UnitStatus = 'Tersedia' | 'Terisi' | 'Perawatan'
+/* Enum yang dipakai API asli. Label tampilan (`UnitStatus`) dan nilai kabel
+   (`UnitStatusDto`) sengaja dua tipe: adaptor yang menerjemahkan, sehingga
+   komponen tidak pernah melihat enum dan API tidak pernah menerima label. */
+export type UnitStatusDto = 'available' | 'rented' | 'maintenance'
 export type UnitType = 'Kamar Kos' | 'Kontrakan' | 'Ruang Usaha' | 'Apartemen'
 
 export type Unit = {
@@ -45,11 +49,8 @@ export type Unit = {
    menulis fasilitas sebagai satu baris koma; gambar dan tanggal terisi menyusul. */
 export type UnitInput = Pick<Unit, 'name' | 'address' | 'price' | 'status'> & Partial<Pick<Unit, 'type' | 'facilities' | 'image'>>
 
-export type BookingStatus = 'Menunggu Persetujuan' | 'Disetujui' | 'Ditolak'
-/* Di luar ERD: pengajuan sewa belum punya tabelnya di skema. */
-export type Booking = { id: number; unit_id: number; tenant_id: number; duration: string; status: BookingStatus }
-
 export type ContractStatus = 'Menunggu' | 'Aktif' | 'Selesai' | 'Dibatalkan'
+export type ContractStatusDto = 'pending' | 'active' | 'completed' | 'cancelled'
 
 export type Contract = {
   id: number
@@ -61,7 +62,10 @@ export type Contract = {
   status: ContractStatus
 }
 
+/* `Belum Bayar` bukan nilai API: bulan yang belum dibayar tidak punya baris
+   pembayaran, jadi status itu hanya ada di tampilan. */
 export type PaymentStatus = 'Belum Bayar' | 'Menunggu Verifikasi' | 'Lunas' | 'Ditolak'
+export type PaymentStatusDto = 'pending' | 'paid' | 'rejected'
 
 export type Payment = {
   id: number
@@ -72,10 +76,10 @@ export type Payment = {
   proof_url: string
 }
 
-/* Bentuk yang dikirim handler: baris siap tampil hasil join, seperti peran
-   `with()` pada API sungguhan, supaya komponen tidak perlu menyambung sendiri. */
+/* Bentuk yang dipakai komponen: baris hasil join dengan label tampilan, seperti
+   peran `with()` pada API sungguhan, supaya komponen tidak perlu menyambung
+   sendiri. Adaptor (bukan handler) yang menghasilkan bentuk ini dari DTO. */
 export type UnitRow = Unit & { owner_name: string }
-export type BookingRow = Booking & { renter_name: string; unit_title: string; renter_phone: string }
 export type ContractRow = Contract & { renter_name: string; unit_title: string; owner_name: string; term: string; monthly: number }
 export type PaymentRow = Payment & { renter_name: string; unit_title: string }
 
