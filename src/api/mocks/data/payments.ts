@@ -7,4 +7,5 @@ export const payments: Payment[] = [
   { id: 302, contract_id: 202, month: '2026-10', amount: 3100000, status: 'Menunggu Verifikasi', proof_url: 'bukti-transfer-okt.jpg' },
   { id: 303, contract_id: 201, month: '2026-09', amount: 2500000, status: 'Lunas', proof_url: 'bukti-transfer-sep.jpg' },
   { id: 304, contract_id: 202, month: '2026-09', amount: 3100000, status: 'Ditolak', proof_url: '' },
+  { id: 305, contract_id: 205, month: '2026-11', amount: 2500000, status: 'Menunggu Verifikasi', proof_url: 'bukti-transfer-nov.jpg' },
 ]

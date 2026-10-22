@@ -23,7 +23,7 @@ export type Tenant = {
   joined: string
 }
 
-export type UnitStatus = 'Tersedia' | 'Terisi'
+export type UnitStatus = 'Tersedia' | 'Terisi' | 'Perawatan'
 export type UnitType = 'Kamar Kos' | 'Kontrakan' | 'Ruang Usaha' | 'Apartemen'
 
 export type Unit = {
@@ -48,7 +48,7 @@ export type BookingStatus = 'Menunggu Persetujuan' | 'Disetujui' | 'Ditolak'
 /* Di luar ERD: pengajuan sewa belum punya tabelnya di skema. */
 export type Booking = { id: number; unit_id: number; tenant_id: number; duration: string; status: BookingStatus }
 
-export type ContractStatus = 'Aktif' | 'Selesai' | 'Dibatalkan'
+export type ContractStatus = 'Menunggu' | 'Aktif' | 'Selesai' | 'Dibatalkan'
 
 export type Contract = {
   id: number
