@@ -1,5 +1,5 @@
 import { buka } from '@/api/client'
-import type { ContractRow, ContractStatusDto } from '@/api/types'
+import type { ContractRow, ContractStatusDto, KtpStatus } from '@/api/types'
 import { hitungBulanSewa } from '@/lib/sewa'
 
 /* Dua tabel, satu per arah: enum backend ke label tampilan, dan sebaliknya.
@@ -27,10 +27,20 @@ export function dariStatusKontrak(nilai: ContractRow['status']): ContractStatusD
   return DARI_STATUS[nilai] ?? 'pending'
 }
 
+/* Status verifikasi KTP penyewa memakai tiga label yang sama dengan pengguna.
+   Nilai di luar ketiganya diabaikan (bukan diteruskan), sehingga kolom "KTP"
+   jatuh ke "Belum" alih-alih menampilkan teks asing. */
+const STATUS_KTP: KtpStatus[] = ['Terverifikasi', 'Menunggu', 'Belum']
+
+function keKtp(nilai: unknown): KtpStatus | undefined {
+  return STATUS_KTP.find((status) => status === String(nilai ?? ''))
+}
+
 export function keKontrak(dto: unknown): ContractRow {
   const k = (dto ?? {}) as Record<string, unknown>
   const total = keAngka(k.total_price)
   const bulan = hitungBulan(String(k.start_date ?? ''), String(k.end_date ?? ''))
+  const ktp = keKtp(k.ktp)
   return {
     id: Number(k.id),
     unit_id: Number(k.unit_id),
@@ -46,6 +56,9 @@ export function keKontrak(dto: unknown): ContractRow {
     /* Biaya bulanan dihitung dari nilai kontrak dan masa sewa, bukan dibaca dari
        `monthly` kiriman server: dua sumber untuk satu angka bisa berselisih. */
     monthly: bulan > 0 ? Math.round(total / bulan) : total,
+    /* Hanya diteruskan bila server mengirimnya; tanpanya kolom "KTP" di layar
+       pemilik tampil "Belum". */
+    ...(ktp ? { ktp } : {}),
   }
 }
 

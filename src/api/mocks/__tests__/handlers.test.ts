@@ -182,13 +182,26 @@ describe('data contoh', () => {
     expect(((await res.json()) as { data: { proof_url: string } }).data.proof_url).toBe('/bukti/bukti-okt.jpg')
   })
 
-  it('mendaftarkan akun baru dan mengembalikan sesinya', async () => {
-    const hasil = await apiFetch<{ token: string; user: User }>('/auth/register', {
-      method: 'POST',
-      body: { name: 'Warga Baru', email: 'baru@mail.com', password: 'rahasia123' },
-    })
+  it('mendaftarkan akun baru lewat multipart dan mengembalikan sesinya', async () => {
+    /* Pendaftaran memakai `multipart/form-data` karena berkas KTP ikut terkirim;
+       badan disusun tangan dengan alasan yang sama seperti dua tes di atas. */
+    const badan = multipart(
+      { name: 'Warga Baru', email: 'baru@mail.com', password: 'rahasia123', role: 'penyewa' },
+      { nama: 'ktp.png', isi: 'x', bidang: 'ktp' },
+    )
+    const res = await kirim('/register', badan)
+    expect(res.status).toBe(201)
+    const hasil = (await res.json()) as { token: string; user: User }
     expect(hasil.token).toMatch(/^mock\./)
     expect(hasil.user.role).toBe('penyewa')
+  })
+
+  it('menolak pendaftaran multipart tanpa berkas KTP dengan 422', async () => {
+    const badan = multipart({ name: 'Warga Baru', email: 'baru@mail.com', password: 'rahasia123' })
+    const res = await kirim('/register', badan)
+    expect(res.status).toBe(422)
+    const jawaban = (await res.json()) as { errors: Record<string, string> }
+    expect(jawaban.errors.ktp).toBe('Berkas KTP wajib diunggah.')
   })
 })
 
@@ -196,13 +209,23 @@ type BadanMultipart = { tipe: string; isi: string }
 
 /* Badan `multipart/form-data` asli: batas, bagian teks per bidang, satu bagian
    berkas opsional, lalu penutup. `fetch` menerima string dengan header batas
-   yang sama persis, dan handler membacanya lewat `request.formData()`. */
-function multipart(bidang: Record<string, string>, berkas?: { nama: string; isi: string }): BadanMultipart {
+   yang sama persis, dan handler membacanya lewat `request.formData()`. Nama
+   bidang berkas bisa dipilih karena pendaftaran memakai `ktp`, bukan `proof`. */
+function multipart(
+  bidang: Record<string, string>,
+  berkas?: { nama: string; isi: string; bidang?: string },
+): BadanMultipart {
   const batas = '----nusantara-booking'
   const baris = [
     ...Object.entries(bidang).flatMap(([nama, nilai]) => [`--${batas}`, `Content-Disposition: form-data; name="${nama}"`, '', nilai]),
     ...(berkas
-      ? [`--${batas}`, `Content-Disposition: form-data; name="proof"; filename="${berkas.nama}"`, 'Content-Type: image/jpeg', '', berkas.isi]
+      ? [
+          `--${batas}`,
+          `Content-Disposition: form-data; name="${berkas.bidang ?? 'proof'}"; filename="${berkas.nama}"`,
+          'Content-Type: image/jpeg',
+          '',
+          berkas.isi,
+        ]
       : []),
     `--${batas}--`,
     '',

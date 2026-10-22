@@ -45,6 +45,15 @@ describe('adaptor kontrak', () => {
     expect(keDaftarKontrak([])).toEqual([])
   })
 
+  /* Kolom "KTP" di layar pemilik membaca `ktp` bila ada. Nilai asing tidak
+     diteruskan — halaman yang menjatuhkannya ke "Belum". */
+  it('memetakan status KTP hanya bila server mengirimnya', () => {
+    expect(keKontrak({ ...dto, ktp: 'Terverifikasi' }).ktp).toBe('Terverifikasi')
+    expect(keKontrak({ ...dto, ktp: 'Menunggu' }).ktp).toBe('Menunggu')
+    expect(keKontrak(dto).ktp).toBeUndefined()
+    expect(keKontrak({ ...dto, ktp: 'Ditolak' }).ktp).toBeUndefined()
+  })
+
   it('menerima daftar beramplop', () => {
     expect(keDaftarKontrak({ data: [dto] })).toHaveLength(1)
     expect(keDaftarKontrak('bukan-daftar')).toEqual([])

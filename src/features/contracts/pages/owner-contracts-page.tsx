@@ -46,7 +46,7 @@ export function OwnerContractsPage() {
       {kontrak.isPending && <Skeleton className="h-40" />}
       {kontrak.isError && <ErrorState message={(kontrak.error as Error).message} onRetry={() => kontrak.refetch()} />}
       {kontrak.isSuccess && (
-        <Tabel kolom={['Penyewa', 'Unit & Pemilik', 'Masa Sewa', 'Nilai Kontrak', 'Status Kontrak', 'Aksi']}>
+        <Tabel kolom={['Penyewa', 'Unit & Pemilik', 'Masa Sewa', 'Nilai Kontrak', 'KTP', 'Status Kontrak', 'Aksi']}>
           {daftar.map((baris) => (
             <tr key={baris.id}>
               <td className="p-4 font-bold text-brand-text">{baris.renter_name}</td>
@@ -59,6 +59,9 @@ export function OwnerContractsPage() {
                 <span className="text-micro text-brand-text-subtle">{baris.term}</span>
               </td>
               <td className="p-4 font-extrabold text-brand-accent">{formatRupiah(baris.monthly)} / bln</td>
+              {/* Verifikasi KTP dulu tugas panel admin; sekarang pemilik yang
+                  melihatnya di sini. Baris lama tanpa status dianggap "Belum". */}
+              <td className="p-4"><StatusChip nilai={baris.ktp ?? 'Belum'} /></td>
               <td className="p-4"><StatusChip nilai={baris.status} /></td>
               <td className="p-4 text-right">
                 {baris.status === 'Menunggu' ? (
