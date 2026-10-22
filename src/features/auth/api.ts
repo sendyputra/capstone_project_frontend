@@ -14,7 +14,13 @@ export function useSession(): { session: Session | null; isLoading: boolean } {
     enabled: Boolean(tersimpan),
     retry: false,
     staleTime: Infinity,
-    queryFn: async (): Promise<User> => keUser(buka(await apiFetch('/me'))),
+    /* `buka` hanya membuka amplop `{ data: ... }`; sebagian backend (dan mock
+       `/auth/me` yang masih dipertahankan) membungkus pengguna sebagai
+       `{ user }`. Keduanya diterima di sini, begitu pula objek pengguna polos. */
+    queryFn: async (): Promise<User> => {
+      const isi = buka<{ user?: unknown }>(await apiFetch('/me'))
+      return keUser(isi?.user ?? isi)
+    },
   })
 
   if (!tersimpan) return { session: null, isLoading: false }

@@ -1,4 +1,4 @@
-import { http, HttpResponse } from 'msw'
+import { http, HttpResponse, type HttpResponseResolver } from 'msw'
 import { units } from '@/api/mocks/data/units'
 import { subDariToken } from '@/api/mocks/token'
 import { gagalSekali } from '@/api/mocks/handlers/simulasi'
@@ -13,6 +13,14 @@ let urutan = units.length
 
 function subPemanggil(otorisasi: string | null) {
   return subDariToken(otorisasi) ?? PEMILIK_BAWAAN
+}
+
+const ubahUnit: HttpResponseResolver<{ id: string }> = async ({ params, request }) => {
+  const unit = units.find((kandidat) => kandidat.id === Number(params.id))
+  if (!unit) return HttpResponse.json({ message: 'Unit tidak ditemukan.' }, { status: 404 })
+  const muatan = (await request.json()) as Partial<Unit>
+  Object.assign(unit, muatan, { price: muatan.price === undefined ? unit.price : Number(muatan.price) })
+  return HttpResponse.json({ data: barisUnit(unit) })
 }
 
 export const unitHandlers = [
@@ -76,13 +84,10 @@ export const unitHandlers = [
     return HttpResponse.json({ data: barisUnit(unit) })
   }),
 
-  http.patch('/units/:id', async ({ params, request }) => {
-    const unit = units.find((kandidat) => kandidat.id === Number(params.id))
-    if (!unit) return HttpResponse.json({ message: 'Unit tidak ditemukan.' }, { status: 404 })
-    const muatan = (await request.json()) as Partial<Unit>
-    Object.assign(unit, muatan, { price: muatan.price === undefined ? unit.price : Number(muatan.price) })
-    return HttpResponse.json({ data: barisUnit(unit) })
-  }),
+  /* `useUpdateUnit` mengirim PUT, sedangkan pemanggil lama masih PATCH. Satu
+     logika perubahan dipakai kedua metode sampai Task 9 menulis ulang berkas ini. */
+  http.patch('/units/:id', ubahUnit),
+  http.put('/units/:id', ubahUnit),
 
   http.delete('/units/:id', ({ params }) => {
     if (gagalSekali('DELETE /units')) {
