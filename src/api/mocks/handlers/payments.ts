@@ -1,4 +1,4 @@
-import { http, HttpResponse } from 'msw'
+import { http, HttpResponse, type HttpResponseResolver } from 'msw'
 import { contracts } from '@/api/mocks/data/contracts'
 import { payments } from '@/api/mocks/data/payments'
 import { tenants } from '@/api/mocks/data/tenants'
@@ -16,6 +16,15 @@ export function barisTagihan(pembayaran: Payment): PaymentRow {
   const tenant = kontrak ? tenants.find((kandidat) => kandidat.id === kontrak.tenant_id) : undefined
   const unit = kontrak ? unitById(kontrak.unit_id) : undefined
   return { ...pembayaran, month: labelBulan(pembayaran.month), renter_name: tenant?.name ?? '', unit_title: unit?.name ?? '' }
+}
+
+const ubahPembayaran: HttpResponseResolver<{ id: string }> = async ({ params, request }) => {
+  const pembayaran = payments.find((kandidat) => kandidat.id === Number(params.id))
+  if (!pembayaran) return HttpResponse.json({ message: 'Tagihan tidak ditemukan.' }, { status: 404 })
+  const { status } = (await request.json()) as Pick<Payment, 'status'>
+  pembayaran.status = status
+  if (status === 'Ditolak') pembayaran.proof_url = ''
+  return HttpResponse.json({ data: barisTagihan(pembayaran) })
 }
 
 export const paymentHandlers = [
@@ -51,12 +60,9 @@ export const paymentHandlers = [
     return HttpResponse.json({ data: barisTagihan(pembayaran) })
   }),
 
-  http.patch('/payments/:id', async ({ params, request }) => {
-    const pembayaran = payments.find((kandidat) => kandidat.id === Number(params.id))
-    if (!pembayaran) return HttpResponse.json({ message: 'Tagihan tidak ditemukan.' }, { status: 404 })
-    const { status } = (await request.json()) as Pick<Payment, 'status'>
-    pembayaran.status = status
-    if (status === 'Ditolak') pembayaran.proof_url = ''
-    return HttpResponse.json({ data: barisTagihan(pembayaran) })
-  }),
+  /* `useVerifikasiPembayaran` mengirim PUT, sedangkan pemanggil lama masih
+     PATCH. Satu logika perubahan dipakai kedua metode sampai Task 9 menulis
+     ulang berkas ini. */
+  http.patch('/payments/:id', ubahPembayaran),
+  http.put('/payments/:id', ubahPembayaran),
 ]

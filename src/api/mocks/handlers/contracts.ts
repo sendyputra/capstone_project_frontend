@@ -1,4 +1,4 @@
-import { http, HttpResponse } from 'msw'
+import { http, HttpResponse, type HttpResponseResolver } from 'msw'
 import { contracts } from '@/api/mocks/data/contracts'
 import { namaPengguna, tenantById, termBulan, unitById } from '@/api/mocks/join'
 import type { Contract, ContractRow } from '@/api/types'
@@ -15,14 +15,20 @@ export function barisKontrak(kontrak: Contract): ContractRow {
   }
 }
 
+const ubahKontrak: HttpResponseResolver<{ id: string }> = async ({ params, request }) => {
+  const kontrak = contracts.find((kandidat) => kandidat.id === Number(params.id))
+  if (!kontrak) return HttpResponse.json({ message: 'Kontrak tidak ditemukan.' }, { status: 404 })
+  const { status } = (await request.json()) as Pick<Contract, 'status'>
+  kontrak.status = status
+  return HttpResponse.json({ data: barisKontrak(kontrak) })
+}
+
 export const contractHandlers = [
   http.get('/contracts', () => HttpResponse.json({ data: contracts.map(barisKontrak) })),
 
-  http.patch('/contracts/:id', async ({ params, request }) => {
-    const kontrak = contracts.find((kandidat) => kandidat.id === Number(params.id))
-    if (!kontrak) return HttpResponse.json({ message: 'Kontrak tidak ditemukan.' }, { status: 404 })
-    const { status } = (await request.json()) as Pick<Contract, 'status'>
-    kontrak.status = status
-    return HttpResponse.json({ data: barisKontrak(kontrak) })
-  }),
+  /* `useUbahStatusKontrak` mengirim PUT, sedangkan pemanggil lama masih PATCH.
+     Satu logika perubahan dipakai kedua metode sampai Task 9 menulis ulang
+     berkas ini. */
+  http.patch('/contracts/:id', ubahKontrak),
+  http.put('/contracts/:id', ubahKontrak),
 ]
