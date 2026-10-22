@@ -14,6 +14,17 @@ export function formatTanggal(value: string | Date): string {
   return new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }).format(tanggal)
 }
 
+/* Label bulan untuk kolom tagihan: ERD menyimpan `month` sebagai `YYYY-MM`,
+   sedangkan layar menulis "Oktober 2026". Tanggalnya dibangun dalam UTC supaya
+   zona waktu peramban tidak menggeser bulan. Nilai yang tidak berbentuk
+   `YYYY-MM` diteruskan apa adanya — lebih jujur daripada "Invalid Date". */
+export function formatBulan(value: string): string {
+  const cocok = /^(\d{4})-(\d{2})$/.exec(value)
+  if (!cocok) return value
+  const tanggal = new Date(Date.UTC(Number(cocok[1]), Number(cocok[2]) - 1, 1))
+  return new Intl.DateTimeFormat('id-ID', { month: 'long', year: 'numeric', timeZone: 'UTC' }).format(tanggal)
+}
+
 /* Dua inisial pertama untuk avatar bulat — sama seperti purwarupa. */
 export function inisial(nama: string): string {
   return nama

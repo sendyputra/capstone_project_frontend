@@ -16,11 +16,22 @@ export function usePayments() {
   })
 }
 
+/* Unggah bukti bayar membuat baris pembayaran baru: backend tidak punya rute
+   ubah-bukti, jadi `POST /payments` dengan `multipart/form-data` adalah satu-
+   satunya jalan. `Belum Bayar` di layar berarti belum ada baris sama sekali. */
 export function useUnggahBukti() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, proof_url }: { id: number; proof_url: string }) =>
-      apiFetch<{ data: PaymentRow }>(`/payments/${id}/proof`, { method: 'POST', body: { proof_url } }),
+    mutationFn: (masukan: { contract_id: number; month: string; amount: number; proof: File }) => {
+      const badan = new FormData()
+      badan.set('contract_id', String(masukan.contract_id))
+      badan.set('month', masukan.month)
+      badan.set('amount', String(masukan.amount))
+      badan.set('proof', masukan.proof)
+      /* `apiFetch` tidak memaksa `Content-Type` untuk FormData: batas multipart
+         harus disusun peramban sendiri. */
+      return apiFetch<{ data: unknown }>('/payments', { method: 'POST', body: badan })
+    },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['payments'] }),
   })
 }

@@ -52,14 +52,17 @@ export const paymentHandlers = [
   /* Unggah bukti bayar: `multipart/form-data`, seperti rute API asli. Nomor
      kontrak tidak dicocokkan ke tabel kontrak — mock menerima id berbentuk angka
      apa pun; kontrak yang tidak ada hanya membuat baris join tanpa nama penyewa
-     atau unit. Backend asli yang menegakkan `exists:contracts,id`. */
+     atau unit. Backend asli yang menegakkan `exists:contracts,id`.
+     Bagian berkas diperiksa dari bentuknya, bukan lewat `instanceof File`:
+     kelas `File` di lingkungan uji (jsdom) berbeda realm dari kelas yang dipakai
+     parser multipart, sehingga `instanceof` di sini menolak unggahan yang sah. */
   http.post('/payments', async ({ request }) => {
     const badan = await request.formData()
     const kontrakId = Number(badan.get('contract_id'))
     const bulan = String(badan.get('month') ?? '')
     const jumlah = Number(badan.get('amount'))
     const berkas = badan.get('proof')
-    if (!kontrakId || !bulan || !jumlah || !(berkas instanceof File)) {
+    if (!kontrakId || !bulan || !jumlah || !berkas || typeof berkas === 'string') {
       return HttpResponse.json({ message: 'Periksa isian.', errors: { proof: ['Bukti bayar wajib diunggah.'] } }, { status: 422 })
     }
     /* Simulasi kegagalan sekali per aksi, supaya jalur galat dan tombol coba

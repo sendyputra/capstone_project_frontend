@@ -58,13 +58,17 @@ function keAngka(nilai: unknown): number {
   return Number.isFinite(angka) ? angka : 0
 }
 
-/* Selisih bulan kalender, bukan selisih hari: masa sewa ditulis "6 bulan" dan
-   tanggal akhir bergeser mengikuti panjang bulan. Tanggal tak terbaca
+/* Selisih bulan kalender dibulatkan ke atas, bukan dipotong: kontrak
+   1 Sep 2026 – 28 Feb 2027 adalah enam bulan sewa (lima bulan penuh ditambah
+   sisa hari di bulan keenam), dan `total_price` data contoh memang enam kali
+   harga bulanan unit. Memotong sisa hari membuat "5 bulan" dan biaya bulanan
+   yang tidak pernah cocok dengan nilai kontrak. Tanggal tak terbaca
    menghasilkan 0 — ditampilkan "0 bulan", tanda datanya yang cacat — supaya
    `monthly` memakai nilai kontrak apa adanya, bukan hasil bagi karangan. */
 function hitungBulan(mulai: string, akhir: string): number {
   const a = new Date(mulai)
   const b = new Date(akhir)
   if (Number.isNaN(a.getTime()) || Number.isNaN(b.getTime())) return 0
-  return Math.max(1, (b.getFullYear() - a.getFullYear()) * 12 + (b.getMonth() - a.getMonth()))
+  const selisih = (b.getFullYear() - a.getFullYear()) * 12 + (b.getMonth() - a.getMonth())
+  return Math.max(1, selisih + (b.getDate() > a.getDate() ? 1 : 0))
 }
