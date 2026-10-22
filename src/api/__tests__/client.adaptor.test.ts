@@ -35,6 +35,8 @@ describe('apiFetch FormData', () => {
       ),
     )
     await expect(apiFetch('/units', { method: 'POST', body: {} })).rejects.toMatchObject({
+      message: 'Periksa isian.',
+      kind: 'validation',
       fields: { name: 'Nama wajib diisi.' },
     })
   })
