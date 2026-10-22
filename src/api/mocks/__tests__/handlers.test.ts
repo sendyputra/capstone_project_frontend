@@ -27,12 +27,12 @@ afterEach(() => {
 })
 
 describe('data contoh', () => {
-  it('menyajikan lima unit dengan tipe, fasilitas, gambar, dan tanggal terisi', async () => {
+  it('menyajikan dua puluh empat unit dengan tipe, fasilitas, gambar, dan tanggal terisi', async () => {
     /* Katalog lintas pemilik dibaca sebagai penyewa: cakupan pemilik hanya
-       unitnya sendiri, sedangkan katalog publik memuat kelima unit. */
+       unitnya sendiri, sedangkan katalog publik memuat seluruh unit. */
     writeSession(penyewa)
     const { data } = await apiFetch<{ data: UnitDtoRow[] }>('/units')
-    expect(data).toHaveLength(5)
+    expect(data).toHaveLength(24)
     /* Status dikirim sebagai enum backend; label `Tersedia` urusan adaptor. */
     expect(data[0]).toMatchObject({ name: 'Kos Kamar 01', type: 'Kamar Kos', status: 'available' })
     expect(data[0].facilities.length).toBeGreaterThan(0)
@@ -52,11 +52,10 @@ describe('data contoh', () => {
   it('menyajikan kontrak dan tagihan milik pemilik yang masuk, lengkap dengan hasil join', async () => {
     writeSession(pemilik)
     /* Angka di bawah diukur dari data contoh, bukan disalin dari purwarupa:
-       unit 1, 2, 3 milik 402 → kontrak 201, 203, 204, 205 (202 milik unit 5/403).
-       Tagihan untuk 402 tinggal 303 dan 305; 301 (bulan belum dibayar) tidak ada
-       lagi karena backend tidak menyimpan baris itu. */
+       unit 1, 2, 3, 6, 7, 8 milik 402 → kontrak 201, 203, 204, 205, 206, 222.
+       Tagihan untuk 402: 303 (201), 359 (203), 305 (205), dan 308–312 (206). */
     const kontrak = (await apiFetch<{ data: ContractDtoRow[] }>('/contracts')).data
-    expect(kontrak.map((baris) => baris.id)).toEqual([201, 203, 204, 205])
+    expect(kontrak.map((baris) => baris.id)).toEqual([201, 203, 204, 205, 206, 222])
     expect(kontrak[0]).toMatchObject({
       renter_name: 'Siti Sarah',
       unit_title: 'Kontrakan Rumah Asri Type 36',
@@ -65,7 +64,7 @@ describe('data contoh', () => {
     })
 
     const tagihan = (await apiFetch<{ data: PaymentDtoRow[] }>('/payments')).data
-    expect(tagihan.map((baris) => baris.id)).toEqual([303, 305])
+    expect(tagihan.map((baris) => baris.id)).toEqual([303, 305, 308, 309, 310, 311, 312, 359])
     expect(tagihan[0]).toMatchObject({
       month: '2026-09',
       status: 'paid',
@@ -77,12 +76,12 @@ describe('data contoh', () => {
   it('membatasi GET /contracts pada unit milik pemilik yang meminta', async () => {
     writeSession(pemilik)
     const milikWahyu = (await apiFetch<{ data: ContractDtoRow[] }>('/contracts')).data
-    expect(milikWahyu.map((baris) => baris.id)).toEqual([201, 203, 204, 205])
+    expect(milikWahyu.map((baris) => baris.id)).toEqual([201, 203, 204, 205, 206, 222])
     expect(milikWahyu.some((baris) => baris.id === 202)).toBe(false)
 
     writeSession(pemilikLain)
     const milikRina = (await apiFetch<{ data: ContractDtoRow[] }>('/contracts')).data
-    expect(milikRina.map((baris) => baris.id)).toEqual([202])
+    expect(milikRina.map((baris) => baris.id)).toEqual([202, 207, 215, 218, 219])
     expect(milikRina[0]).toMatchObject({ owner_name: 'Bu Rina', unit_title: 'Kontrakan Melati Type 45' })
 
     /* Penyewa juga dibatasi token: 405 → tenant 2, yaitu kontrak 201 dan 205.
@@ -96,11 +95,11 @@ describe('data contoh', () => {
   it('mengirim seluruh unit ke penyewa dan hanya unit sendiri ke pemilik', async () => {
     writeSession(penyewa)
     const katalog = (await apiFetch<{ data: UnitDtoRow[] }>('/units')).data
-    expect(katalog).toHaveLength(5)
+    expect(katalog).toHaveLength(24)
 
     writeSession(pemilik)
     const milik = (await apiFetch<{ data: UnitDtoRow[] }>('/units')).data
-    expect(milik).toHaveLength(3)
+    expect(milik).toHaveLength(6)
     expect(milik.every((unit) => unit.owner_id === 402)).toBe(true)
   })
 
@@ -130,7 +129,7 @@ describe('data contoh', () => {
     })
     /* Penyewa diambil dari token (405 → tenant 2), status selalu `pending`. */
     expect(data).toMatchObject({
-      id: 206,
+      id: 225,
       unit_id: 1,
       tenant_id: 2,
       status: 'pending',
@@ -143,7 +142,7 @@ describe('data contoh', () => {
   })
 
   it('menerima dan menolak bukti bayar lewat PUT', async () => {
-    /* Cakupan pemilik hanya tagihan unitnya sendiri (303 dan 305). */
+    /* Cakupan pemilik hanya tagihan unitnya sendiri. */
     writeSession(pemilik)
     await apiFetch('/payments/305', { method: 'PUT', body: { status: 'paid' } })
     await apiFetch('/payments/303', { method: 'PUT', body: { status: 'rejected' } })
@@ -177,7 +176,7 @@ describe('data contoh', () => {
   })
 
   /* Id unggahan dihitung dari id tertinggi yang hidup, bukan `payments.length + 1`.
-     Data contoh ber-id 302–305, jadi cara lama memberi baris baru id 5 dan
+     Data contoh ber-id 302–360, jadi cara lama memberi baris baru id 59 dan
      `susunTagihan` — yang memakai baris ber-id terbesar per bulan — tetap
      menampilkan `Ditolak`: unggah ulang tampak tidak terjadi apa-apa. */
   it('unggah ulang bulan yang ditolak menurunkan baris Menunggu Verifikasi', async () => {
