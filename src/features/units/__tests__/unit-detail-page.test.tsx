@@ -9,11 +9,11 @@ import { UnitDetailPage } from '@/features/units/pages/unit-detail-page'
 import { masukSebagai } from '@/test/sesi'
 import { renderWithProviders } from '@/test/render'
 
-/* `POST /contracts` belum punya handler mock — adaptor ke backend baru datang
-   pada tugas integrasi. Tes ini memasang handler sementaranya sendiri dengan
-   semantik yang sama seperti `POST /bookings`: gagal sekali saat simulasi
-   menyala, lalu berhasil. Badan permintaan direkam supaya tanggal dan total
-   yang dihitung halaman ikut diperiksa, bukan hanya pesan galatnya. */
+/* Mock sudah punya `POST /contracts`, tetapi tidak mensimulasikan kegagalan
+   jaringan — bagian itu khas demo. Tes ini memasang handler sementaranya sendiri
+   dengan semantik yang sama: gagal sekali saat simulasi menyala, lalu berhasil.
+   Badan permintaan direkam supaya tanggal dan total yang dihitung halaman ikut
+   diperiksa, bukan hanya pesan galatnya. */
 type BadanKontrak = { unit_id: number; start_date: string; end_date: string; total_price: number }
 
 let terkirim: BadanKontrak[] = []
@@ -35,7 +35,7 @@ function pasangHandlerKontrak() {
             id: 900,
             ...badan,
             tenant_id: 2,
-            status: 'Menunggu',
+            status: 'pending',
             renter_name: 'Siti Sarah',
             unit_title: 'Kos Kamar 01',
             owner_name: 'Pak Wahyu',

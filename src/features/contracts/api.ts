@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { keDaftarKontrak, keKontrak } from '@/api/adapters/contracts'
+import { dariStatusKontrak, keDaftarKontrak, keKontrak } from '@/api/adapters/contracts'
 import { apiFetch, buka } from '@/api/client'
 import type { ContractRow } from '@/api/types'
 
@@ -24,8 +24,11 @@ export function useBuatKontrak() {
 export function useUbahStatusKontrak() {
   const queryClient = useQueryClient()
   return useMutation({
+    /* Halaman mengirim status tampilan (`Aktif`); API menuntut enum backend
+       (`active`). `Menunggu` diterjemahkan ke `pending` walau klien tidak
+       pernah mengirimnya sendiri. */
     mutationFn: async ({ id, status }: { id: number; status: ContractRow['status'] }) =>
-      keKontrak(buka(await apiFetch<unknown>(`/contracts/${id}`, { method: 'PUT', body: { status } }))),
+      keKontrak(buka(await apiFetch<unknown>(`/contracts/${id}`, { method: 'PUT', body: { status: dariStatusKontrak(status) } }))),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['contracts'] }),
   })
 }

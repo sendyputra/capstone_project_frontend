@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { keDaftarKontrak, keKontrak, keStatusKontrak } from '@/api/adapters/contracts'
+import { dariStatusKontrak, keDaftarKontrak, keKontrak, keStatusKontrak } from '@/api/adapters/contracts'
 
 /* DTO backend: relasi sudah di-join handler, angka bisa datang sebagai teks. */
 const dto = {
@@ -19,13 +19,18 @@ describe('adaptor kontrak', () => {
     expect(keStatusKontrak('baru')).toBe('Menunggu')
   })
 
-  /* Selama transisi mock masih menyimpan dan mengirim enum tampilan lama; kalau
-     nilai itu jatuh ke `Menunggu`, kontrak yang baru diaktifkan tampak mundur. */
-  it('meneruskan enum Indonesia yang masih dikirim selama transisi', () => {
-    expect(keStatusKontrak('Menunggu')).toBe('Menunggu')
-    expect(keStatusKontrak('Aktif')).toBe('Aktif')
-    expect(keStatusKontrak('Selesai')).toBe('Selesai')
-    expect(keStatusKontrak('Dibatalkan')).toBe('Dibatalkan')
+  /* Mock kini menyimpan enum backend, jadi label Indonesia tidak lagi
+     diteruskan: nilai asing jatuh ke `Menunggu`, bukan diteruskan mentah. */
+  it('tidak meneruskan label Indonesia sebagai status', () => {
+    expect(keStatusKontrak('Aktif')).toBe('Menunggu')
+    expect(keStatusKontrak('Selesai')).toBe('Menunggu')
+  })
+
+  it('mengirim enum backend untuk tiap status tampilan', () => {
+    expect(dariStatusKontrak('Menunggu')).toBe('pending')
+    expect(dariStatusKontrak('Aktif')).toBe('active')
+    expect(dariStatusKontrak('Selesai')).toBe('completed')
+    expect(dariStatusKontrak('Dibatalkan')).toBe('cancelled')
   })
 
   it('membaca relasi dan angka', () => {

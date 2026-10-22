@@ -1,6 +1,8 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { renderHook, waitFor } from '@testing-library/react'
+import { HttpResponse, http } from 'msw'
 import { describe, expect, it } from 'vitest'
+import { server } from '@/api/mocks/server'
 import { useCreateUnit, useMyUnits } from '@/features/units/api'
 import { writeSession } from '@/features/auth/session'
 import type { ReactNode } from 'react'
@@ -36,5 +38,23 @@ describe('useCreateUnit', () => {
     result.current.mutate({ name: 'Kos Kamar 09', address: 'Bandung', price: '1200000.00' as unknown as number, status: 'Tersedia' })
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
     expect(result.current.data?.price).toBe(1200000)
+  })
+
+  /* Formulir memakai label tampilan; yang berangkat ke API harus enum backend.
+     Tanpa kunci ini, `status: 'Tersedia'` bisa kembali terkirim dan baru ketahuan
+     di backend asli. */
+  it('mengirim enum backend, bukan label tampilan', async () => {
+    writeSession({ token: 'mock.abc.tanda', user: { id: 402, name: 'Pak Wahyu', email: 'wahyu@umkm.id', role: 'pemilik' } })
+    const terkirim: unknown[] = []
+    server.use(
+      http.post('/units', async ({ request }) => {
+        terkirim.push(await request.json())
+        return HttpResponse.json({ data: { id: 99 } }, { status: 201 })
+      }),
+    )
+    const { result } = renderHook(() => useCreateUnit(), { wrapper: pembungkus() })
+    result.current.mutate({ name: 'Kos Kamar 09', address: 'Bandung', price: 1200000, status: 'Perawatan' })
+    await waitFor(() => expect(result.current.isSuccess).toBe(true))
+    expect(terkirim).toEqual([{ name: 'Kos Kamar 09', address: 'Bandung', price: 1200000, status: 'maintenance' }])
   })
 })

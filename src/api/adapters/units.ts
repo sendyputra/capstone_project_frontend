@@ -1,21 +1,31 @@
 import { buka } from '@/api/client'
-import type { UnitRow, UnitStatus, UnitType } from '@/api/types'
+import type { UnitRow, UnitStatus, UnitStatusDto, UnitType } from '@/api/types'
 
-/* Dua penulisan diterima selama transisi: enum backend (`available`) dan enum
-   tampilan lama (`Tersedia`) yang masih dikirim mock sampai handler DTO selesai. */
+/* Satu tabel per arah: `STATUS` menerjemahkan enum backend ke label tampilan,
+   `DARI_STATUS` sebaliknya. Keduanya dijaga tipe, jadi menambah status tampilan
+   tanpa menambah padanan backend tidak lolos typecheck. */
 const STATUS: Record<string, UnitStatus> = {
   available: 'Tersedia',
   rented: 'Terisi',
   maintenance: 'Perawatan',
-  Tersedia: 'Tersedia',
-  Terisi: 'Terisi',
-  Perawatan: 'Perawatan',
+}
+
+const DARI_STATUS: Record<UnitStatus, UnitStatusDto> = {
+  Tersedia: 'available',
+  Terisi: 'rented',
+  Perawatan: 'maintenance',
 }
 
 const TIPE: UnitType[] = ['Kamar Kos', 'Kontrakan', 'Ruang Usaha', 'Apartemen']
 
-function keStatus(nilai: unknown): UnitStatus {
-  return STATUS[String(nilai)] ?? 'Tersedia'
+/* Nilai di luar enum backend jatuh ke `Tersedia`, bukan diteruskan mentah —
+   status asing tak boleh menyamar jadi status sah. */
+export function keStatusUnit(nilai: string): UnitStatus {
+  return STATUS[nilai] ?? 'Tersedia'
+}
+
+export function dariStatusUnit(nilai: UnitStatus): UnitStatusDto {
+  return DARI_STATUS[nilai] ?? 'available'
 }
 
 function keTipe(nilai: unknown): UnitType {
@@ -50,7 +60,7 @@ export function keUnit(dto: unknown): UnitRow {
     name: String(baris.name ?? ''),
     address: String(baris.address ?? ''),
     price: keHarga(baris.price),
-    status: keStatus(baris.status),
+    status: keStatusUnit(String(baris.status)),
     type: keTipe(baris.type),
     facilities: keDaftarTeks(baris.facilities),
     image: String(baris.image ?? ''),
