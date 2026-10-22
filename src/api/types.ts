@@ -80,7 +80,11 @@ export type Payment = {
    peran `with()` pada API sungguhan, supaya komponen tidak perlu menyambung
    sendiri. Adaptor (bukan handler) yang menghasilkan bentuk ini dari DTO. */
 export type UnitRow = Unit & { owner_name: string }
-export type ContractRow = Contract & { renter_name: string; unit_title: string; owner_name: string; term: string; monthly: number }
+/* `ktp` hanya ada bila server mengirimnya (baris kontrak menyertakan status
+   verifikasi penyewanya); tanpanya kolom "KTP" tampil sebagai "Belum". */
+export type ContractRow = Contract & { renter_name: string; unit_title: string; owner_name: string; term: string; monthly: number } & {
+  ktp?: KtpStatus
+}
 export type PaymentRow = Payment & { renter_name: string; unit_title: string }
 
 export type ApiErrorKind = 'unauthorized' | 'validation' | 'not_found' | 'conflict' | 'server' | 'network'

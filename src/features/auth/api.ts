@@ -39,11 +39,14 @@ export function useLogin() {
   })
 }
 
+/* Pendaftaran selalu `multipart/form-data`: berkas KTP ikut terkirim bersama
+   isian identitas, dan `apiFetch` membiarkan peramban menyusun batas multipart
+   sendiri. Panggilan yang tidak membawa berkas tidak akan pernah sah di sini. */
 export function useRegister() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async (masukan: { email: string; password: string }) =>
-      keSession(await apiFetch('/register', { method: 'POST', body: masukan })),
+    mutationFn: async (badan: FormData) =>
+      keSession(await apiFetch('/register', { method: 'POST', body: badan })),
     onSuccess: (hasil) => {
       writeSession({ token: hasil.token, user: hasil.user })
       queryClient.setQueryData(['auth', 'me', hasil.user.id], hasil.user)

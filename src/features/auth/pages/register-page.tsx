@@ -11,14 +11,16 @@ import { Label } from '@/ui/label'
 
 type Ktp = { status: 'idle' | 'loading' | 'error' | 'sukses'; pesan: string }
 
-/* KTP dibaca di peramban dengan Tesseract.js; tidak ada unggahan berkas dan
-   tidak ada endpoint OCR. Bila hasilnya tidak meyakinkan, NIK dan nama diisi
-   manual. Berkas disimpan di state agar bisa dikirim pada tugas berikutnya. */
+/* KTP dibaca di peramban dengan Tesseract.js; tidak ada endpoint OCR. Bila
+   hasilnya tidak meyakinkan, NIK dan nama diisi manual. Berkasnya sendiri tetap
+   disimpan sebagai `File` dan ikut terkirim sebagai bagian `ktp` pada
+   `multipart/form-data` saat mendaftar — backend yang memverifikasinya. */
 export function RegisterPage() {
   const daftar = useRegister()
   const navigate = useNavigate()
   const [ktp, setKtp] = useState<Ktp>({ status: 'idle', pesan: '' })
-  const [, setBerkasKtp] = useState<File | null>(null)
+  const [berkasKtp, setBerkasKtp] = useState<File | null>(null)
+  const [galatBerkas, setGalatBerkas] = useState('')
   const form = useForm<RegisterValues>({
     resolver: zodResolver(registerSchema),
     defaultValues: { name: '', nik: '', email: '', password: '', password_confirmation: '', role: 'penyewa' },
@@ -26,6 +28,8 @@ export function RegisterPage() {
 
   async function bacaBerkas(berkas: File) {
     setBerkasKtp(berkas)
+    /* Berkas sudah dipilih, jadi keluhan "wajib diunggah" tidak berlaku lagi. */
+    setGalatBerkas('')
     setKtp({ status: 'loading', pesan: '' })
     try {
       const hasil = await bacaBerkasKtp(berkas)
@@ -44,10 +48,26 @@ export function RegisterPage() {
   }
 
   const onSubmit = form.handleSubmit((nilai) => {
-    daftar.mutate(
-      { email: nilai.email, password: nilai.password },
-      { onSuccess: () => navigate('/katalog', { replace: true }) },
-    )
+    /* Berkas KTP wajib ada sebelum apa pun dikirim. Pemeriksaan ini sengaja di
+       peramban: tidak perlu perjalanan ke server untuk menolak berkas kosong,
+       dan pesannya bisa tampil seketika. */
+    if (!berkasKtp) {
+      setGalatBerkas('Berkas KTP wajib diunggah.')
+      return
+    }
+    setGalatBerkas('')
+    /* Urutan bagian tidak penting bagi server; yang penting `ktp` berupa berkas,
+       bukan teks, supaya `request.formData()` di backend melihatnya sebagai
+       unggahan. */
+    const badan = new FormData()
+    badan.set('name', nilai.name)
+    badan.set('nik', nilai.nik)
+    badan.set('email', nilai.email)
+    badan.set('password', nilai.password)
+    badan.set('password_confirmation', nilai.password_confirmation)
+    badan.set('role', nilai.role)
+    badan.set('ktp', berkasKtp)
+    daftar.mutate(badan, { onSuccess: () => navigate('/katalog', { replace: true }) })
   })
 
   return (
@@ -84,6 +104,11 @@ export function RegisterPage() {
             </p>
           )}
           {ktp.status === 'sukses' && <p className="text-ui text-brand-success-soft-fg">{ktp.pesan}</p>}
+          {galatBerkas && (
+            <p role="alert" className="text-ui text-brand-danger">
+              {galatBerkas}
+            </p>
+          )}
         </div>
 
         <div className="space-y-2">

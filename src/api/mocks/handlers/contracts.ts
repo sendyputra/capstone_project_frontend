@@ -1,18 +1,30 @@
 import { http, HttpResponse, type HttpResponseResolver } from 'msw'
 import { contracts, type ContractDto } from '@/api/mocks/data/contracts'
 import { namaPengguna, pemanggil, tenantById, tenantByUserId, termBulan, unitById } from '@/api/mocks/join'
+import type { KtpStatus } from '@/api/types'
 
-export type ContractDtoRow = ContractDto & { renter_name: string; unit_title: string; owner_name: string; term: string; monthly: number }
+/* Status verifikasi KTP milik penyewa ikut pada baris kontrak: layar pemilik
+   menampilkannya sebagai kolom "KTP", dan tanpa ini kolom itu selalu "Belum". */
+export type ContractDtoRow = ContractDto & {
+  renter_name: string
+  unit_title: string
+  owner_name: string
+  term: string
+  monthly: number
+  ktp: KtpStatus
+}
 
 export function barisKontrak(kontrak: ContractDto): ContractDtoRow {
   const unit = unitById(kontrak.unit_id)
+  const tenant = tenantById(kontrak.tenant_id)
   return {
     ...kontrak,
-    renter_name: tenantById(kontrak.tenant_id)?.name ?? 'Tanpa penyewa',
+    renter_name: tenant?.name ?? 'Tanpa penyewa',
     unit_title: unit?.name ?? 'Unit terhapus',
     owner_name: unit ? namaPengguna(unit.owner_id) : 'Tanpa pemilik',
     term: termBulan(kontrak.start_date, kontrak.end_date),
     monthly: unit?.price ?? 0,
+    ktp: tenant?.ktp ?? 'Belum',
   }
 }
 
