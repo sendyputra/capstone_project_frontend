@@ -1,3 +1,4 @@
+import type { ContractRow } from '@/api/types'
 import { useContracts, useUbahStatusKontrak } from '@/features/contracts/api'
 import { formatRupiah, formatTanggal } from '@/lib/format'
 import { ErrorState } from '@/ui/error-state'
@@ -6,11 +7,19 @@ import { StatusChip } from '@/ui/status-chip'
 import { Tabel } from '@/ui/tabel'
 import { useToast } from '@/ui/toast'
 
+/* Spec §5: kontrak `Menunggu` tampil lebih dulu supaya pemilik melihat
+   pekerjaannya sebelum daftar berjalan. Hanya kelompok itu yang dipindah —
+   urutan sisanya dipertahankan apa adanya dari server (tanpa mengurutkan ulang
+   berdasarkan status lain). */
+function urutkanMenungguDulu(daftar: ContractRow[]): ContractRow[] {
+  return [...daftar.filter((baris) => baris.status === 'Menunggu'), ...daftar.filter((baris) => baris.status !== 'Menunggu')]
+}
+
 export function OwnerContractsPage() {
   const kontrak = useContracts()
   const ubah = useUbahStatusKontrak()
   const { tampilkan } = useToast()
-  const daftar = kontrak.data ?? []
+  const daftar = urutkanMenungguDulu(kontrak.data ?? [])
   const aktif = daftar.filter((baris) => baris.status === 'Aktif').length
 
   function setujui(id: number, nama: string) {

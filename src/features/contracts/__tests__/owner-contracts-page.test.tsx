@@ -33,6 +33,20 @@ describe('OwnerContractsPage', () => {
     expect(within(baris).getByText('Terverifikasi')).toBeInTheDocument()
   })
 
+  /* Spec §5: pemilik melihat kontrak yang menunggu lebih dulu. Tanpa urutan
+     ini, kontrak `Aktif` dari data contoh menutupi pekerjaan yang sebenarnya
+     menunggu keputusan. */
+  it('menampilkan kontrak Menunggu pada baris pertama', async () => {
+    masukSebagai(402, 'pemilik', 'Pak Wahyu')
+    renderWithProviders(<OwnerContractsPage />)
+
+    const tabel = await screen.findByRole('table')
+    /* Baris 0 adalah kepala tabel; baris 1 baris data pertama. */
+    const barisPertama = within(tabel).getAllByRole('row')[1]
+    expect(within(barisPertama).getByText('Menunggu')).toBeInTheDocument()
+    expect(within(barisPertama).getByRole('button', { name: 'Setujui' })).toBeInTheDocument()
+  })
+
   /* Mock menerima PATCH maupun PUT, jadi tanpa kunci ini adaptor boleh kembali
      mengirim PATCH dan produksi membalas 405 tanpa satu tes pun merah. */
   it('mengirim perubahan status kontrak dengan PUT', async () => {

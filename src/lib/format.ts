@@ -25,6 +25,13 @@ export function formatBulan(value: string): string {
   return new Intl.DateTimeFormat('id-ID', { month: 'long', year: 'numeric', timeZone: 'UTC' }).format(tanggal)
 }
 
+/* Bukti bayar tersimpan sebagai jalur berkas (`/bukti/…`), sedangkan layar
+   menampilkan nama berkasnya saja. Dipakai layar tagihan penyewa dan layar
+   verifikasi pemilik: dua tempat, satu aturan. */
+export function namaBerkas(jalur: string): string {
+  return jalur.split('/').filter(Boolean).pop() ?? ''
+}
+
 /* Dua inisial pertama untuk avatar bulat — sama seperti purwarupa. */
 export function inisial(nama: string): string {
   return nama

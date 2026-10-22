@@ -1,9 +1,12 @@
 import { afterEach, describe, expect, it } from 'vitest'
+import { keDaftarKontrak } from '@/api/adapters/contracts'
+import { keDaftarPembayaran } from '@/api/adapters/payments'
 import { apiFetch } from '@/api/client'
 import type { ContractDtoRow } from '@/api/mocks/handlers/contracts'
 import type { PaymentDtoRow } from '@/api/mocks/handlers/payments'
 import { aktifkanSimulasi } from '@/api/mocks/handlers/simulasi'
 import type { UnitDtoRow } from '@/api/mocks/join'
+import { susunTagihan } from '@/lib/tagihan'
 import { writeSession, type Session } from '@/features/auth/session'
 import type { User } from '@/api/types'
 
@@ -171,6 +174,35 @@ describe('data contoh', () => {
     expect(res.status).toBe(422)
     const jawaban = (await res.json()) as { errors: Record<string, string[]> }
     expect(jawaban.errors.proof).toHaveLength(1)
+  })
+
+  /* Id unggahan dihitung dari id tertinggi yang hidup, bukan `payments.length + 1`.
+     Data contoh ber-id 302–305, jadi cara lama memberi baris baru id 5 dan
+     `susunTagihan` — yang memakai baris ber-id terbesar per bulan — tetap
+     menampilkan `Ditolak`: unggah ulang tampak tidak terjadi apa-apa. */
+  it('unggah ulang bulan yang ditolak menurunkan baris Menunggu Verifikasi', async () => {
+    writeSession(pemilik)
+    /* Tolak bukti September kontrak 201 (baris 303), lalu unggah ulang bulan itu. */
+    await apiFetch('/payments/303', { method: 'PUT', body: { status: 'rejected' } })
+
+    const badan = multipart({ contract_id: '201', month: '2026-09', amount: '2500000' }, { nama: 'bukti-sep-ulang.jpg', isi: 'x' })
+    const res = await kirim('/payments', badan)
+    expect(res.status).toBe(201)
+    const baru = ((await res.json()) as { data: { id: number } }).data
+    expect(baru.id).toBeGreaterThan(305)
+
+    /* Baris turunan yang dilihat penyewa di `/tagihan` dihitung dari kontrak dan
+       pembayaran, jadi yang diperiksa adalah hasil `susunTagihan`, bukan jawaban
+       POST-nya saja. */
+    const tagihan = susunTagihan(
+      keDaftarKontrak(await apiFetch<unknown>('/contracts')),
+      keDaftarPembayaran(await apiFetch<unknown>('/payments')),
+      '2026-09-15',
+    )
+    expect(tagihan.find((baris) => baris.contract_id === 201 && baris.month === '2026-09')).toMatchObject({
+      status: 'Menunggu Verifikasi',
+      proof_url: '/bukti/bukti-sep-ulang.jpg',
+    })
   })
 
   it('unggah bukti bayar gagal sekali saat simulasi menyala', async () => {

@@ -17,6 +17,20 @@ describe('OwnerPaymentsPage', () => {
 
     await userEvent.click(within(baris).getByRole('button', { name: 'Setujui' }))
     expect(await within(baris).findByText('Lunas')).toBeInTheDocument()
+    /* Toast memakai label bulan yang sama dengan tabel, bukan `YYYY-MM`. */
+    expect(await screen.findByText(/Tagihan November 2026 ditandai lunas/)).toBeInTheDocument()
+  })
+
+  /* DTO backend mengirim `month: '2026-09'` dan `proof_url` berupa jalur berkas.
+     Halaman pemilik harus menampilkan label bulan dan nama berkas, seperti
+     halaman tagihan penyewa — bukan nilai mentahnya. */
+  it('menampilkan label bulan dan nama berkas bukti', async () => {
+    masukSebagai(402, 'pemilik', 'Pak Wahyu')
+    renderWithProviders(<OwnerPaymentsPage />)
+
+    const baris = (await screen.findByText('Tagihan September 2026')).closest('tr')!
+    expect(within(baris).getByText('bukti-transfer-sep.jpg')).toBeInTheDocument()
+    expect(screen.queryByText(/2026-09/)).not.toBeInTheDocument()
   })
 
   /* Mock menerima PATCH maupun PUT, jadi tanpa kunci ini adaptor boleh kembali

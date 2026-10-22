@@ -38,10 +38,13 @@ export function useMyUnits() {
   })
 }
 
+/* Detail unit dibaca dari jalur publik: `/katalog/:id` terbuka untuk pengunjung,
+   dan `GET /units/:id` menolak permintaan tanpa token. Pemilik membuka detail
+   unitnya lewat halaman yang sama, jadi satu jalur publik melayani keduanya. */
 export function useUnit(id: number) {
   return useQuery({
     queryKey: unitKeys.detail(id),
-    queryFn: async () => keUnit(buka(await apiFetch(`/units/${id}`))),
+    queryFn: async () => keUnit(buka(await apiFetch(`/public/units/${id}`))),
   })
 }
 

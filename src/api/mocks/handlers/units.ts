@@ -25,6 +25,17 @@ export const unitHandlers = [
   /* Katalog publik: seluruh unit lintas pemilik, tanpa pemeriksaan token. */
   http.get('/public/units', () => HttpResponse.json({ data: units.map(barisUnit) })),
 
+  /* Detail publik untuk `/katalog/:id`: pengunjung tanpa token harus bisa
+     membuka satu unit. Pemetaan barisnya sama dengan `/units/:id` — bedanya
+     hanya tidak ada token yang dibaca. */
+  http.get('/public/units/:id', ({ params }) => {
+    const unit = units.find((kandidat) => kandidat.id === Number(params.id))
+    if (!unit) return HttpResponse.json({ message: 'Unit tidak ditemukan.' }, { status: 404 })
+    return HttpResponse.json({ data: barisUnit(unit) })
+  }),
+
+  /* Detail jalur pemilik dipertahankan: `GET /units/:id` tetap dilayani untuk
+     klien yang membawa token (dan untuk tes jalur privat). */
   http.get('/units/:id', ({ params }) => {
     const unit = units.find((kandidat) => kandidat.id === Number(params.id))
     if (!unit) return HttpResponse.json({ message: 'Unit tidak ditemukan.' }, { status: 404 })

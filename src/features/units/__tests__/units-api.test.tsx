@@ -3,7 +3,8 @@ import { renderHook, waitFor } from '@testing-library/react'
 import { HttpResponse, http } from 'msw'
 import { describe, expect, it } from 'vitest'
 import { server } from '@/api/mocks/server'
-import { useCreateUnit, useMyUnits } from '@/features/units/api'
+import { useCreateUnit, useMyUnits, usePublicUnits, useUnit } from '@/features/units/api'
+import { pantauMetode } from '@/test/metode'
 import { writeSession } from '@/features/auth/session'
 import type { ReactNode } from 'react'
 
@@ -11,6 +12,27 @@ function pembungkus() {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })
   return ({ children }: { children: ReactNode }) => <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
 }
+
+/* Adendum butir 1: katalog dan detailnya dibaca dari jalur publik, supaya
+   pengunjung tanpa token bisa membuka `/katalog` dan `/katalog/:id`. Mock
+   melayani jalur privat maupun publik, jadi tanpa kunci ini adaptor boleh
+   kembali ke `/units` dan `/units/:id` — yang menolak 401 di API asli — tanpa
+   satu tes pun merah. */
+describe('jalur publik unit', () => {
+  it('usePublicUnits memanggil GET /public/units tanpa sesi', async () => {
+    const rekaman = pantauMetode()
+    const { result } = renderHook(() => usePublicUnits(), { wrapper: pembungkus() })
+    await waitFor(() => expect(result.current.isSuccess).toBe(true))
+    expect(rekaman).toContain('GET /public/units')
+  })
+
+  it('useUnit memanggil GET /public/units/:id', async () => {
+    const rekaman = pantauMetode()
+    const { result } = renderHook(() => useUnit(1), { wrapper: pembungkus() })
+    await waitFor(() => expect(result.current.isSuccess).toBe(true))
+    expect(rekaman).toContain('GET /public/units/1')
+  })
+})
 
 describe('useMyUnits', () => {
   it('hanya mengembalikan unit milik pemilik yang sedang masuk', async () => {
