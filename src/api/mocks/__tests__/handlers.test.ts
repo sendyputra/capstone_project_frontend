@@ -203,6 +203,32 @@ describe('data contoh', () => {
     const jawaban = (await res.json()) as { errors: Record<string, string> }
     expect(jawaban.errors.ktp).toBe('Berkas KTP wajib diunggah.')
   })
+
+  /* Akun baru harus langsung punya baris penyewa. Tanpa itu kontraknya jatuh ke
+     `tenant_id: 0` dan layar pemilik menampilkan "Tanpa penyewa" / "Belum" untuk
+     penyewa yang sah — ditemukan saat review Task 12. */
+  it('membuat baris penyewa bersama akun baru, sehingga kontraknya bernama', async () => {
+    const badan = multipart(
+      { name: 'Warga Baru', email: 'baru2@mail.com', password: 'rahasia123', role: 'penyewa' },
+      { nama: 'ktp.png', isi: 'x', bidang: 'ktp' },
+    )
+    const res = await kirim('/register', badan)
+    expect(res.status).toBe(201)
+    const hasil = (await res.json()) as { token: string; user: User }
+    writeSession({ token: hasil.token, user: hasil.user })
+
+    /* Diajukan sebagai akun baru itu sendiri: penyewa diambil dari token, bukan
+       dari badan permintaan. */
+    const { data } = await apiFetch<{ data: ContractDtoRow }>('/contracts', {
+      method: 'POST',
+      body: { unit_id: 1, start_date: '2027-01-01', end_date: '2027-04-01', total_price: 3600000 },
+    })
+    /* Yang gagal sebelum perbaikan: `renter_name` "Tanpa penyewa", `ktp`
+       "Belum", dan `tenant_id` nol. */
+    expect(data.renter_name).toBe('Warga Baru')
+    expect(data.ktp).toBe('Menunggu')
+    expect(data.tenant_id).toBeGreaterThan(0)
+  })
 })
 
 type BadanMultipart = { tipe: string; isi: string }

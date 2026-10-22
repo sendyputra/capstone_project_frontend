@@ -1,7 +1,8 @@
 import { http, HttpResponse } from 'msw'
 import { users } from '@/api/mocks/data/users'
+import { tenants } from '@/api/mocks/data/tenants'
 import { subDariToken } from '@/api/mocks/token'
-import type { User } from '@/api/types'
+import type { Tenant, User } from '@/api/types'
 
 /* Pemilik pertama pada data contoh; dipakai hanya bila token tidak membawa sub
    yang bisa dibaca (mis. token uji yang dipalsukan). */
@@ -12,6 +13,16 @@ function tokenUntuk(userId: number) {
 }
 
 let urutan = users.length + 401
+
+/* Akun baru langsung menjadi penyewa: tanpa baris `tenants` yang menunjuk
+   `user_id`-nya, kontrak yang ia ajukan jatuh ke `tenant_id: 0` dan layar
+   pemilik menampilkan "Tanpa penyewa" / "Belum". Nomornya dihitung dari data
+   yang sedang hidup, bukan dari penghitung modul: `resetData` mengembalikan
+   daftar penyewa ke snapshot, jadi id yang dipakai pun ikut kembali — snapshot
+   tetap sumber kebenaran. */
+function idTenantBaru(): number {
+  return Math.max(...tenants.map((tenant) => tenant.id)) + 1
+}
 
 /* Rute baru (`/login`, `/register`, `/me`) hidup berdampingan dengan rute lama
    berawalan `/auth/` selama transisi, jadi logikanya ditulis sekali di sini. */
@@ -60,6 +71,9 @@ async function daftar({ request }: { request: Request }) {
       { status: 422 },
     )
   }
+  /* Satu tanggal bergabung untuk akun dan baris penyewanya, supaya keduanya
+     tidak pernah berselisih; gaya labelnya mengikuti data contoh. */
+  const bergabung = '9 Okt 2026'
   const user: User = {
     id: ++urutan,
     name: name.trim() || email.split('@')[0],
@@ -69,9 +83,23 @@ async function daftar({ request }: { request: Request }) {
     city: '',
     /* Akun baru menunggu KTP-nya diperiksa. */
     ktp: 'Menunggu',
-    joined: '9 Okt 2026',
+    joined: bergabung,
   }
   users.push(user)
+  /* Baris penyewa dibuat bersama akunnya: kontrak yang diajukan akun baru
+     dibaca lewat `tenantByUserId`, jadi tanpanya pemilik melihat "Tanpa
+     penyewa" dan kolom KTP "Belum" untuk penyewa yang sah. Teleponnya kosong
+     karena formulir pendaftaran belum menanyakannya, dan status KTP-nya
+     mengikuti akun (`Menunggu`). */
+  const tenant: Tenant = {
+    id: idTenantBaru(),
+    user_id: user.id,
+    name: user.name,
+    phone: '',
+    ktp: 'Menunggu',
+    joined: bergabung,
+  }
+  tenants.push(tenant)
   return HttpResponse.json({ token: tokenUntuk(user.id), user }, { status: 201 })
 }
 

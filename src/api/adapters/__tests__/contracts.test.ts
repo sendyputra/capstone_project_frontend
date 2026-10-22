@@ -54,6 +54,17 @@ describe('adaptor kontrak', () => {
     expect(keKontrak({ ...dto, ktp: 'Ditolak' }).ktp).toBeUndefined()
   })
 
+  /* DTO baru menamai bidang itu `ktp_status`; adaptor sesi sudah menerima kedua
+     ejaan, jadi adaptor kontrak pun harus. Nilai asing tetap ditolak. */
+  it('menerima ejaan ktp_status seperti adaptor sesi', () => {
+    expect(keKontrak({ ...dto, ktp_status: 'Terverifikasi' }).ktp).toBe('Terverifikasi')
+    expect(keKontrak({ ...dto, ktp_status: 'Menunggu' }).ktp).toBe('Menunggu')
+    expect(keKontrak({ ...dto, ktp_status: 'Ditolak' }).ktp).toBeUndefined()
+    expect(keKontrak({ ...dto, ktp_status: '' }).ktp).toBeUndefined()
+    /* `ktp` didahulukan bila keduanya ada, sama seperti adaptor sesi. */
+    expect(keKontrak({ ...dto, ktp: 'Menunggu', ktp_status: 'Terverifikasi' }).ktp).toBe('Menunggu')
+  })
+
   it('menerima daftar beramplop', () => {
     expect(keDaftarKontrak({ data: [dto] })).toHaveLength(1)
     expect(keDaftarKontrak('bukan-daftar')).toEqual([])
