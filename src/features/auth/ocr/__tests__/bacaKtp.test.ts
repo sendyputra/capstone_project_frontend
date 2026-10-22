@@ -24,4 +24,30 @@ describe('bacaKtp', () => {
     recognize.mockResolvedValue({ data: { text: 'NIK : 3578123456780001' } })
     expect(await bacaKtp(berkas)).toMatchObject({ nama: '', yakin: false })
   })
+
+  it('memanggil Tesseract dengan berkas dan bahasa Indonesia', async () => {
+    recognize.mockResolvedValue({ data: { text: 'NIK : 3578123456780001\nNama : BUDI SANTOSO' } })
+    await bacaKtp(berkas)
+    expect(recognize).toHaveBeenCalledWith(berkas, 'ind')
+  })
+
+  it('membaca NIK berlabel yang dipisah spasi sebagai 16 digit', async () => {
+    recognize.mockResolvedValue({ data: { text: 'NIK : 3578 1234 5678 0001\nNama : BUDI SANTOSO' } })
+    expect(await bacaKtp(berkas)).toEqual({ nik: '3578123456780001', nama: 'BUDI SANTOSO', yakin: true })
+  })
+
+  it('tidak yakin bila NIK berlabel terbaca tanpa nama', async () => {
+    recognize.mockResolvedValue({ data: { text: 'NIK : 3578 1234 5678 0001' } })
+    expect(await bacaKtp(berkas)).toMatchObject({ nik: '3578123456780001', nama: '', yakin: false })
+  })
+
+  it('mengosongkan NIK berlabel yang tercampur huruf', async () => {
+    recognize.mockResolvedValue({ data: { text: 'NIK : 3578 1234 5678 OOO1\nNama : BUDI SANTOSO' } })
+    expect(await bacaKtp(berkas)).toEqual({ nik: '', nama: 'BUDI SANTOSO', yakin: false })
+  })
+
+  it('mengosongkan NIK berlabel yang bukan tepat 16 digit', async () => {
+    recognize.mockResolvedValue({ data: { text: 'NIK : 3578 1234 5678 00011\nNama : BUDI SANTOSO' } })
+    expect(await bacaKtp(berkas)).toMatchObject({ nik: '', yakin: false })
+  })
 })
