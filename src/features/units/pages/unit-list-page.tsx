@@ -1,6 +1,6 @@
 import { Link } from 'react-router'
 import { UnitTable } from '@/features/units/components/unit-table'
-import { useDeleteUnit, useUbahStatusUnit, useUnits } from '@/features/units/api'
+import { useDeleteUnit, useMyUnits, useUbahStatusUnit } from '@/features/units/api'
 import { EmptyState } from '@/ui/empty-state'
 import { ErrorState } from '@/ui/error-state'
 import { Skeleton } from '@/ui/skeleton'
@@ -20,7 +20,7 @@ function RangkaTabel() {
 }
 
 export function UnitListPage() {
-  const daftar = useUnits()
+  const daftar = useMyUnits()
   const status = useUbahStatusUnit()
   const hapus = useDeleteUnit()
   const konfirmasi = useKonfirmasi()

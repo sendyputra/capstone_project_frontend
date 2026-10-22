@@ -32,6 +32,9 @@ export const unitHandlers = [
     return HttpResponse.json({ data: data.map(barisUnit) })
   }),
 
+  /* Katalog publik: seluruh unit lintas pemilik, tanpa pemeriksaan token. */
+  http.get('/public/units', () => HttpResponse.json({ data: units.map(barisUnit) })),
+
   http.get('/units/:id', ({ params }) => {
     const unit = units.find((kandidat) => kandidat.id === Number(params.id))
     if (!unit) return HttpResponse.json({ message: 'Unit tidak ditemukan.' }, { status: 404 })
