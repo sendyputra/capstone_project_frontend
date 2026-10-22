@@ -5,11 +5,11 @@ import { useToast } from '@/ui/toast'
 
 /* Alat pratinjau seperti pil peran di purwarupa: sekali klik masuk sebagai akun
    contoh peran itu, lalu menuju rute awalnya. Hanya hidup di mode mock — inilah
-   bedanya dengan aplikasi sungguhan, yang menuntut masuk manual. */
+   bedanya dengan aplikasi sungguhan, yang menuntut masuk manual. Dua peran saja:
+   penyewa dan pemilik. */
 const AKUN: { id: Role; label: string; email: string; awal: string }[] = [
   { id: 'penyewa', label: 'Penyewa', email: 'rian@mail.com', awal: '/katalog' },
   { id: 'pemilik', label: 'Pemilik', email: 'wahyu@umkm.id', awal: '/pemilik' },
-  { id: 'admin', label: 'Admin', email: 'admin@nusantarabooking.id', awal: '/admin/unit' },
 ]
 
 export function PreviewBar() {

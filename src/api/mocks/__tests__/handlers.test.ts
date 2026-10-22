@@ -8,7 +8,8 @@ function sesi(id: number, role: Session['user']['role'], nama: string): Session 
   return { token: `mock.${btoa(JSON.stringify({ sub: id }))}.tanda`, user: { id, name: nama, email: 'x@mail.com', role } }
 }
 
-const admin = sesi(401, 'admin', 'Admin Nusantara')
+/* Dua peran saja sejak layar admin dihapus: sesi uji memakai pemilik, dan
+   penyewa untuk layar yang memang dilihat penyewa (katalog, tagihan sendiri). */
 const pemilik = sesi(402, 'pemilik', 'Pak Wahyu')
 const penyewa = sesi(405, 'penyewa', 'Siti Sarah')
 
@@ -18,7 +19,9 @@ afterEach(() => {
 
 describe('data contoh', () => {
   it('menyajikan lima unit dengan tipe, fasilitas, gambar, dan tanggal terisi', async () => {
-    writeSession(admin)
+    /* Katalog lintas pemilik dibaca sebagai penyewa: cakupan pemilik hanya
+       unitnya sendiri, sedangkan katalog publik memuat kelima unit. */
+    writeSession(penyewa)
     const { data } = await apiFetch<{ data: UnitRow[] }>('/units')
     expect(data).toHaveLength(5)
     expect(data[0]).toMatchObject({ name: 'Kos Kamar 01', type: 'Kamar Kos', status: 'Tersedia' })
@@ -28,7 +31,7 @@ describe('data contoh', () => {
   })
 
   it('menyajikan pengajuan, kontrak, tagihan, dan pengguna sejumlah purwarupa', async () => {
-    writeSession(admin)
+    writeSession(pemilik)
     expect((await apiFetch<{ data: BookingRow[] }>('/bookings')).data).toHaveLength(2)
     expect((await apiFetch<{ data: ContractRow[] }>('/contracts')).data).toHaveLength(4)
     expect((await apiFetch<{ data: PaymentRow[] }>('/payments')).data).toHaveLength(4)
@@ -36,7 +39,7 @@ describe('data contoh', () => {
   })
 
   it('menyertakan nama pemilik, penyewa, dan unit pada baris hasil join', async () => {
-    writeSession(admin)
+    writeSession(pemilik)
     const kontrak = (await apiFetch<{ data: ContractRow[] }>('/contracts')).data[0]
     expect(kontrak.renter_name).toBe('Siti Sarah')
     expect(kontrak.unit_title).toBe('Kontrakan Rumah Asri Type 36')
@@ -71,18 +74,20 @@ describe('data contoh', () => {
   })
 
   it('mengubah status kontrak', async () => {
-    writeSession(admin)
+    writeSession(pemilik)
     await apiFetch('/contracts/201', { method: 'PATCH', body: { status: 'Selesai' } })
     const kontrak = (await apiFetch<{ data: ContractRow[] }>('/contracts')).data.find((baris) => baris.id === 201)
     expect(kontrak?.status).toBe('Selesai')
   })
 
   it('menerima dan menolak bukti bayar', async () => {
-    writeSession(admin)
-    await apiFetch('/payments/302', { method: 'PATCH', body: { status: 'Lunas' } })
+    /* Cakupan pemilik hanya tagihan unitnya sendiri, jadi baris yang diubah
+       dipilih dari unit Pak Wahyu (301 dan 305). */
+    writeSession(pemilik)
+    await apiFetch('/payments/305', { method: 'PATCH', body: { status: 'Lunas' } })
     await apiFetch('/payments/301', { method: 'PATCH', body: { status: 'Ditolak' } })
     const tagihan = (await apiFetch<{ data: PaymentRow[] }>('/payments')).data
-    expect(tagihan.find((baris) => baris.id === 302)?.status).toBe('Lunas')
+    expect(tagihan.find((baris) => baris.id === 305)?.status).toBe('Lunas')
     expect(tagihan.find((baris) => baris.id === 301)?.status).toBe('Ditolak')
   })
 
@@ -97,12 +102,12 @@ describe('data contoh', () => {
   })
 
   it('mengubah peran pengguna dan menolak menghapus akun sendiri', async () => {
-    writeSession(admin)
+    writeSession(pemilik)
     await apiFetch('/users/405', { method: 'PATCH', body: { role: 'pemilik' } })
     const pengguna = (await apiFetch<{ data: User[] }>('/users')).data.find((baris) => baris.id === 405)
     expect(pengguna?.role).toBe('pemilik')
 
-    await expect(apiFetch('/users/401', { method: 'DELETE' })).rejects.toMatchObject({ kind: 'conflict' })
+    await expect(apiFetch('/users/402', { method: 'DELETE' })).rejects.toMatchObject({ kind: 'conflict' })
   })
 
   it('mendaftarkan akun baru dan mengembalikan sesinya', async () => {

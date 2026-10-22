@@ -78,9 +78,27 @@ describe('peta rute', () => {
     expect(await screen.findByText('Total Unit Dikelola')).toBeInTheDocument()
   })
 
-  it('mengantar pemilik ke 403 saat membuka rute admin', async () => {
+  it('menyediakan rute kontrak untuk pemilik', async () => {
+    writeSession(sesiPemilik)
+    renderRute('/pemilik/kontrak')
+    expect(await screen.findByRole('heading', { name: 'Kontrak Sewa' })).toBeInTheDocument()
+  })
+
+  it('menyediakan rute pembayaran untuk pemilik', async () => {
+    writeSession(sesiPemilik)
+    renderRute('/pemilik/pembayaran')
+    expect(await screen.findByRole('heading', { name: 'Verifikasi Pembayaran Unit Saya' })).toBeInTheDocument()
+  })
+
+  it('tidak lagi menyediakan rute admin', async () => {
     writeSession(sesiPemilik)
     renderRute('/admin/unit')
-    expect(await screen.findByText('Halaman ini bukan untuk peran Anda')).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: /tidak ditemukan/i })).toBeInTheDocument()
+  })
+
+  it('tidak lagi menyediakan rute pengajuan sewa', async () => {
+    writeSession(sesiPemilik)
+    renderRute('/pemilik/pengajuan')
+    expect(await screen.findByRole('heading', { name: /tidak ditemukan/i })).toBeInTheDocument()
   })
 })
