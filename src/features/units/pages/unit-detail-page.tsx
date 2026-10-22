@@ -29,6 +29,12 @@ export function UnitDetailPage({ mode = 'penyewa' }: { mode?: 'penyewa' | 'pemil
       return
     }
     if (!unit.data) return
+    /* Input date bisa dikosongkan; `hitungSewa` mensyaratkan tanggal `YYYY-MM-DD`,
+       jadi batasnya di sini — bukan di dalam fungsi itu. */
+    if (!mulai) {
+      setGalat('Tanggal mulai sewa wajib diisi.')
+      return
+    }
     setGalat('')
     const { akhir, total } = hitungSewa(mulai, durasi, unit.data.price)
     buatKontrak.mutate(
@@ -99,7 +105,7 @@ export function UnitDetailPage({ mode = 'penyewa' }: { mode?: 'penyewa' | 'pemil
               <>
                 <label className="block text-ui font-semibold text-brand-text">
                   Mulai sewa
-                  <input type="date" value={mulai} onChange={(e) => setMulai(e.target.value)} className="mt-1 w-full rounded-lg border border-brand-border px-3 py-2" />
+                  <input type="date" required value={mulai} onChange={(e) => setMulai(e.target.value)} className="mt-1 w-full rounded-lg border border-brand-border px-3 py-2" />
                 </label>
                 <label className="block text-ui font-semibold text-brand-text">
                   Durasi
