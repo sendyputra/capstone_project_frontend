@@ -10,7 +10,7 @@ export default defineConfig({
     globals: true,
     setupFiles: ['./src/test/setup.ts'],
     css: false,
-    env: { NODE_ENV: 'test', VITE_API_MOCK: 'on', VITE_API_BASE_URL: '' },
+    env: { NODE_ENV: 'test', VITE_API_BASE_URL: '' },
     /* Layar katalog, kalender, dan tabel membuat jsdom berat; worker yang
        terlalu banyak membuat tes yang cepat di luar menjadi kehabisan waktu. */
     maxWorkers: 2,
