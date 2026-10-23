@@ -1,20 +1,18 @@
 # Nusantara Booking — Frontend
 
 Aplikasi React untuk Nusantara Booking (pengelolaan & sewa properti UMKM). Repo ini
-terpisah dari backend Laravel dan berbicara lewat REST. Isinya kini mengikuti purwarupa
-naskah secara utuh: beranda publik, dan tiga peran — penyewa, pemilik, admin.
+terpisah dari backend Laravel dan berbicara lewat REST. Isinya mengikuti purwarupa
+naskah: beranda publik, serta dua peran — penyewa dan pemilik.
 
 ## Menjalankan
 
 ```bash
 bun install
-VITE_API_MOCK=on bun run dev
+bun run dev
 ```
 
-Buka `http://localhost:5173/`. Bilah **Pratinjau** di bawah layar masuk otomatis sebagai
-akun contoh tiap peran (hanya muncul saat `VITE_API_MOCK=on`).
-
-Tanpa `VITE_API_MOCK=on`, aplikasi akan memanggil API sungguhan di `VITE_API_BASE_URL`.
+Buka `http://localhost:5173/`. Aplikasi memanggil API di `VITE_API_BASE_URL`
+(lihat `.env.example`).
 
 ## Peta layar
 
@@ -27,11 +25,8 @@ Tanpa `VITE_API_MOCK=on`, aplikasi akan memanggil API sungguhan di `VITE_API_BAS
 | `/tagihan` | penyewa | Tagihan bulanan dan unggah bukti bayar |
 | `/pemilik` | pemilik | Dashboard: 4 angka termasuk estimasi pendapatan |
 | `/pemilik/unit`, `/pemilik/unit/baru`, `/pemilik/unit/:id` | pemilik | Kelola unit, tambah unit, kalender unit |
-| `/pemilik/pengajuan` | pemilik | Pengajuan sewa masuk |
-| `/admin/unit` | admin | Unit lintas pemilik |
-| `/admin/kontrak` | admin | Kontrak sewa |
-| `/admin/pembayaran` | admin | Verifikasi bukti bayar |
-| `/admin/pengguna` | admin | Akun, peran, verifikasi KTP, penghapusan |
+| `/pemilik/kontrak` | pemilik | Kontrak sewa unit sendiri |
+| `/pemilik/pembayaran` | pemilik | Verifikasi pembayaran unit sendiri |
 
 ## Perintah
 
@@ -49,16 +44,10 @@ Tanpa `VITE_API_MOCK=on`, aplikasi akan memanggil API sungguhan di `VITE_API_BAS
 
 Gerbangnya: `typecheck`, `lint`, `test`, `check:styles`, `check:tokens`, `build`.
 
-## Akun demo
+## Akun uji
 
-Kata sandi apa pun diterima asalkan panjangnya minimal 8 karakter.
-
-| Email | Peran |
-|---|---|
-| `rian@mail.com` | Penyewa |
-| `wahyu@umkm.id` | Pemilik |
-| `rina@umkm.id` | Pemilik |
-| `admin@nusantarabooking.id` | Admin |
+Akun uji API ada di `docs/deploy-uji.md`. Data contoh di `src/api/mocks` hanya
+dipakai oleh Vitest; aplikasi tidak lagi memiliki mode mock saat berjalan.
 
 ## Variabel lingkungan
 
@@ -66,12 +55,10 @@ Disalin dari `.env.example` ke `.env.local` bila perlu.
 
 | Variabel | Isi |
 |---|---|
-| `VITE_API_BASE_URL` | Alamat API Laravel. Kosongkan untuk memakai jalur relatif. |
-| `VITE_API_MOCK` | `on` = data contoh lewat MSW; `off` = memanggil API sungguhan. |
+| `VITE_API_BASE_URL` | Alamat API Laravel, mis. `https://nb.ifast.id/api`. |
 
-Berpindah ke API asli cukup dengan mematikan `VITE_API_MOCK` dan mengisi
-`VITE_API_BASE_URL`; tidak ada berkas fitur yang perlu disentuh. Handler mock boleh
-ditinggalkan sebagai alat demo.
+Live dan preview selalu memakai API asli. Handler dan data contoh dipertahankan
+hanya untuk tes otomatis.
 
 ## Token desain
 

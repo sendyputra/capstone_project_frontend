@@ -11,7 +11,6 @@ jobs:
     env:
       # Live dan preview memakai API asli; mock hanya untuk tes lokal.
       VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL || 'https://nb.ifast.id/api' }}
-      VITE_API_MOCK: ${{ vars.VITE_API_MOCK || 'off' }}
     steps:
       - uses: actions/checkout@v7
 
