@@ -2,6 +2,7 @@ import { Link } from 'react-router'
 import { useSession } from '@/features/auth/api'
 import { useMyUnits } from '@/features/units/api'
 import { OwnerStats } from '@/features/dashboard/components/owner-stats'
+import { EmptyState } from '@/ui/empty-state'
 import { ErrorState } from '@/ui/error-state'
 import { Skeleton } from '@/ui/skeleton'
 
@@ -35,7 +36,18 @@ export function OwnerDashboardPage() {
         </div>
       )}
       {daftar.isError && <ErrorState message={(daftar.error as Error).message} onRetry={() => daftar.refetch()} />}
-      {daftar.isSuccess && <OwnerStats units={daftar.data} />}
+      {daftar.isSuccess && daftar.data.length === 0 && (
+        <EmptyState
+          title="Belum ada unit"
+          description="Tambahkan unit pertama Anda supaya statistik dan pendapatan mulai terisi."
+          action={
+            <Link className="font-semibold text-brand-accent" to="/pemilik/unit/baru">
+              Tambah Unit Baru
+            </Link>
+          }
+        />
+      )}
+      {daftar.isSuccess && daftar.data.length > 0 && <OwnerStats units={daftar.data} />}
     </section>
   )
 }
