@@ -22,7 +22,7 @@ export const unitKeys = {
 export function usePublicUnits() {
   return useQuery({
     queryKey: unitKeys.publik,
-    queryFn: async () => keDaftarUnit(await apiFetch('/public/units')),
+    queryFn: async () => keDaftarUnit(await apiFetch('/list/units')),
   })
 }
 
@@ -44,7 +44,7 @@ export function useMyUnits() {
 export function useUnit(id: number) {
   return useQuery({
     queryKey: unitKeys.detail(id),
-    queryFn: async () => keUnit(buka(await apiFetch(`/public/units/${id}`))),
+    queryFn: async () => keUnit(buka(await apiFetch(`/detail/unit/${id}`))),
   })
 }
 
