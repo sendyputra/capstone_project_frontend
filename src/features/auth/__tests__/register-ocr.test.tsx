@@ -65,4 +65,23 @@ describe('pendaftaran dengan OCR', () => {
     expect(bacaKtp).toHaveBeenCalledTimes(2)
     expect(screen.getByLabelText('NIK')).toHaveValue('3578123456780001')
   })
+
+  /* Berkas baru tidak boleh mewarisi hasil berkas sebelumnya. Bedanya dengan
+     tes di atas: yang dikosongkan hanya nilai yang memang berasal dari OCR,
+     sehingga isian manual tetap aman. */
+  it('membuang nilai OCR lama saat berkas berikutnya gagal dibaca', async () => {
+    bacaKtp.mockResolvedValueOnce({ nik: '3578123456780001', nama: 'BUDI SANTOSO', yakin: true })
+    bacaKtp.mockResolvedValueOnce({ nik: '', nama: '', yakin: false })
+    renderHalaman()
+
+    const input = screen.getByLabelText('Berkas KTP')
+    await userEvent.upload(input, berkas)
+    expect(await screen.findByDisplayValue('3578123456780001')).toBeInTheDocument()
+
+    await userEvent.upload(input, berkas)
+
+    expect(await screen.findByText(/tidak terbaca/i)).toBeInTheDocument()
+    expect(screen.getByLabelText('NIK')).toHaveValue('')
+    expect(screen.getByLabelText('Nama lengkap')).toHaveValue('')
+  })
 })
