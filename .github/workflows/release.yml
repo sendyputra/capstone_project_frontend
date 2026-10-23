@@ -32,7 +32,8 @@ jobs:
 
       - run: bun run build
         env:
-          VITE_API_MOCK: 'on'
+          VITE_API_MOCK: 'off'
+          VITE_API_BASE_URL: https://nb.ifast.id/api
 
       - name: Tentukan apakah ada perubahan yang layak rilis
         id: changes

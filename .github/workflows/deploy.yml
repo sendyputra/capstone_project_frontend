@@ -9,11 +9,9 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     env:
-      # Alamat API Laravel; kosong berarti jalur relatif.
-      VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
-      # Laman demo memakai data contoh; setel variabel VITE_API_MOCK=off begitu
-      # backend sungguhan tersedia.
-      VITE_API_MOCK: ${{ vars.VITE_API_MOCK || 'on' }}
+      # Live dan preview memakai API asli; mock hanya untuk tes lokal.
+      VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL || 'https://nb.ifast.id/api' }}
+      VITE_API_MOCK: ${{ vars.VITE_API_MOCK || 'off' }}
     steps:
       - uses: actions/checkout@v7
 
