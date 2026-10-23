@@ -9,3 +9,19 @@ export const loginSchema = z.object({
 })
 
 export type LoginValues = z.infer<typeof loginSchema>
+
+export const registerSchema = z
+  .object({
+    name: z.string().min(3, 'Nama wajib diisi.'),
+    nik: z.string().regex(/^\d{16}$/, 'NIK harus 16 digit.'),
+    email: z.string().email('Email tidak valid.'),
+    password: z.string().min(8, 'Kata sandi minimal 8 karakter.'),
+    password_confirmation: z.string(),
+    role: z.enum(['penyewa', 'pemilik']),
+  })
+  .refine((nilai) => nilai.password === nilai.password_confirmation, {
+    path: ['password_confirmation'],
+    message: 'Konfirmasi sandi tidak cocok.',
+  })
+
+export type RegisterValues = z.infer<typeof registerSchema>

@@ -1,10 +1,72 @@
-import type { Payment } from '@/api/types'
+import type { Payment, PaymentStatusDto } from '@/api/types'
+
+/* Baris tabel `payments` seperti yang dikirim API asli: bentuknya sama dengan
+   `Payment`, hanya statusnya enum backend (`paid`), bukan label tampilan. */
+export type PaymentDto = Omit<Payment, 'status'> & { status: PaymentStatusDto }
 
 /* `month` memakai format `YYYY-MM` seperti ERD; `proof_url` menyimpan nama
-   berkas bukti, sebagaimana purwarupa menampilkan `proofName`. */
-export const payments: Payment[] = [
-  { id: 301, contract_id: 201, month: '2026-10', amount: 2500000, status: 'Belum Bayar', proof_url: '' },
-  { id: 302, contract_id: 202, month: '2026-10', amount: 3100000, status: 'Menunggu Verifikasi', proof_url: 'bukti-transfer-okt.jpg' },
-  { id: 303, contract_id: 201, month: '2026-09', amount: 2500000, status: 'Lunas', proof_url: 'bukti-transfer-sep.jpg' },
-  { id: 304, contract_id: 202, month: '2026-09', amount: 3100000, status: 'Ditolak', proof_url: '' },
+   berkas bukti, sebagaimana purwarupa menampilkan `proofName`.
+
+   Bulan yang belum dibayar tidak punya baris di sini: backend tidak menyimpan
+   status "belum bayar", jadi ketiadaan baris itulah tandanya. */
+export const payments: PaymentDto[] = [
+  { id: 302, contract_id: 202, month: '2026-10', amount: 3100000, status: 'pending', proof_url: 'bukti-transfer-202-okt.jpg' },
+  { id: 303, contract_id: 201, month: '2026-09', amount: 2500000, status: 'paid', proof_url: 'bukti-transfer-201-sep.jpg' },
+  { id: 304, contract_id: 202, month: '2026-09', amount: 3100000, status: 'rejected', proof_url: '' },
+  { id: 305, contract_id: 205, month: '2026-11', amount: 2500000, status: 'pending', proof_url: 'bukti-transfer-205-nov.jpg' },
+  { id: 306, contract_id: 202, month: '2026-07', amount: 3100000, status: 'paid', proof_url: 'bukti-transfer-202-jul.jpg' },
+  { id: 307, contract_id: 202, month: '2026-08', amount: 3100000, status: 'paid', proof_url: 'bukti-transfer-202-agu.jpg' },
+  { id: 308, contract_id: 206, month: '2026-06', amount: 1300000, status: 'paid', proof_url: 'bukti-transfer-206-jun.jpg' },
+  { id: 309, contract_id: 206, month: '2026-07', amount: 1300000, status: 'paid', proof_url: 'bukti-transfer-206-jul.jpg' },
+  { id: 310, contract_id: 206, month: '2026-08', amount: 1300000, status: 'paid', proof_url: 'bukti-transfer-206-agu.jpg' },
+  { id: 311, contract_id: 206, month: '2026-09', amount: 1300000, status: 'paid', proof_url: 'bukti-transfer-206-sep.jpg' },
+  { id: 312, contract_id: 206, month: '2026-10', amount: 1300000, status: 'pending', proof_url: 'bukti-transfer-206-okt.jpg' },
+  { id: 313, contract_id: 207, month: '2026-06', amount: 1100000, status: 'paid', proof_url: 'bukti-transfer-207-jun.jpg' },
+  { id: 314, contract_id: 207, month: '2026-07', amount: 1100000, status: 'rejected', proof_url: '' },
+  { id: 315, contract_id: 207, month: '2026-08', amount: 1100000, status: 'paid', proof_url: 'bukti-transfer-207-agu.jpg' },
+  { id: 316, contract_id: 207, month: '2026-09', amount: 1100000, status: 'paid', proof_url: 'bukti-transfer-207-sep.jpg' },
+  { id: 317, contract_id: 207, month: '2026-10', amount: 1100000, status: 'pending', proof_url: 'bukti-transfer-207-okt.jpg' },
+  { id: 318, contract_id: 208, month: '2026-06', amount: 2000000, status: 'paid', proof_url: 'bukti-transfer-208-jun.jpg' },
+  { id: 319, contract_id: 208, month: '2026-07', amount: 2000000, status: 'paid', proof_url: 'bukti-transfer-208-jul.jpg' },
+  { id: 320, contract_id: 208, month: '2026-08', amount: 2000000, status: 'rejected', proof_url: '' },
+  { id: 321, contract_id: 208, month: '2026-09', amount: 2000000, status: 'paid', proof_url: 'bukti-transfer-208-sep.jpg' },
+  { id: 322, contract_id: 208, month: '2026-10', amount: 2000000, status: 'pending', proof_url: 'bukti-transfer-208-okt.jpg' },
+  { id: 323, contract_id: 209, month: '2026-02', amount: 1400000, status: 'paid', proof_url: 'bukti-transfer-209-feb.jpg' },
+  { id: 324, contract_id: 209, month: '2026-03', amount: 1400000, status: 'paid', proof_url: 'bukti-transfer-209-mar.jpg' },
+  { id: 325, contract_id: 209, month: '2026-04', amount: 1400000, status: 'paid', proof_url: 'bukti-transfer-209-apr.jpg' },
+  { id: 326, contract_id: 209, month: '2026-05', amount: 1400000, status: 'paid', proof_url: 'bukti-transfer-209-mei.jpg' },
+  { id: 327, contract_id: 209, month: '2026-06', amount: 1400000, status: 'paid', proof_url: 'bukti-transfer-209-jun.jpg' },
+  { id: 328, contract_id: 209, month: '2026-07', amount: 1400000, status: 'rejected', proof_url: '' },
+  { id: 329, contract_id: 209, month: '2026-08', amount: 1400000, status: 'paid', proof_url: 'bukti-transfer-209-agu.jpg' },
+  { id: 330, contract_id: 209, month: '2026-09', amount: 1400000, status: 'paid', proof_url: 'bukti-transfer-209-sep.jpg' },
+  { id: 331, contract_id: 209, month: '2026-10', amount: 1400000, status: 'pending', proof_url: 'bukti-transfer-209-okt.jpg' },
+  { id: 332, contract_id: 210, month: '2025-11', amount: 1800000, status: 'paid', proof_url: 'bukti-transfer-210-nov25.jpg' },
+  { id: 333, contract_id: 210, month: '2025-12', amount: 1800000, status: 'paid', proof_url: 'bukti-transfer-210-des25.jpg' },
+  { id: 334, contract_id: 210, month: '2026-01', amount: 1800000, status: 'paid', proof_url: 'bukti-transfer-210-jan.jpg' },
+  { id: 335, contract_id: 210, month: '2026-02', amount: 1800000, status: 'paid', proof_url: 'bukti-transfer-210-feb.jpg' },
+  { id: 336, contract_id: 210, month: '2026-03', amount: 1800000, status: 'paid', proof_url: 'bukti-transfer-210-mar.jpg' },
+  { id: 337, contract_id: 210, month: '2026-04', amount: 1800000, status: 'rejected', proof_url: '' },
+  { id: 338, contract_id: 210, month: '2026-05', amount: 1800000, status: 'paid', proof_url: 'bukti-transfer-210-mei.jpg' },
+  { id: 339, contract_id: 210, month: '2026-06', amount: 1800000, status: 'paid', proof_url: 'bukti-transfer-210-jun.jpg' },
+  { id: 340, contract_id: 210, month: '2026-07', amount: 1800000, status: 'paid', proof_url: 'bukti-transfer-210-jul.jpg' },
+  { id: 341, contract_id: 210, month: '2026-08', amount: 1800000, status: 'paid', proof_url: 'bukti-transfer-210-agu.jpg' },
+  { id: 342, contract_id: 210, month: '2026-09', amount: 1800000, status: 'paid', proof_url: 'bukti-transfer-210-sep.jpg' },
+  { id: 343, contract_id: 210, month: '2026-10', amount: 1800000, status: 'pending', proof_url: 'bukti-transfer-210-okt.jpg' },
+  { id: 344, contract_id: 211, month: '2026-06', amount: 2400000, status: 'paid', proof_url: 'bukti-transfer-211-jun.jpg' },
+  { id: 345, contract_id: 211, month: '2026-07', amount: 2400000, status: 'paid', proof_url: 'bukti-transfer-211-jul.jpg' },
+  { id: 346, contract_id: 211, month: '2026-08', amount: 2400000, status: 'rejected', proof_url: '' },
+  { id: 347, contract_id: 211, month: '2026-09', amount: 2400000, status: 'paid', proof_url: 'bukti-transfer-211-sep.jpg' },
+  { id: 348, contract_id: 211, month: '2026-10', amount: 2400000, status: 'pending', proof_url: 'bukti-transfer-211-okt.jpg' },
+  { id: 349, contract_id: 212, month: '2026-06', amount: 1500000, status: 'paid', proof_url: 'bukti-transfer-212-jun.jpg' },
+  { id: 350, contract_id: 212, month: '2026-07', amount: 1500000, status: 'paid', proof_url: 'bukti-transfer-212-jul.jpg' },
+  { id: 351, contract_id: 212, month: '2026-08', amount: 1500000, status: 'rejected', proof_url: '' },
+  { id: 352, contract_id: 212, month: '2026-09', amount: 1500000, status: 'paid', proof_url: 'bukti-transfer-212-sep.jpg' },
+  { id: 353, contract_id: 212, month: '2026-10', amount: 1500000, status: 'pending', proof_url: 'bukti-transfer-212-okt.jpg' },
+  { id: 354, contract_id: 213, month: '2026-06', amount: 1700000, status: 'paid', proof_url: 'bukti-transfer-213-jun.jpg' },
+  { id: 355, contract_id: 213, month: '2026-07', amount: 1700000, status: 'paid', proof_url: 'bukti-transfer-213-jul.jpg' },
+  { id: 356, contract_id: 213, month: '2026-08', amount: 1700000, status: 'paid', proof_url: 'bukti-transfer-213-agu.jpg' },
+  { id: 357, contract_id: 213, month: '2026-09', amount: 1700000, status: 'paid', proof_url: 'bukti-transfer-213-sep.jpg' },
+  { id: 358, contract_id: 213, month: '2026-10', amount: 1700000, status: 'pending', proof_url: 'bukti-transfer-213-okt.jpg' },
+  { id: 359, contract_id: 203, month: '2026-03', amount: 4500000, status: 'paid', proof_url: 'bukti-transfer-203-mar.jpg' },
+  { id: 360, contract_id: 218, month: '2025-12', amount: 950000, status: 'paid', proof_url: 'bukti-transfer-218-des25.jpg' },
 ]

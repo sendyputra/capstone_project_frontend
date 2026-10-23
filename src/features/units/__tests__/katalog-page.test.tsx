@@ -27,7 +27,7 @@ describe('KatalogPage', () => {
       </MemoryRouter>,
     )
 
-    expect(await screen.findByText('5 Unit Ditemukan')).toBeInTheDocument()
+    expect(await screen.findByText('24 Unit Ditemukan')).toBeInTheDocument()
     expect(screen.getByText('Kos Putri Melati Kamar B2')).toBeInTheDocument()
   })
 
@@ -59,7 +59,7 @@ describe('KatalogPage', () => {
     const kartu = (await screen.findByText('Kos Kamar 01')).closest('article')!
     expect(kartu).toHaveTextContent('Rp 1.200.000')
     expect(within(kartu).getByText('Tersedia')).toHaveClass('bg-brand-success')
-    expect(screen.getByText('5 Unit Ditemukan')).toBeInTheDocument()
+    expect(screen.getByText('24 Unit Ditemukan')).toBeInTheDocument()
 
     const terisi = screen.getByText('Kontrakan Rumah Asri Type 36').closest('article')!
     expect(within(terisi).getByText('Terisi')).toHaveClass('bg-brand-danger')
@@ -70,13 +70,13 @@ describe('KatalogPage', () => {
     await screen.findByText('Kos Kamar 01')
 
     await userEvent.type(screen.getByLabelText(/Cari Nama atau Lokasi/), 'ruko')
-    await waitFor(() => expect(screen.getByText('1 Unit Ditemukan')).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByText('4 Unit Ditemukan')).toBeInTheDocument())
 
     await userEvent.click(screen.getByRole('button', { name: 'Reset Filter' }))
-    await waitFor(() => expect(screen.getByText('5 Unit Ditemukan')).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByText('24 Unit Ditemukan')).toBeInTheDocument())
 
     await userEvent.selectOptions(screen.getByLabelText('Status Ketersediaan'), 'Terisi')
-    await waitFor(() => expect(screen.getByText('2 Unit Ditemukan')).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByText('10 Unit Ditemukan')).toBeInTheDocument())
   })
 
   it('menampilkan keadaan kosong saat tak ada yang cocok', async () => {

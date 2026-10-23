@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { cleanup, render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import { StatusChip } from '@/ui/status-chip'
 
@@ -21,5 +21,18 @@ describe('StatusChip', () => {
   it('memakai warna netral untuk status yang tidak dikenal', () => {
     render(<StatusChip nilai="Entah" />)
     expect(screen.getByText('Entah')).toHaveClass('bg-brand-surface-sunken')
+  })
+
+  it('memberi nada untuk Perawatan dan Menunggu', () => {
+    render(<StatusChip nilai="Perawatan" />)
+    expect(screen.getByText('Perawatan')).toHaveClass('bg-brand-warning-soft')
+    cleanup()
+    render(<StatusChip nilai="Menunggu" />)
+    expect(screen.getByText('Menunggu')).toHaveClass('bg-brand-warning-soft')
+  })
+
+  it('tidak pecah untuk status tak dikenal', () => {
+    render(<StatusChip nilai="entah" />)
+    expect(screen.getByText('entah')).toBeInTheDocument()
   })
 })

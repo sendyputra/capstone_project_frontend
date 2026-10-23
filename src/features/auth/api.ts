@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { apiFetch } from '@/api/client'
+import { apiFetch, buka } from '@/api/client'
+import { keSession, keUser } from '@/api/adapters/auth'
 import type { User } from '@/api/types'
 import { clearSession, useStoredSession, writeSession, type Session } from '@/features/auth/session'
 
@@ -7,15 +8,18 @@ export function useSession(): { session: Session | null; isLoading: boolean } {
   const tersimpan = useStoredSession()
   /* Panggilan ini hanya memastikan token masih berlaku: 401 ditangani sekali di
      `apiFetch` (sesi dibuang + penanda kedaluwarsa), sehingga tidak ada efek
-     samping di dalam render. */
+     samping di dalam render. Adaptor yang menormalkan DTO pengguna. */
   const query = useQuery({
     queryKey: ['auth', 'me', tersimpan?.user.id ?? 0],
     enabled: Boolean(tersimpan),
     retry: false,
     staleTime: Infinity,
+    /* `buka` hanya membuka amplop `{ data: ... }`; sebagian backend (dan mock
+       `/auth/me` yang masih dipertahankan) membungkus pengguna sebagai
+       `{ user }`. Keduanya diterima di sini, begitu pula objek pengguna polos. */
     queryFn: async (): Promise<User> => {
-      const { user } = await apiFetch<{ user: User }>('/auth/me')
-      return user
+      const isi = buka<{ user?: unknown }>(await apiFetch('/me'))
+      return keUser(isi?.user ?? isi)
     },
   })
 
@@ -26,8 +30,8 @@ export function useSession(): { session: Session | null; isLoading: boolean } {
 export function useLogin() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (masukan: { email: string; password: string }) =>
-      apiFetch<{ token: string; user: User }>('/auth/login', { method: 'POST', body: masukan }),
+    mutationFn: async (masukan: { email: string; password: string }) =>
+      keSession(await apiFetch('/login', { method: 'POST', body: masukan })),
     onSuccess: (hasil) => {
       writeSession({ token: hasil.token, user: hasil.user })
       queryClient.setQueryData(['auth', 'me', hasil.user.id], hasil.user)
@@ -35,11 +39,14 @@ export function useLogin() {
   })
 }
 
+/* Pendaftaran selalu `multipart/form-data`: berkas KTP ikut terkirim bersama
+   isian identitas, dan `apiFetch` membiarkan peramban menyusun batas multipart
+   sendiri. Panggilan yang tidak membawa berkas tidak akan pernah sah di sini. */
 export function useRegister() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (masukan: { email: string; password: string }) =>
-      apiFetch<{ token: string; user: User }>('/auth/register', { method: 'POST', body: masukan }),
+    mutationFn: async (badan: FormData) =>
+      keSession(await apiFetch('/register', { method: 'POST', body: badan })),
     onSuccess: (hasil) => {
       writeSession({ token: hasil.token, user: hasil.user })
       queryClient.setQueryData(['auth', 'me', hasil.user.id], hasil.user)

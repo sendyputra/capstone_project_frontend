@@ -1,7 +1,13 @@
 import { screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { createMemoryRouter, RouterProvider } from 'react-router'
-import { describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+
+/* Tesseract tidak dijalankan di tes: pembacaan KTP diuji di
+   `src/features/auth/ocr/__tests__/bacaKtp.test.ts`. */
+const bacaKtp = vi.fn()
+vi.mock('@/features/auth/ocr/bacaKtp', () => ({ bacaKtp: (...args: unknown[]) => bacaKtp(...args) }))
+
 import { BantuanPage } from '@/features/help/pages/bantuan-page'
 import { RegisterPage } from '@/features/auth/pages/register-page'
 import { readSession } from '@/features/auth/session'
@@ -18,33 +24,59 @@ function renderDaftar() {
   return renderWithProviders(<RouterProvider router={router} />)
 }
 
+async function isiFormulir(email: string) {
+  await userEvent.type(await screen.findByLabelText('Nama lengkap'), 'Budi Santoso')
+  await userEvent.type(screen.getByLabelText('NIK'), '3578123456780001')
+  await userEvent.type(screen.getByLabelText('Email / Nomor WhatsApp'), email)
+  await userEvent.type(screen.getByLabelText('Kata sandi'), 'rahasia123')
+  await userEvent.type(screen.getByLabelText('Ulangi kata sandi'), 'rahasia123')
+}
+
 describe('RegisterPage', () => {
+  beforeEach(() => bacaKtp.mockReset())
+
   it('menyediakan blok verifikasi KTP untuk mode daftar', async () => {
     renderDaftar()
     expect(await screen.findByText('Verifikasi KTP (Fitur OCR)')).toBeInTheDocument()
     expect(screen.getByText(/Unggah foto KTP Anda/)).toBeInTheDocument()
   })
 
-  it('membaca KTP: gagal sekali, lalu berhasil saat diulang', async () => {
+  it('menawarkan isian manual saat KTP tidak terbaca', async () => {
+    bacaKtp.mockResolvedValue({ nik: '', nama: '', yakin: false })
     renderDaftar()
-    const input = await screen.findByLabelText('Berkas KTP')
 
-    await userEvent.upload(input, new File(['x'], 'ktp.jpg', { type: 'image/jpeg' }))
-    expect(await screen.findByRole('alert')).toHaveTextContent(/KTP gagal dibaca karena koneksi terputus/i)
+    await userEvent.upload(await screen.findByLabelText('Berkas KTP'), new File(['x'], 'ktp.jpg', { type: 'image/jpeg' }))
 
-    await userEvent.click(screen.getByRole('button', { name: 'Coba Lagi' }))
-    expect(await screen.findByText('Data KTP terbaca. Periksa hasilnya sebelum mendaftar.')).toBeInTheDocument()
+    expect(await screen.findByRole('alert')).toHaveTextContent(/KTP tidak terbaca/i)
+    expect(screen.getByLabelText('NIK')).toBeEnabled()
+    expect(screen.getByLabelText('Nama lengkap')).toBeEnabled()
   })
 
   it('mendaftar lalu menulis sesinya dan menuju katalog', async () => {
+    bacaKtp.mockResolvedValue({ nik: '3578123456780001', nama: 'BUDI SANTOSO', yakin: true })
     renderDaftar()
 
-    await userEvent.type(await screen.findByLabelText('Email / Nomor WhatsApp'), 'baru@mail.com')
+    await userEvent.upload(await screen.findByLabelText('Berkas KTP'), new File(['x'], 'ktp.jpg', { type: 'image/jpeg' }))
+    await screen.findByText('Data KTP terbaca. Periksa hasilnya sebelum mendaftar.')
+    await userEvent.type(screen.getByLabelText('Email / Nomor WhatsApp'), 'baru@mail.com')
     await userEvent.type(screen.getByLabelText('Kata sandi'), 'rahasia123')
+    await userEvent.type(screen.getByLabelText('Ulangi kata sandi'), 'rahasia123')
     await userEvent.click(screen.getByRole('button', { name: 'Daftar Sekarang' }))
 
     await waitFor(() => expect(readSession()?.user.email).toBe('baru@mail.com'))
     expect(await screen.findByText('Katalog unit')).toBeInTheDocument()
+  })
+
+  it('menolak pendaftaran bila NIK bukan 16 digit', async () => {
+    renderDaftar()
+
+    await isiFormulir('baru@mail.com')
+    await userEvent.clear(screen.getByLabelText('NIK'))
+    await userEvent.type(screen.getByLabelText('NIK'), '123')
+    await userEvent.click(screen.getByRole('button', { name: 'Daftar Sekarang' }))
+
+    expect(await screen.findByText('NIK harus 16 digit.')).toBeInTheDocument()
+    expect(readSession()).toBeNull()
   })
 })
 

@@ -1,4 +1,4 @@
-import { useUnits } from '@/features/units/api'
+import { usePublicUnits } from '@/features/units/api'
 import { FormCariUnit } from '@/features/units/components/form-cari-unit'
 import { UnitCard } from '@/features/units/components/unit-card'
 import { useFilterUnit, type FilterUnit } from '@/features/units/use-filter-unit'
@@ -10,7 +10,7 @@ import { Skeleton } from '@/ui/skeleton'
 export function KatalogPage({ filter: filterMilikHalaman, tampilkanForm = true }: { filter?: FilterUnit; tampilkanForm?: boolean }) {
   const milikSendiri = useFilterUnit()
   const filter = filterMilikHalaman ?? milikSendiri
-  const daftar = useUnits()
+  const daftar = usePublicUnits()
   const hasil = filter.saring(daftar.data ?? [])
 
   return (

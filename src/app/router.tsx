@@ -4,17 +4,13 @@ import { NotFoundPage } from '@/app/pages/not-found-page'
 import { RouteErrorPage } from '@/app/pages/route-error-page'
 import { RequireRole } from '@/app/guards'
 import { AppShell } from '@/app/layouts/app-shell'
-import { AdminShell } from '@/features/admin/layouts/admin-shell'
-import { AdminKontrakPage } from '@/features/admin/pages/admin-kontrak-page'
-import { AdminPembayaranPage } from '@/features/admin/pages/admin-pembayaran-page'
-import { AdminPenggunaPage } from '@/features/admin/pages/admin-pengguna-page'
-import { AdminUnitPage } from '@/features/admin/pages/admin-unit-page'
 import { LoginPage } from '@/features/auth/pages/login-page'
 import { RegisterPage } from '@/features/auth/pages/register-page'
 import { BantuanPage } from '@/features/help/pages/bantuan-page'
 import { LandingPage } from '@/features/landing/pages/landing-page'
 import { TagihanPage } from '@/features/billing/pages/tagihan-page'
-import { PengajuanPage } from '@/features/bookings/pages/pengajuan-page'
+import { OwnerPaymentsPage } from '@/features/billing/pages/owner-payments-page'
+import { OwnerContractsPage } from '@/features/contracts/pages/owner-contracts-page'
 import { OwnerDashboardPage } from '@/features/dashboard/pages/owner-dashboard-page'
 import { KatalogPage } from '@/features/units/pages/katalog-page'
 import { UnitDetailPage } from '@/features/units/pages/unit-detail-page'
@@ -43,17 +39,8 @@ export const routes: RouteObject[] = [
       { path: '/pemilik/unit', element: <RequireRole role="pemilik"><UnitListPage /></RequireRole> },
       { path: '/pemilik/unit/baru', element: <RequireRole role="pemilik"><UnitFormPage /></RequireRole> },
       { path: '/pemilik/unit/:id', element: <RequireRole role="pemilik"><UnitDetailPage mode="pemilik" /></RequireRole> },
-      { path: '/pemilik/pengajuan', element: <RequireRole role="pemilik"><PengajuanPage /></RequireRole> },
-      {
-        path: '/admin',
-        element: <RequireRole role="admin"><AdminShell /></RequireRole>,
-        children: [
-          { path: 'unit', element: <AdminUnitPage /> },
-          { path: 'kontrak', element: <AdminKontrakPage /> },
-          { path: 'pembayaran', element: <AdminPembayaranPage /> },
-          { path: 'pengguna', element: <AdminPenggunaPage /> },
-        ],
-      },
+      { path: '/pemilik/kontrak', element: <RequireRole role="pemilik"><OwnerContractsPage /></RequireRole> },
+      { path: '/pemilik/pembayaran', element: <RequireRole role="pemilik"><OwnerPaymentsPage /></RequireRole> },
       { path: '*', element: <NotFoundPage /> },
     ],
   },
