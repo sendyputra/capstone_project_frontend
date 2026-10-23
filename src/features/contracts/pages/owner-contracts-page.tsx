@@ -1,6 +1,7 @@
 import type { ContractRow } from '@/api/types'
 import { useContracts, useUbahStatusKontrak } from '@/features/contracts/api'
 import { formatRupiah, formatTanggal } from '@/lib/format'
+import { unduhCsv } from '@/lib/csv'
 import { ErrorState } from '@/ui/error-state'
 import { Skeleton } from '@/ui/skeleton'
 import { StatusChip } from '@/ui/status-chip'
@@ -42,6 +43,28 @@ export function OwnerContractsPage() {
     )
   }
 
+  /* Laporan kontrak diunduh sebagai CSV: bisa dibuka langsung di Excel dan
+     tidak menambah ketergantungan pustaka spreadsheet di bundel. */
+  function unduh() {
+    unduhCsv(
+      `kontrak-sewa-${new Date().toISOString().slice(0, 10)}.csv`,
+      ['ID', 'Penyewa', 'Unit', 'Pemilik', 'Mulai', 'Selesai', 'Durasi', 'Harga per Bulan', 'Nilai Kontrak', 'KTP', 'Status'],
+      daftar.map((baris) => [
+        baris.id,
+        baris.renter_name,
+        baris.unit_title,
+        baris.owner_name,
+        baris.start_date,
+        baris.end_date,
+        baris.term,
+        baris.monthly,
+        baris.total_price,
+        baris.ktp ?? 'Belum',
+        baris.status,
+      ]),
+    )
+  }
+
   return (
     <section className="space-y-6 rounded-2xl border border-brand-border bg-brand-surface p-6 shadow-sm">
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-brand-border pb-4">
@@ -49,7 +72,17 @@ export function OwnerContractsPage() {
           <h2 className="text-heading-s font-bold text-brand-text">Kontrak Sewa</h2>
           <p className="text-micro text-brand-text-muted">Daftar kontrak berjalan beserta perubahan statusnya.</p>
         </div>
-        <span className="rounded-full bg-brand-success-soft px-3 py-2 text-micro font-bold text-brand-success-soft-fg">{aktif} Aktif</span>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            disabled={daftar.length === 0}
+            onClick={unduh}
+            className="rounded-lg border border-brand-border px-3 py-2 text-micro font-bold text-brand-text-muted disabled:opacity-60"
+          >
+            Unduh CSV
+          </button>
+          <span className="rounded-full bg-brand-success-soft px-3 py-2 text-micro font-bold text-brand-success-soft-fg">{aktif} Aktif</span>
+        </div>
       </div>
 
       {kontrak.isPending && <Skeleton className="h-40" />}

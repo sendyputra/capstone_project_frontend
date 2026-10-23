@@ -17,6 +17,7 @@ describe('OwnerPaymentsPage', () => {
 
     await userEvent.click(within(baris).getByRole('button', { name: 'Setujui' }))
     expect(await within(baris).findByText('Lunas')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Unduh CSV' })).toBeInTheDocument()
     /* Toast memakai label bulan yang sama dengan tabel, bukan `YYYY-MM`. */
     expect(await screen.findByText(/Tagihan November 2026 ditandai lunas/)).toBeInTheDocument()
   })

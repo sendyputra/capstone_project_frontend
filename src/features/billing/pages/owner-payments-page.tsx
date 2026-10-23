@@ -1,5 +1,6 @@
 import { usePayments, useVerifikasiPembayaran } from '@/features/billing/api'
 import { formatBulan, formatRupiah, namaBerkas } from '@/lib/format'
+import { unduhCsv } from '@/lib/csv'
 import { ErrorState } from '@/ui/error-state'
 import { Skeleton } from '@/ui/skeleton'
 import { StatusChip } from '@/ui/status-chip'
@@ -43,6 +44,14 @@ export function OwnerPaymentsPage() {
     )
   }
 
+  function unduh() {
+    unduhCsv(
+      `pembayaran-${new Date().toISOString().slice(0, 10)}.csv`,
+      ['ID', 'Penyewa', 'Unit', 'Bulan', 'Jumlah', 'Status', 'Bukti'],
+      daftar.map((baris) => [baris.id, baris.renter_name, baris.unit_title, baris.month, baris.amount, baris.status, namaBerkas(baris.proof_url)]),
+    )
+  }
+
   return (
     <section className="space-y-6 rounded-2xl border border-brand-border bg-brand-surface p-6 shadow-sm">
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-brand-border pb-4">
@@ -50,7 +59,17 @@ export function OwnerPaymentsPage() {
           <h2 className="text-heading-s font-bold text-brand-text">Verifikasi Pembayaran Unit Saya</h2>
           <p className="text-micro text-brand-text-muted">Bukti bayar yang diunggah penyewa, menunggu setujui atau tolak.</p>
         </div>
-        <span className="rounded-full bg-brand-warning-soft px-3 py-2 text-micro font-bold text-brand-warning-soft-fg">{menunggu} Menunggu</span>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            disabled={daftar.length === 0}
+            onClick={unduh}
+            className="rounded-lg border border-brand-border px-3 py-2 text-micro font-bold text-brand-text-muted disabled:opacity-60"
+          >
+            Unduh CSV
+          </button>
+          <span className="rounded-full bg-brand-warning-soft px-3 py-2 text-micro font-bold text-brand-warning-soft-fg">{menunggu} Menunggu</span>
+        </div>
       </div>
 
       {tagihan.isPending && <Skeleton className="h-40" />}
