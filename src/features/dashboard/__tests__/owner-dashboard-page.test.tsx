@@ -17,12 +17,23 @@ describe('hitungStatistik', () => {
       total: 3,
       tersedia: 1,
       terisi: 2,
+      perawatan: 0,
       pendapatan: 200,
     })
   })
 
+  it('tidak menghitung unit perawatan sebagai terisi', () => {
+    expect(hitungStatistik([unit({ id: 1 }), unit({ id: 2, status: 'Terisi' }), unit({ id: 3, status: 'Perawatan' })])).toEqual({
+      total: 3,
+      tersedia: 1,
+      terisi: 1,
+      perawatan: 1,
+      pendapatan: 100,
+    })
+  })
+
   it('aman untuk daftar kosong', () => {
-    expect(hitungStatistik([])).toEqual({ total: 0, tersedia: 0, terisi: 0, pendapatan: 0 })
+    expect(hitungStatistik([])).toEqual({ total: 0, tersedia: 0, terisi: 0, perawatan: 0, pendapatan: 0 })
   })
 })
 
@@ -40,5 +51,6 @@ describe('OwnerDashboardPage', () => {
     expect(screen.getByText('6 Unit')).toBeInTheDocument()
     expect(screen.getByText('Unit Kosong / Siap Huni')).toBeInTheDocument()
     expect(screen.getByText('Rp 3.800.000')).toBeInTheDocument()
+    expect(screen.getByText('1 unit sedang dalam perawatan dan tidak dihitung sebagai terisi.')).toBeInTheDocument()
   })
 })
