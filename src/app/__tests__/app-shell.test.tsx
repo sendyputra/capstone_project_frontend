@@ -33,14 +33,6 @@ describe('AppShell', () => {
     await waitFor(() => expect(document.documentElement.dataset.role).toBe('owner'))
   })
 
-  it('memakai jabatan pengelola sistem pada avatar admin', async () => {
-    writeSession({ ...sesi, user: { ...sesi.user, id: 401, name: 'Admin Nusantara', role: 'admin' } })
-    renderShell()
-
-    const header = document.querySelector('header')!
-    expect(await within(header).findByText('Pengelola Sistem')).toBeInTheDocument()
-  })
-
   it('mengganti tema saat tombolnya ditekan', async () => {
     writeSession(sesi)
     renderShell()
@@ -67,8 +59,10 @@ describe('AppShell', () => {
 
     expect(await screen.findByRole('link', { name: /Dashboard/ })).toHaveAttribute('href', '/pemilik')
     expect(screen.getByRole('link', { name: /Unit Saya/ })).toHaveAttribute('href', '/pemilik/unit')
-    expect(screen.getByRole('link', { name: /Pengajuan Sewa/ })).toHaveAttribute('href', '/pemilik/pengajuan')
+    expect(screen.getByRole('link', { name: /Kontrak/ })).toHaveAttribute('href', '/pemilik/kontrak')
+    expect(screen.getByRole('link', { name: /Pembayaran/ })).toHaveAttribute('href', '/pemilik/pembayaran')
     expect(screen.getByRole('link', { name: /Bantuan/ })).toHaveAttribute('href', '/bantuan')
+    expect(screen.queryByRole('link', { name: /Pengajuan Sewa/ })).not.toBeInTheDocument()
     expect(screen.queryByRole('link', { name: /Tagihan Saya/ })).not.toBeInTheDocument()
   })
 

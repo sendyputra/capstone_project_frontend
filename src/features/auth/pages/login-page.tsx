@@ -10,11 +10,10 @@ import { Button } from '@/ui/button'
 import { Input } from '@/ui/input'
 import { Label } from '@/ui/label'
 
-/* Tiap peran mendarat di rute awalnya sendiri; admin belum punya beranda
-   penuh, jadi diarahkan ke halaman admin pertama yang ada di peta rute. */
+/* Dua peran mendarat di rute awalnya sendiri: pemilik ke dasbornya, penyewa
+   ke beranda publik. Layar admin sudah tidak ada di peta rute. */
 function ruteAwal(role: Role): string {
   if (role === 'pemilik') return '/pemilik'
-  if (role === 'admin') return '/admin/unit'
   return '/'
 }
 
@@ -78,7 +77,7 @@ export function LoginPage() {
       </form>
 
       <p className="mt-4 text-ui text-brand-text-muted">
-        Akun demo: wahyu@umkm.id (Pemilik), rina@umkm.id (Pemilik), admin@nusantarabooking.id (Admin). Kata sandi apa pun minimal 8 karakter.
+        Akun demo: wahyu@umkm.id (Pemilik), rina@umkm.id (Pemilik). Kata sandi apa pun minimal 8 karakter.
       </p>
     </section>
   )

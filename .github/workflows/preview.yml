@@ -1,0 +1,48 @@
+name: Preview Firebase Hosting
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+  checks: write
+
+# Push beruntun pada PR yang sama membatalkan preview sebelumnya, bukan
+# menumpuk antrean deploy.
+concurrency:
+  group: preview-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  preview:
+    # PR dari fork tidak mendapat secret, jadi dilewati alih-alih gagal.
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    env:
+      VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
+      VITE_API_MOCK: ${{ vars.VITE_API_MOCK || 'on' }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - run: bun install --frozen-lockfile
+
+      - run: bun run lint
+      - run: bun run test
+      - run: bun run check:styles
+      - run: bun run check:tokens
+      - run: bun run build
+
+      - uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          projectId: nusantara-booking
+          channelId: pr-${{ github.event.pull_request.number }}
+          expires: 7d

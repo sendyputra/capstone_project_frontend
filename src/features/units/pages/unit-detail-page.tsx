@@ -1,10 +1,11 @@
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
-import { useAjukanSewa } from '@/features/bookings/api'
 import { useSession } from '@/features/auth/api'
+import { useBuatKontrak } from '@/features/contracts/api'
 import { useUnit } from '@/features/units/api'
 import { KalenderKetersediaan } from '@/features/units/components/kalender-ketersediaan'
 import { formatRupiah } from '@/lib/format'
+import { hitungSewa } from '@/lib/sewa'
 import { ErrorState } from '@/ui/error-state'
 import { useToast } from '@/ui/toast'
 import { Skeleton } from '@/ui/skeleton'
@@ -13,11 +14,13 @@ export function UnitDetailPage({ mode = 'penyewa' }: { mode?: 'penyewa' | 'pemil
   const { id } = useParams()
   const unitId = Number(id)
   const unit = useUnit(unitId)
-  const ajukan = useAjukanSewa()
+  const buatKontrak = useBuatKontrak()
   const { session } = useSession()
   const navigate = useNavigate()
   const { tampilkan } = useToast()
   const [galat, setGalat] = useState('')
+  const [mulai, setMulai] = useState(() => new Date().toISOString().slice(0, 10))
+  const [durasi, setDurasi] = useState(3)
 
   function kirim() {
     /* Katalog terbuka untuk pengunjung; yang menuntut akun hanya pengajuannya. */
@@ -25,14 +28,25 @@ export function UnitDetailPage({ mode = 'penyewa' }: { mode?: 'penyewa' | 'pemil
       navigate('/masuk', { state: { dari: `/katalog/${unitId}` } })
       return
     }
+    if (!unit.data) return
+    /* Input date bisa dikosongkan; `hitungSewa` mensyaratkan tanggal `YYYY-MM-DD`,
+       jadi batasnya di sini — bukan di dalam fungsi itu. */
+    if (!mulai) {
+      setGalat('Tanggal mulai sewa wajib diisi.')
+      return
+    }
     setGalat('')
-    ajukan.mutate(unitId, {
-      onSuccess: () => {
-        tampilkan('Pengajuan sewa terkirim dan masuk daftar pengajuan pemilik.', 'success')
-        navigate('/katalog')
+    const { akhir, total } = hitungSewa(mulai, durasi, unit.data.price)
+    buatKontrak.mutate(
+      { unit_id: unitId, start_date: mulai, end_date: akhir, total_price: total },
+      {
+        onSuccess: () => {
+          tampilkan('Pengajuan sewa terkirim dan masuk daftar pengajuan pemilik.', 'success')
+          navigate('/katalog')
+        },
+        onError: (eror) => setGalat((eror as Error).message),
       },
-      onError: (eror) => setGalat((eror as Error).message),
-    })
+    )
   }
 
   return (
@@ -88,14 +102,26 @@ export function UnitDetailPage({ mode = 'penyewa' }: { mode?: 'penyewa' | 'pemil
               </p>
             )}
             {mode === 'penyewa' && (
-              <button
-                type="button"
-                onClick={kirim}
-                disabled={ajukan.isPending}
-                className="w-full rounded-xl bg-brand-accent py-3 text-ui font-bold text-brand-accent-fg shadow-lg disabled:opacity-70"
-              >
-                {ajukan.isPending ? 'Mengirim pengajuan…' : galat ? 'Coba Lagi' : 'Ajukan Sewa'}
-              </button>
+              <>
+                <label className="block text-ui font-semibold text-brand-text">
+                  Mulai sewa
+                  <input type="date" required value={mulai} onChange={(e) => setMulai(e.target.value)} className="mt-1 w-full rounded-lg border border-brand-border px-3 py-2" />
+                </label>
+                <label className="block text-ui font-semibold text-brand-text">
+                  Durasi
+                  <select value={durasi} onChange={(e) => setDurasi(Number(e.target.value))} className="mt-1 w-full rounded-lg border border-brand-border px-3 py-2">
+                    {[1, 3, 6, 12].map((bulan) => <option key={bulan} value={bulan}>{bulan} bulan</option>)}
+                  </select>
+                </label>
+                <button
+                  type="button"
+                  onClick={kirim}
+                  disabled={buatKontrak.isPending}
+                  className="w-full rounded-xl bg-brand-accent py-3 text-ui font-bold text-brand-accent-fg shadow-lg disabled:opacity-70"
+                >
+                  {buatKontrak.isPending ? 'Mengirim pengajuan…' : galat ? 'Coba Lagi' : 'Ajukan Sewa'}
+                </button>
+              </>
             )}
           </div>
         </div>

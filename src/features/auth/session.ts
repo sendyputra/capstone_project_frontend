@@ -8,12 +8,14 @@ const pendengar = new Set<() => void>()
 let tersimpan: Session | null = null
 let terakhirDibaca: string | null = null
 
+const PERAN: Role[] = ['penyewa', 'pemilik']
+
 function sahkan(nilai: unknown): Session | null {
   if (!nilai || typeof nilai !== 'object') return null
   const kandidat = nilai as Partial<Session>
   const user = kandidat.user as Session['user'] | undefined
   if (typeof kandidat.token !== 'string' || !kandidat.token) return null
-  if (!user || typeof user.id !== 'number' || typeof user.role !== 'string' || typeof user.email !== 'string') return null
+  if (!user || typeof user.id !== 'number' || typeof user.email !== 'string' || !PERAN.includes(user.role)) return null
   return { token: kandidat.token, user: { id: user.id, name: String(user.name ?? ''), email: user.email, role: user.role } }
 }
 

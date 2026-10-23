@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils'
 const tone: Record<string, string> = {
   Tersedia: 'bg-brand-success-soft text-brand-success-soft-fg',
   Terisi: 'bg-brand-danger-soft text-brand-danger-soft-fg',
+  Perawatan: 'bg-brand-warning-soft text-brand-warning-soft-fg',
   'Belum Bayar': 'bg-brand-warning-soft text-brand-warning-soft-fg',
   'Menunggu Verifikasi': 'bg-brand-accent-track text-brand-accent-soft-fg',
   'Menunggu Persetujuan': 'bg-brand-warning-soft text-brand-warning-soft-fg',

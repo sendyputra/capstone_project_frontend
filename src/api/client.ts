@@ -27,8 +27,13 @@ export async function apiFetch<T>(
   options: { method?: string; body?: unknown; signal?: AbortSignal } = {},
 ): Promise<T> {
   const sesi = readSession()
+  /* Unggahan berkas memakai FormData: biarkan peramban menyusun sendiri batas
+     multipart, jadi header Content-Type tidak boleh dipaksa JSON. Badan
+     disimpan di lokal supaya `unknown` bisa menyempit lewat `isFormData`. */
+  const badan = options.body
+  const isFormData = badan instanceof FormData
   const headers: Record<string, string> = { Accept: 'application/json' }
-  if (options.body !== undefined) headers['Content-Type'] = 'application/json'
+  if (badan !== undefined && !isFormData) headers['Content-Type'] = 'application/json'
   if (sesi) headers.Authorization = `Bearer ${sesi.token}`
 
   let respons: Response
@@ -36,7 +41,7 @@ export async function apiFetch<T>(
     respons = await fetch(BASE_URL + path, {
       method: options.method ?? 'GET',
       headers,
-      body: options.body === undefined ? undefined : JSON.stringify(options.body),
+      body: badan === undefined ? undefined : isFormData ? badan : JSON.stringify(badan),
       signal: options.signal,
     })
   } catch (galat) {
@@ -58,9 +63,22 @@ export async function apiFetch<T>(
       clearSession()
       tandaiSesiKedaluwarsa()
     }
-    const fields = kind === 'validation' ? (muatan.errors as Record<string, string>) : undefined
-    throw new ApiError(kind, respons.status, muatan.message ?? pesanUmum[kind], fields)
+    /* Laravel mengirim galat isian sebagai larik pesan per bidang; layar hanya
+       menampilkan pesan pertama, jadi ratakan di sini sekali saja. */
+    const mentah = (muatan as { errors?: Record<string, string | string[]> }).errors ?? {}
+    const fields = Object.fromEntries(
+      Object.entries(mentah).map(([kunci, nilai]) => [kunci, Array.isArray(nilai) ? nilai[0] : nilai]),
+    )
+    throw new ApiError(kind, respons.status, (muatan as { message?: string }).message ?? pesanUmum[kind], fields)
   }
 
+  return muatan as T
+}
+
+/* Sebagian besar endpoint Laravel membungkus muatan sebagai { data: ... };
+   sebagian lain mengirim larik atau objek langsung. Satu pembuka untuk ketiganya
+   supaya pemanggil tidak perlu tahu bentuk mana yang datang. */
+export function buka<T>(muatan: unknown): T {
+  if (muatan && typeof muatan === 'object' && 'data' in muatan) return (muatan as { data: T }).data
   return muatan as T
 }

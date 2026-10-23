@@ -1,37 +1,41 @@
-import { http, HttpResponse } from 'msw'
-import { units } from '@/api/mocks/data/units'
-import { subDariToken } from '@/api/mocks/token'
+import { http, HttpResponse, type HttpResponseResolver } from 'msw'
+import { units, type UnitDto } from '@/api/mocks/data/units'
 import { gagalSekali } from '@/api/mocks/handlers/simulasi'
-import { barisUnit, penggunaById } from '@/api/mocks/join'
-import type { Unit } from '@/api/types'
-
-/* Pemilik pertama pada data contoh; dipakai hanya bila token tidak membawa sub
-   yang bisa dibaca (mis. token uji yang dipalsukan). */
-const PEMILIK_BAWAAN = 402
+import { barisUnit, pemanggil, subPemanggil } from '@/api/mocks/join'
 
 let urutan = units.length
 
-function subPemanggil(otorisasi: string | null) {
-  return subDariToken(otorisasi) ?? PEMILIK_BAWAAN
+const ubahUnit: HttpResponseResolver<{ id: string }> = async ({ params, request }) => {
+  const unit = units.find((kandidat) => kandidat.id === Number(params.id))
+  if (!unit) return HttpResponse.json({ message: 'Unit tidak ditemukan.' }, { status: 404 })
+  const muatan = (await request.json()) as Partial<UnitDto>
+  Object.assign(unit, muatan, { price: muatan.price === undefined ? unit.price : Number(muatan.price) })
+  return HttpResponse.json({ data: barisUnit(unit) })
 }
 
 export const unitHandlers = [
+  /* Cakupan dibaca dari token, seperti backend asli: pemilik hanya unitnya,
+     sedangkan pengunjung dan penyewa melihat seluruh unit lintas pemilik. */
   http.get('/units', ({ request }) => {
-    const otorisasi = request.headers.get('Authorization')
-    /* Tanpa token = pengunjung, jadi seluruh unit (katalog publik). Token ada
-       tetapi tak terbaca — token uji yang dipalsukan — diperlakukan sebagai
-       pemilik bawaan, supaya tes punya cakupan yang jelas. */
-    const sub = subDariToken(otorisasi) ?? (otorisasi ? PEMILIK_BAWAAN : null)
-    const peran = sub === null ? null : penggunaById(sub)?.role
-
-    /* Cakupan dibaca dari token, seperti backend asli: pemilik hanya unitnya,
-       sedangkan katalog dan panel admin melihat seluruh unit lintas pemilik. */
-    let data = units
-    if (peran === 'pemilik') data = units.filter((unit) => unit.owner_id === sub)
-
+    const { sub, peran } = pemanggil(request)
+    const data = peran === 'pemilik' ? units.filter((unit) => unit.owner_id === sub) : units
     return HttpResponse.json({ data: data.map(barisUnit) })
   }),
 
+  /* Katalog publik: seluruh unit lintas pemilik, tanpa pemeriksaan token. */
+  http.get('/list/units', () => HttpResponse.json({ data: units.map(barisUnit) })),
+
+  /* Detail publik untuk `/katalog/:id`: pengunjung tanpa token harus bisa
+     membuka satu unit. Pemetaan barisnya sama dengan `/units/:id` — bedanya
+     hanya tidak ada token yang dibaca. */
+  http.get('/detail/unit/:id', ({ params }) => {
+    const unit = units.find((kandidat) => kandidat.id === Number(params.id))
+    if (!unit) return HttpResponse.json({ message: 'Unit tidak ditemukan.' }, { status: 404 })
+    return HttpResponse.json({ data: barisUnit(unit) })
+  }),
+
+  /* Detail jalur pemilik dipertahankan: `GET /units/:id` tetap dilayani untuk
+     klien yang membawa token (dan untuk tes jalur privat). */
   http.get('/units/:id', ({ params }) => {
     const unit = units.find((kandidat) => kandidat.id === Number(params.id))
     if (!unit) return HttpResponse.json({ message: 'Unit tidak ditemukan.' }, { status: 404 })
@@ -39,7 +43,7 @@ export const unitHandlers = [
   }),
 
   http.post('/units', async ({ request }) => {
-    const muatan = (await request.json()) as Partial<Unit>
+    const muatan = (await request.json()) as Partial<UnitDto>
     if (gagalSekali('POST /units')) {
       return HttpResponse.json({ message: 'Unit gagal disimpan karena koneksi terputus.' }, { status: 500 })
     }
@@ -49,13 +53,13 @@ export const unitHandlers = [
         { status: 422 },
       )
     }
-    const unit: Unit = {
+    const unit: UnitDto = {
       id: ++urutan,
-      owner_id: subPemanggil(request.headers.get('Authorization')),
+      owner_id: subPemanggil(request),
       name: muatan.name,
       address: muatan.address ?? '',
       price: Number(muatan.price ?? 0),
-      status: muatan.status ?? 'Tersedia',
+      status: muatan.status ?? 'available',
       type: muatan.type ?? 'Kamar Kos',
       facilities: muatan.facilities ?? [],
       image: muatan.image ?? '/demo/kos.jpg',
@@ -68,18 +72,14 @@ export const unitHandlers = [
   http.patch('/units/:id/status', async ({ params, request }) => {
     const unit = units.find((kandidat) => kandidat.id === Number(params.id))
     if (!unit) return HttpResponse.json({ message: 'Unit tidak ditemukan.' }, { status: 404 })
-    const { status } = (await request.json()) as Pick<Unit, 'status'>
+    const { status } = (await request.json()) as Pick<UnitDto, 'status'>
     unit.status = status
     return HttpResponse.json({ data: barisUnit(unit) })
   }),
 
-  http.patch('/units/:id', async ({ params, request }) => {
-    const unit = units.find((kandidat) => kandidat.id === Number(params.id))
-    if (!unit) return HttpResponse.json({ message: 'Unit tidak ditemukan.' }, { status: 404 })
-    const muatan = (await request.json()) as Partial<Unit>
-    Object.assign(unit, muatan, { price: muatan.price === undefined ? unit.price : Number(muatan.price) })
-    return HttpResponse.json({ data: barisUnit(unit) })
-  }),
+  /* `useUpdateUnit` mengirim PUT; mock hanya melayani PUT supaya adaptor yang
+     kembali ke PATCH gagal di sini, bukan diam-diam lolos. */
+  http.put('/units/:id', ubahUnit),
 
   http.delete('/units/:id', ({ params }) => {
     if (gagalSekali('DELETE /units')) {
