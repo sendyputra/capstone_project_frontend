@@ -5,6 +5,7 @@ on:
 
 permissions:
   contents: write
+  actions: write
 
 concurrency:
   group: release-main
@@ -61,3 +62,11 @@ jobs:
         run: bunx release-it --ci
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Deploy tag rilis ke Firebase
+        if: steps.changes.outputs.release == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          tag=$(git describe --tags --abbrev=0)
+          gh workflow run deploy.yml --ref "$tag" --repo "${{ github.repository }}"
