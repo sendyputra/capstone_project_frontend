@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { Link, useNavigate } from 'react-router'
 import { useRegister } from '@/features/auth/api'
@@ -21,6 +21,9 @@ export function RegisterPage() {
   const [ktp, setKtp] = useState<Ktp>({ status: 'idle', pesan: '' })
   const [berkasKtp, setBerkasKtp] = useState<File | null>(null)
   const [galatBerkas, setGalatBerkas] = useState('')
+  /* Nilai yang terakhir diisi OCR, supaya berkas baru tidak mewarisi NIK/nama
+     dari berkas sebelumnya — tetapi isian manual pengguna tidak ikut dibuang. */
+  const terakhirOcr = useRef({ nik: '', nama: '' })
   const form = useForm<RegisterValues>({
     resolver: zodResolver(registerSchema),
     defaultValues: { name: '', nik: '', email: '', password: '', password_confirmation: '', role: 'penyewa' },
@@ -30,6 +33,11 @@ export function RegisterPage() {
     setBerkasKtp(berkas)
     /* Berkas sudah dipilih, jadi keluhan "wajib diunggah" tidak berlaku lagi. */
     setGalatBerkas('')
+    /* Hanya nilai hasil OCR berkas sebelumnya yang dikosongkan; isian yang
+       diketik pengguna sendiri dipertahankan bila berkas baru gagal dibaca. */
+    const isi = form.getValues()
+    if (isi.nik && isi.nik === terakhirOcr.current.nik) form.setValue('nik', '')
+    if (isi.name && isi.name === terakhirOcr.current.nama) form.setValue('name', '')
     setKtp({ status: 'loading', pesan: '' })
     try {
       const hasil = await bacaBerkasKtp(berkas)
@@ -37,6 +45,7 @@ export function RegisterPage() {
          mendapat nilai; hasil kosong tidak boleh menghapus isian manual. */
       if (hasil.nik) form.setValue('nik', hasil.nik)
       if (hasil.nama) form.setValue('name', hasil.nama)
+      terakhirOcr.current = { nik: hasil.nik, nama: hasil.nama }
       setKtp(
         hasil.yakin
           ? { status: 'sukses', pesan: 'Data KTP terbaca. Periksa hasilnya sebelum mendaftar.' }
