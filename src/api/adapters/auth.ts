@@ -5,6 +5,11 @@ import type { KtpStatus, Role, User } from '@/api/types'
 const PERAN: Role[] = ['penyewa', 'pemilik']
 const STATUS_KTP: KtpStatus[] = ['Terverifikasi', 'Menunggu', 'Belum']
 
+/* Backend Laravel memakai enum Inggris (`owner`/`tenant`), sedangkan domain
+   frontend memakai `pemilik`/`penyewa`. Keduanya diterima di sini supaya DTO
+   lama dan baru sama-sama terbaca; nilai lain tetap ditolak. */
+const PERAN_BACKEND: Record<string, Role> = { owner: 'pemilik', tenant: 'penyewa' }
+
 /* Adaptor ini hanya memeriksa bentuk data yang baru datang dari API: peran di
    luar dua nilai (mis. `admin`) dilempar sebagai galat, bukan dipetakan
    diam-diam, supaya DTO tak dikenal tidak menyamar jadi pengguna yang sah.
@@ -12,7 +17,8 @@ const STATUS_KTP: KtpStatus[] = ['Terverifikasi', 'Menunggu', 'Belum']
    `features/auth/session.ts` yang menolak peran di luar dua nilai saat membaca
    localStorage, dan permintaan yang gagal karena jaringan tidak menghapus sesi. */
 function kePeran(nilai: unknown): Role {
-  const peran = String(nilai) as Role
+  const teks = String(nilai)
+  const peran = PERAN_BACKEND[teks] ?? (teks as Role)
   if (!PERAN.includes(peran)) throw new ApiError('server', 0, 'Peran akun tidak dikenali.')
   return peran
 }
@@ -43,6 +49,8 @@ export function keUser(dto: unknown): User {
 }
 
 export function keSession(muatan: unknown): { token: string; user: User } {
-  const isi = buka<{ token?: unknown; user?: unknown }>(muatan)
-  return { token: String(isi?.token ?? ''), user: keUser(isi?.user) }
+  /* Backend menerbitkan `access_token`; mock dan DTO lama memakai `token`.
+     Keduanya diterima supaya sesi tidak kosong saat berpindah backend. */
+  const isi = buka<{ token?: unknown; access_token?: unknown; user?: unknown }>(muatan)
+  return { token: String(isi?.token ?? isi?.access_token ?? ''), user: keUser(isi?.user) }
 }

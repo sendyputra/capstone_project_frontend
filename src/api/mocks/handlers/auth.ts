@@ -54,7 +54,7 @@ async function daftar({ request }: { request: Request }) {
   const name = teks('name')
   const email = teks('email')
   const password = teks('password')
-  const role = teks('role') === 'pemilik' ? 'pemilik' : 'penyewa'
+  const role = ['pemilik', 'owner'].includes(teks('role')) ? 'pemilik' : 'penyewa'
   const berkasKtp = badan.get('ktp')
   if (!email || !email.includes('@')) {
     return HttpResponse.json({ message: 'Periksa isian.', errors: { email: 'Email belum sah.' } }, { status: 422 })

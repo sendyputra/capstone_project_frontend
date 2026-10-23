@@ -39,4 +39,18 @@ describe('adaptor auth', () => {
   it('meneruskan galat saat peran sesi tidak dikenali', () => {
     expect(() => keSession({ data: { token: 'jwt', user: { ...dto, role: 'admin' } } })).toThrow()
   })
+
+  /* Backend Laravel mengirim `access_token` dan enum peran Inggris. */
+  it('membaca access_token dan memetakan owner menjadi pemilik', () => {
+    const hasil = keSession({ access_token: 'jwt-baru', token_type: 'bearer', user: { ...dto, role: 'owner' } })
+    expect(hasil).toMatchObject({ token: 'jwt-baru', user: { role: 'pemilik' } })
+  })
+
+  it('memetakan tenant menjadi penyewa', () => {
+    expect(keUser({ ...dto, role: 'tenant' }).role).toBe('penyewa')
+  })
+
+  it('memetakan peran domain yang sudah benar tanpa mengubahnya', () => {
+    expect(keUser({ ...dto, role: 'penyewa' }).role).toBe('penyewa')
+  })
 })
