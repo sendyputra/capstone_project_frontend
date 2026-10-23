@@ -17,6 +17,7 @@ describe('OwnerContractsPage', () => {
 
     await userEvent.click(within(baris).getByRole('button', { name: 'Setujui' }))
     expect(await within(baris).findByText('Aktif')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Unduh CSV' })).toBeInTheDocument()
   })
 
   /* Verifikasi KTP dulu ada di panel admin yang sudah dihapus; pemilik sekarang
