@@ -52,5 +52,14 @@ describe('OwnerDashboardPage', () => {
     expect(screen.getByText('Unit Kosong / Siap Huni')).toBeInTheDocument()
     expect(screen.getByText('Rp 3.800.000')).toBeInTheDocument()
     expect(screen.getByText('1 unit sedang dalam perawatan dan tidak dihitung sebagai terisi.')).toBeInTheDocument()
+
+    /* Fitur wajib dashboard: tunggakan dan kontrak yang akan habis. Kontrak
+       201 belum membayar Oktober; kontrak 206 berakhir 31 Okt 2026. */
+    expect(await screen.findByText('Tunggakan')).toBeInTheDocument()
+    expect(screen.getByText('1 tagihan')).toBeInTheDocument()
+    expect(screen.getByText('Total Rp 2.500.000')).toBeInTheDocument()
+    expect(screen.getByText('Kontrak Akan Habis')).toBeInTheDocument()
+    expect(screen.getByText('1 kontrak')).toBeInTheDocument()
+    expect(screen.getByText('Kos Kamar 03')).toBeInTheDocument()
   })
 })
