@@ -19,18 +19,18 @@ function pembungkus() {
    kembali ke `/units` dan `/units/:id` — yang menolak 401 di API asli — tanpa
    satu tes pun merah. */
 describe('jalur publik unit', () => {
-  it('usePublicUnits memanggil GET /public/units tanpa sesi', async () => {
+  it('usePublicUnits memanggil GET /list/units tanpa sesi', async () => {
     const rekaman = pantauMetode()
     const { result } = renderHook(() => usePublicUnits(), { wrapper: pembungkus() })
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
-    expect(rekaman).toContain('GET /public/units')
+    expect(rekaman).toContain('GET /list/units')
   })
 
-  it('useUnit memanggil GET /public/units/:id', async () => {
+  it('useUnit memanggil GET /detail/unit/:id', async () => {
     const rekaman = pantauMetode()
     const { result } = renderHook(() => useUnit(1), { wrapper: pembungkus() })
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
-    expect(rekaman).toContain('GET /public/units/1')
+    expect(rekaman).toContain('GET /detail/unit/1')
   })
 })
 

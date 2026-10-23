@@ -65,7 +65,7 @@ export function keUnit(dto: unknown): UnitRow {
     facilities: keDaftarTeks(baris.facilities),
     image: String(baris.image ?? ''),
     booked_dates: keTanggalTerisi(baris.booked_dates),
-    owner_name: String(baris.owner_name ?? ''),
+    owner_name: String(baris.owner_name ?? (baris.owner as { name?: unknown } | undefined)?.name ?? ''),
   }
 }
 
