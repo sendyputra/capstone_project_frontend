@@ -74,7 +74,9 @@ export function RegisterPage() {
     badan.set('email', nilai.email)
     badan.set('password', nilai.password)
     badan.set('password_confirmation', nilai.password_confirmation)
-    badan.set('role', nilai.role)
+    /* Kontrak API memakai enum Inggris (`owner`/`tenant`); mock menerjemahkan
+       balik ke peran domain. */
+    badan.set('role', nilai.role === 'pemilik' ? 'owner' : 'tenant')
     badan.set('ktp', berkasKtp)
     daftar.mutate(badan, { onSuccess: () => navigate('/katalog', { replace: true }) })
   })

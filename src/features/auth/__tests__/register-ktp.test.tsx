@@ -46,7 +46,7 @@ describe('pendaftaran multipart', () => {
 
     await waitFor(() => expect(badan).not.toBeNull())
     expect(badan!.get('nik')).toBe('3578123456780001')
-    expect(badan!.get('role')).toBe('penyewa')
+    expect(badan!.get('role')).toBe('tenant')
 
     /* `instanceof File` tidak bisa dipakai di sini: `src/test/setup.ts` menyalin
        badan multipart ke kelas `File` milik Node selama permintaan (jsdom memakai
