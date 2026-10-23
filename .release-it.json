@@ -1,0 +1,37 @@
+{
+  "$schema": "https://unpkg.com/release-it@21/schema/release-it.json",
+  "git": {
+    "commitMessage": "chore(release): v${version}",
+    "tagName": "v${version}",
+    "tagAnnotation": "v${version}",
+    "push": true,
+    "pushArgs": ["--follow-tags"],
+    "requireCleanWorkingDir": true,
+    "requireUpstream": false
+  },
+  "github": {
+    "release": true,
+    "releaseName": "v${version}",
+    "tokenRef": "GITHUB_TOKEN"
+  },
+  "npm": false,
+  "plugins": {
+    "@release-it/conventional-changelog": {
+      "preset": {
+        "name": "conventionalcommits",
+        "types": [
+          { "type": "feat", "section": "Fitur" },
+          { "type": "fix", "section": "Perbaikan" },
+          { "type": "perf", "section": "Performa" },
+          { "type": "refactor", "section": "Refaktor" },
+          { "type": "docs", "section": "Dokumentasi", "hidden": true },
+          { "type": "chore", "section": "Pemeliharaan", "hidden": true },
+          { "type": "test", "section": "Pengujian", "hidden": true },
+          { "type": "ci", "section": "CI", "hidden": true }
+        ]
+      },
+      "infile": "CHANGELOG.md",
+      "header": "# Changelog\n\nSemua perubahan penting dicatat di sini. Format mengikuti [Conventional Commits](https://www.conventionalcommits.org/).\n"
+    }
+  }
+}
