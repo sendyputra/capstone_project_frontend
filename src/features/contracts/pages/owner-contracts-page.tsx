@@ -1,6 +1,10 @@
+import { useState, type FormEvent } from 'react'
 import type { ContractRow } from '@/api/types'
-import { useContracts, useUbahStatusKontrak, useUnduhLaporanKontrak } from '@/features/contracts/api'
+import { useBuatKontrak, useContracts, useUbahStatusKontrak, useUnduhLaporanKontrak } from '@/features/contracts/api'
+import { useTenants } from '@/features/tenants/api'
+import { useMyUnits } from '@/features/units/api'
 import { formatRupiah, formatTanggal } from '@/lib/format'
+import { hitungSewa } from '@/lib/sewa'
 import { ErrorState } from '@/ui/error-state'
 import { Skeleton } from '@/ui/skeleton'
 import { StatusChip } from '@/ui/status-chip'
@@ -19,9 +23,56 @@ export function OwnerContractsPage() {
   const kontrak = useContracts()
   const ubah = useUbahStatusKontrak()
   const unduhLaporan = useUnduhLaporanKontrak()
+  const buat = useBuatKontrak()
+  const penyewa = useTenants()
+  const unitSaya = useMyUnits()
   const { tampilkan } = useToast()
   const daftar = urutkanMenungguDulu(kontrak.data ?? [])
   const aktif = daftar.filter((baris) => baris.status === 'Aktif').length
+  const [bukaForm, setBukaForm] = useState(false)
+  const [penyewaId, setPenyewaId] = useState('')
+  const [unitId, setUnitId] = useState('')
+  const [mulai, setMulai] = useState('')
+  const [durasi, setDurasi] = useState(3)
+  const [galatForm, setGalatForm] = useState('')
+
+  /* Unit `Perawatan` tidak bisa disewakan, jadi tidak ditawarkan. */
+  const unitPilihan = (unitSaya.data ?? []).filter((unit) => unit.status !== 'Perawatan')
+  const unitDipilih = unitPilihan.find((unit) => unit.id === Number(unitId))
+  const ringkasan = unitDipilih && mulai ? hitungSewa(mulai, durasi, unitDipilih.price) : null
+
+  function tutupForm() {
+    setBukaForm(false)
+    setPenyewaId('')
+    setUnitId('')
+    setMulai('')
+    setDurasi(3)
+    setGalatForm('')
+  }
+
+  function simpanKontrak(peristiwa: FormEvent) {
+    peristiwa.preventDefault()
+    if (!penyewaId || !unitDipilih) {
+      setGalatForm('Penyewa dan unit wajib dipilih.')
+      return
+    }
+    if (!mulai) {
+      setGalatForm('Tanggal mulai sewa wajib diisi.')
+      return
+    }
+    const { akhir, total } = hitungSewa(mulai, durasi, unitDipilih.price)
+    const nama = (penyewa.data ?? []).find((baris) => baris.id === Number(penyewaId))?.name ?? 'penyewa'
+    buat.mutate(
+      { tenant_id: Number(penyewaId), unit_id: unitDipilih.id, start_date: mulai, end_date: akhir, total_price: total },
+      {
+        onSuccess: () => {
+          tutupForm()
+          tampilkan(`Kontrak ${nama} dibuat dan menunggu persetujuan.`, 'success')
+        },
+        onError: (eror) => setGalatForm((eror as Error).message),
+      },
+    )
+  }
 
   function setujui(id: number, nama: string) {
     ubah.mutate(
@@ -66,9 +117,87 @@ export function OwnerContractsPage() {
           >
             {unduhLaporan.isPending ? 'Mengunduh…' : 'Unduh CSV'}
           </button>
+          <button
+            type="button"
+            onClick={() => (bukaForm ? tutupForm() : setBukaForm(true))}
+            className="rounded-lg bg-brand-accent px-3 py-2 text-micro font-bold text-brand-accent-fg"
+          >
+            {bukaForm ? 'Tutup' : 'Buat Kontrak'}
+          </button>
           <span className="rounded-full bg-brand-success-soft px-3 py-2 text-micro font-bold text-brand-success-soft-fg">{aktif} Aktif</span>
         </div>
       </div>
+
+      {bukaForm && (
+        <form onSubmit={simpanKontrak} aria-label="Form buat kontrak" className="grid gap-3 rounded-xl border border-brand-border bg-brand-bg p-4 sm:grid-cols-5">
+          <label className="block text-ui font-semibold text-brand-text">
+            Penyewa
+            <select
+              value={penyewaId}
+              onChange={(e) => setPenyewaId(e.target.value)}
+              className="mt-1 w-full rounded-lg border border-brand-border px-3 py-2"
+            >
+              <option value="">Pilih penyewa</option>
+              {(penyewa.data ?? []).map((baris) => (
+                <option key={baris.id} value={baris.id}>{baris.name}</option>
+              ))}
+            </select>
+          </label>
+          <label className="block text-ui font-semibold text-brand-text">
+            Unit
+            <select
+              value={unitId}
+              onChange={(e) => setUnitId(e.target.value)}
+              className="mt-1 w-full rounded-lg border border-brand-border px-3 py-2"
+            >
+              <option value="">Pilih unit</option>
+              {unitPilihan.map((unit) => (
+                <option key={unit.id} value={unit.id}>{unit.name}</option>
+              ))}
+            </select>
+          </label>
+          <label className="block text-ui font-semibold text-brand-text">
+            Mulai sewa
+            <input
+              type="date"
+              value={mulai}
+              onChange={(e) => setMulai(e.target.value)}
+              className="mt-1 w-full rounded-lg border border-brand-border px-3 py-2"
+            />
+          </label>
+          <label className="block text-ui font-semibold text-brand-text">
+            Durasi
+            <select
+              value={durasi}
+              onChange={(e) => setDurasi(Number(e.target.value))}
+              className="mt-1 w-full rounded-lg border border-brand-border px-3 py-2"
+            >
+              {[1, 3, 6, 12].map((bulan) => (
+                <option key={bulan} value={bulan}>{bulan} bulan</option>
+              ))}
+            </select>
+          </label>
+          <div className="flex items-end">
+            <button
+              type="submit"
+              disabled={buat.isPending}
+              className="w-full rounded-lg bg-brand-accent px-4 py-2 text-ui font-semibold text-brand-accent-fg disabled:opacity-70"
+            >
+              {buat.isPending ? 'Menyimpan…' : 'Simpan Kontrak'}
+            </button>
+          </div>
+          {galatForm && (
+            <p role="alert" className="sm:col-span-5 rounded-lg border border-brand-danger-border bg-brand-danger-soft p-3 text-ui text-brand-danger-soft-fg">
+              {galatForm}
+            </p>
+          )}
+          {ringkasan && (
+            <p className="sm:col-span-5 text-micro text-brand-text-muted">
+              Selesai {formatTanggal(ringkasan.akhir)} · Total {formatRupiah(ringkasan.total)}
+            </p>
+          )}
+        </form>
+      )}
 
       {kontrak.isPending && <Skeleton className="h-40" />}
       {kontrak.isError && <ErrorState message={(kontrak.error as Error).message} onRetry={() => kontrak.refetch()} />}

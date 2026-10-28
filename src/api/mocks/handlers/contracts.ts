@@ -40,16 +40,20 @@ const ubahKontrak: HttpResponseResolver<{ id: string }> = async ({ params, reque
 
 let urutan = Math.max(...contracts.map((kontrak) => kontrak.id))
 
-type MasukanKontrak = { unit_id?: unknown; start_date?: unknown; end_date?: unknown; total_price?: unknown }
+type MasukanKontrak = { tenant_id?: unknown; unit_id?: unknown; start_date?: unknown; end_date?: unknown; total_price?: unknown }
 
 function tanggalSah(nilai: string): boolean {
   return /^\d{4}-\d{2}-\d{2}$/.test(nilai) && !Number.isNaN(new Date(nilai).getTime())
 }
 
 /* Pengajuan sewa baru selalu masuk sebagai `pending`: pemilik yang mengaktifkan.
-   Penyewanya diambil dari token, bukan dari badan permintaan — klien tidak boleh
-   memilih atas nama siapa kontrak dibuat. */
+   Penyewa yang mengajukan sendiri diambil dari token; pemilik wajib memilih
+   `tenant_id` penyewa yang ia kelola, dan unitnya harus miliknya. */
 const buatKontrak: HttpResponseResolver = async ({ request }) => {
+  const { sub, peran } = pemanggil(request)
+  if (!peran) return HttpResponse.json({ message: 'Unauthenticated.' }, { status: 401 })
+  if (peran !== 'pemilik' && peran !== 'penyewa') return HttpResponse.json({ message: 'Unauthorized access' }, { status: 403 })
+
   const badan = (await request.json()) as MasukanKontrak
   const unitId = Number(badan.unit_id)
   const mulai = String(badan.start_date ?? '')
@@ -64,10 +68,27 @@ const buatKontrak: HttpResponseResolver = async ({ request }) => {
   if (!Number.isFinite(total) || total <= 0) galat.total_price = 'Total harga wajib lebih dari nol.'
   if (Object.keys(galat).length > 0) return HttpResponse.json({ message: 'Periksa isian.', errors: galat }, { status: 422 })
 
+  const unit = unitById(unitId)!
+  let tenantId = 0
+  if (peran === 'pemilik') {
+    const tenant = tenantById(Number(badan.tenant_id))
+    if (!tenant) return HttpResponse.json({ message: 'Penyewa tidak ditemukan.' }, { status: 422 })
+    if (unit.owner_id !== sub || tenant.owner_id !== sub) {
+      return HttpResponse.json({ message: 'Unauthorized access' }, { status: 403 })
+    }
+    tenantId = tenant.id
+  } else {
+    tenantId = tenantByUserId(sub)?.id ?? 0
+  }
+
+  if (unit.booked_dates.some((tanggal) => tanggal >= mulai && tanggal <= selesai)) {
+    return HttpResponse.json({ message: 'Tanggal yang dipilih sudah terisi atau diblokir.' }, { status: 422 })
+  }
+
   const kontrak: ContractDto = {
     id: ++urutan,
     unit_id: unitId,
-    tenant_id: tenantByUserId(pemanggil(request).sub)?.id ?? 0,
+    tenant_id: tenantId,
     start_date: mulai,
     end_date: selesai,
     total_price: total,
