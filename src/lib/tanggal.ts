@@ -18,3 +18,14 @@ export function tanggalHariIni(saat: Date = new Date()): string {
   const ambil = (jenis: string) => bagian.find((potongan) => potongan.type === jenis)?.value ?? ''
   return `${ambil('year')}-${ambil('month')}-${ambil('day')}`
 }
+
+/* Tanggal kalender dari nilai API. Laravel menyerialkan kolom `date` sebagai
+   tengah malam UTC (`2026-10-01` menjadi `2026-09-30T17:00:00.000000Z`), jadi
+   string apa adanya harus dikembalikan ke tanggal WIB; memotongnya langsung
+   menggeser hari dan bulan. Nilai yang sudah `YYYY-MM-DD` atau tak terbaca
+   diteruskan apa adanya. */
+export function tanggalKalender(nilai: string): string {
+  if (/^\d{4}-\d{2}-\d{2}$/.test(nilai)) return nilai
+  const tanggal = new Date(nilai)
+  return Number.isNaN(tanggal.getTime()) ? nilai : tanggalHariIni(tanggal)
+}
