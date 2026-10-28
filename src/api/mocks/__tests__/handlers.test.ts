@@ -7,6 +7,7 @@ import type { PaymentDtoRow } from '@/api/mocks/handlers/payments'
 import { aktifkanSimulasi } from '@/api/mocks/handlers/simulasi'
 import type { UnitDtoRow } from '@/api/mocks/join'
 import { susunTagihan } from '@/lib/tagihan'
+import { tanggalHariIni } from '@/lib/tanggal'
 import { writeSession, type Session } from '@/features/auth/session'
 import type { User } from '@/api/types'
 
@@ -37,7 +38,8 @@ describe('data contoh', () => {
     expect(data[0]).toMatchObject({ name: 'Kos Kamar 01', type: 'Kamar Kos', status: 'available' })
     expect(data[0].facilities.length).toBeGreaterThan(0)
     expect(data[0].image).toMatch(/^\/demo\//)
-    expect(data[0].booked_dates).toEqual([5, 6, 7, 12, 13, 20])
+    const bulan = tanggalHariIni().slice(0, 7)
+    expect(data[0].booked_dates).toEqual([5, 6, 7, 12, 13, 20].map((hari) => `${bulan}-${String(hari).padStart(2, '0')}`))
   })
 
   /* Jalur relatif, bukan `http://localhost/...` seperti di brief: MSW mencocokkan

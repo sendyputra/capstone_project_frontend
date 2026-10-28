@@ -37,15 +37,13 @@ function keHarga(nilai: unknown): number {
   return Number.isFinite(harga) ? harga : 0
 }
 
-/* `UnitRow.booked_dates` bertipe `number[]` (nomor hari pada kalender). DTO
-   backend bisa mengirim tanggal ISO; entri yang bukan angka dibuang, bukan
-   dipaksa menjadi NaN. */
-function keTanggalTerisi(nilai: unknown): number[] {
+/* Kalender bekerja dengan tanggal ISO `YYYY-MM-DD`; entri lain dibuang, bukan
+   dipaksa menjadi tanggal yang salah. */
+const POLA_TANGGAL = /^\d{4}-\d{2}-\d{2}$/
+
+function keDaftarTanggal(nilai: unknown): string[] {
   if (!Array.isArray(nilai)) return []
-  return nilai.flatMap((baris) => {
-    const angka = typeof baris === 'number' ? baris : typeof baris === 'string' && baris.trim() !== '' ? Number(baris) : Number.NaN
-    return Number.isFinite(angka) ? [angka] : []
-  })
+  return nilai.filter((baris): baris is string => typeof baris === 'string' && POLA_TANGGAL.test(baris))
 }
 
 function keDaftarTeks(nilai: unknown): string[] {
@@ -64,7 +62,8 @@ export function keUnit(dto: unknown): UnitRow {
     type: keTipe(baris.type),
     facilities: keDaftarTeks(baris.facilities),
     image: String(baris.image ?? ''),
-    booked_dates: keTanggalTerisi(baris.booked_dates),
+    booked_dates: keDaftarTanggal(baris.booked_dates),
+    blocked_dates: keDaftarTanggal(baris.blocked_dates),
     owner_name: String(baris.owner_name ?? (baris.owner as { name?: unknown } | undefined)?.name ?? ''),
   }
 }

@@ -1,18 +1,22 @@
 import { useUnit } from '@/features/units/api'
+import { tanggalHariIni } from '@/lib/tanggal'
 import { Skeleton } from '@/ui/skeleton'
 
 const HARI = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab']
 
 /* Kalender bulan berjalan seperti purwarupa: nomor 1–31, tanggal terisi ditandai
-   merah. Purwarupa belum memakai bulan sungguhan. */
-export function KalenderKetersediaan({ tanggalTerisi }: { tanggalTerisi: number[] }) {
+   merah. Grid 31 hari tetap dipakai sampai kalender bulan sungguhan (Task 7);
+   perbandingan memakai tanggal ISO supaya cocok dengan `booked_dates`. */
+export function KalenderKetersediaan({ tanggalTerisi }: { tanggalTerisi: string[] }) {
+  const bulan = tanggalHariIni().slice(0, 7)
   return (
     <div className="grid grid-cols-7 gap-1 rounded-xl border border-brand-border bg-brand-bg p-3 text-center text-micro">
       {HARI.map((hari) => (
         <span key={hari} className="py-1 font-bold text-brand-text-subtle">{hari}</span>
       ))}
       {Array.from({ length: 31 }, (_, i) => i + 1).map((hari) => {
-        const terisi = tanggalTerisi.includes(hari)
+        const iso = `${bulan}-${String(hari).padStart(2, '0')}`
+        const terisi = tanggalTerisi.includes(iso)
         return (
           <div
             key={hari}

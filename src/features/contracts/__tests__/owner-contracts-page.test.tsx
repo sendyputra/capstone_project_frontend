@@ -69,6 +69,17 @@ describe('OwnerContractsPage', () => {
     expect(rekaman.filter((permintaan) => permintaan.startsWith('PATCH'))).toEqual([])
   })
 
+  /* `GET /contracts` tanpa parameter hanya mengembalikan kontrak aktif, jadi
+     kontrak `Menunggu` dan `Selesai` hilang dari layar pemilik. */
+  it('meminta semua status kontrak, bukan hanya yang aktif', async () => {
+    masukSebagai(402, 'pemilik', 'Pak Wahyu')
+    const rekaman = pantauMetode()
+    renderWithProviders(<OwnerContractsPage />)
+    await screen.findAllByText('Siti Sarah')
+
+    expect(rekaman).toContain('GET /contracts?status=all')
+  })
+
   it('mengunduh laporan kontrak dari server', async () => {
     masukSebagai(402, 'pemilik', 'Pak Wahyu')
     renderWithProviders(<OwnerContractsPage />)

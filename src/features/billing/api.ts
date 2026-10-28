@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { dariStatusBayar, keDaftarPembayaran, kePembayaran } from '@/api/adapters/payments'
-import { apiDownload, apiFetch, buka } from '@/api/client'
+import { apiDownload, apiFetch, bukaEntitas } from '@/api/client'
 import type { PaymentRow } from '@/api/types'
 import { useSession } from '@/features/auth/api'
 import { tanggalHariIni } from '@/lib/tanggal'
@@ -50,7 +50,7 @@ export function useVerifikasiPembayaran() {
   return useMutation({
     /* `Lunas`/`Ditolak` dari halaman diterjemahkan ke `paid`/`rejected`. */
     mutationFn: async ({ id, status }: { id: number; status: PaymentRow['status'] }) =>
-      kePembayaran(buka(await apiFetch<unknown>(`/payments/${id}`, { method: 'PUT', body: { status: dariStatusBayar(status) } }))),
+      kePembayaran(bukaEntitas(await apiFetch<unknown>(`/payments/${id}`, { method: 'PUT', body: { status: dariStatusBayar(status) } }), 'payment')),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['payments'] }),
   })
 }

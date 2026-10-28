@@ -1,4 +1,5 @@
 import type { Unit, UnitStatusDto } from '@/api/types'
+import { tanggalHariIni } from '@/lib/tanggal'
 
 /* Baris tabel `units` seperti yang dikirim API asli: bentuknya sama dengan
    `Unit`, hanya statusnya enum backend (`available`), bukan label tampilan. */
@@ -7,7 +8,14 @@ export type UnitDto = Omit<Unit, 'status'> & { status: UnitStatusDto }
 /* Data contoh disalin dari purwarupa (`appData().properties`); `owner` berupa
    nama di purwarupa dipetakan ke `owner_id` supaya cocok dengan ERD, dan
    `image` menunjuk aset lokal di `public/demo/` alih-alih URL luar. */
-export const units: UnitDto[] = [
+/* Tanggal contoh dipatok ke bulan berjalan supaya kalender selalu punya isi
+   saat demo; tanggal ISO yang lalu tidak lagi muncul di grid bulan ini. */
+function hariBulanIni(hari: number[]): string[] {
+  const bulan = tanggalHariIni().slice(0, 7)
+  return hari.map((d) => `${bulan}-${String(d).padStart(2, '0')}`)
+}
+
+const daftarUnit: Array<Omit<UnitDto, 'blocked_dates'>> = [
   {
     id: 1,
     owner_id: 402,
@@ -18,7 +26,7 @@ export const units: UnitDto[] = [
     type: 'Kamar Kos',
     image: '/demo/kos.jpg',
     facilities: ['KM Dalam', 'Kasur Springbed', 'WiFi Highspeed', 'Lemari Pakaian'],
-    booked_dates: [5, 6, 7, 12, 13, 20],
+    booked_dates: hariBulanIni([5, 6, 7, 12, 13, 20]),
   },
   {
     id: 2,
@@ -30,7 +38,7 @@ export const units: UnitDto[] = [
     type: 'Kontrakan',
     image: '/demo/kontrakan.jpg',
     facilities: ['2 Kamar Tidur', 'Dapur', 'Garasi Mobil', 'Air PDAM'],
-    booked_dates: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30],
+    booked_dates: hariBulanIni(Array.from({ length: 30 }, (_, i) => i + 1)),
   },
   {
     id: 3,
@@ -42,7 +50,7 @@ export const units: UnitDto[] = [
     type: 'Ruang Usaha',
     image: '/demo/ruko.jpg',
     facilities: ['Akses Pinggir Jalan Utama', 'Listrik 2200W', 'Toilet', 'Parkir Luas'],
-    booked_dates: [10, 11, 15],
+    booked_dates: hariBulanIni([10, 11, 15]),
   },
   {
     id: 4,
@@ -54,7 +62,7 @@ export const units: UnitDto[] = [
     type: 'Kamar Kos',
     image: '/demo/kos.jpg',
     facilities: ['KM Dalam', 'Kasur', 'WiFi', 'Dapur Bersama'],
-    booked_dates: [3, 4, 11],
+    booked_dates: hariBulanIni([3, 4, 11]),
   },
   {
     id: 5,
@@ -66,7 +74,7 @@ export const units: UnitDto[] = [
     type: 'Kontrakan',
     image: '/demo/kontrakan.jpg',
     facilities: ['3 Kamar Tidur', 'Dapur', 'Carport', 'Air PAM'],
-    booked_dates: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+    booked_dates: hariBulanIni([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]),
   },
   {
     id: 6,
@@ -78,7 +86,7 @@ export const units: UnitDto[] = [
     type: 'Kamar Kos',
     image: '/demo/kos.jpg',
     facilities: ['KM Dalam', 'Kasur', 'WiFi'],
-    booked_dates: [2, 3, 9],
+    booked_dates: hariBulanIni([2, 3, 9]),
   },
   {
     id: 7,
@@ -90,7 +98,7 @@ export const units: UnitDto[] = [
     type: 'Kamar Kos',
     image: '/demo/kos.jpg',
     facilities: ['KM Dalam', 'Kasur', 'WiFi', 'Lemari'],
-    booked_dates: [1, 2, 3, 4, 5],
+    booked_dates: hariBulanIni([1, 2, 3, 4, 5]),
   },
   {
     id: 8,
@@ -114,7 +122,7 @@ export const units: UnitDto[] = [
     type: 'Kamar Kos',
     image: '/demo/kos.jpg',
     facilities: ['KM Dalam', 'Kasur', 'WiFi'],
-    booked_dates: [1, 2, 3],
+    booked_dates: hariBulanIni([1, 2, 3]),
   },
   {
     id: 10,
@@ -126,7 +134,7 @@ export const units: UnitDto[] = [
     type: 'Kamar Kos',
     image: '/demo/kos.jpg',
     facilities: ['KM Dalam', 'Kasur', 'WiFi', 'Dapur Bersama'],
-    booked_dates: [8, 9],
+    booked_dates: hariBulanIni([8, 9]),
   },
   {
     id: 11,
@@ -138,7 +146,7 @@ export const units: UnitDto[] = [
     type: 'Ruang Usaha',
     image: '/demo/ruko.jpg',
     facilities: ['Akses Jalan Utama', 'Listrik 2200W', 'Toilet'],
-    booked_dates: [12],
+    booked_dates: hariBulanIni([12]),
   },
   {
     id: 12,
@@ -150,7 +158,7 @@ export const units: UnitDto[] = [
     type: 'Kamar Kos',
     image: '/demo/kos.jpg',
     facilities: ['KM Dalam', 'Kasur', 'WiFi', 'AC'],
-    booked_dates: [4, 5],
+    booked_dates: hariBulanIni([4, 5]),
   },
   {
     id: 13,
@@ -162,7 +170,7 @@ export const units: UnitDto[] = [
     type: 'Kontrakan',
     image: '/demo/kontrakan.jpg',
     facilities: ['2 Kamar Tidur', 'Dapur', 'Carport'],
-    booked_dates: [1, 2, 3, 4, 5, 6],
+    booked_dates: hariBulanIni([1, 2, 3, 4, 5, 6]),
   },
   {
     id: 14,
@@ -174,7 +182,7 @@ export const units: UnitDto[] = [
     type: 'Kamar Kos',
     image: '/demo/kos.jpg',
     facilities: ['KM Dalam', 'Kasur', 'WiFi'],
-    booked_dates: [1],
+    booked_dates: hariBulanIni([1]),
   },
   {
     id: 15,
@@ -186,7 +194,7 @@ export const units: UnitDto[] = [
     type: 'Ruang Usaha',
     image: '/demo/ruko.jpg',
     facilities: ['Parkir Luas', 'Toilet', 'Listrik 2200W'],
-    booked_dates: [10],
+    booked_dates: hariBulanIni([10]),
   },
   {
     id: 16,
@@ -198,7 +206,7 @@ export const units: UnitDto[] = [
     type: 'Kontrakan',
     image: '/demo/kontrakan.jpg',
     facilities: ['3 Kamar Tidur', 'Dapur', 'Carport'],
-    booked_dates: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+    booked_dates: hariBulanIni([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]),
   },
   {
     id: 17,
@@ -210,7 +218,7 @@ export const units: UnitDto[] = [
     type: 'Apartemen',
     image: '/demo/kontrakan.jpg',
     facilities: ['1 Kamar Tidur', 'AC', 'Kolam Renang', 'Keamanan 24 Jam'],
-    booked_dates: [3, 4],
+    booked_dates: hariBulanIni([3, 4]),
   },
   {
     id: 18,
@@ -222,7 +230,7 @@ export const units: UnitDto[] = [
     type: 'Apartemen',
     image: '/demo/kontrakan.jpg',
     facilities: ['2 Kamar Tidur', 'AC', 'Dapur', 'Parkir'],
-    booked_dates: [1, 2, 3, 4, 5],
+    booked_dates: hariBulanIni([1, 2, 3, 4, 5]),
   },
   {
     id: 19,
@@ -234,7 +242,7 @@ export const units: UnitDto[] = [
     type: 'Kamar Kos',
     image: '/demo/kos.jpg',
     facilities: ['KM Dalam', 'Kasur', 'WiFi'],
-    booked_dates: [7],
+    booked_dates: hariBulanIni([7]),
   },
   {
     id: 20,
@@ -246,7 +254,7 @@ export const units: UnitDto[] = [
     type: 'Kontrakan',
     image: '/demo/kontrakan.jpg',
     facilities: ['2 Kamar Tidur', 'Dapur', 'Garasi'],
-    booked_dates: [1, 2, 3, 4, 5, 6, 7, 8],
+    booked_dates: hariBulanIni([1, 2, 3, 4, 5, 6, 7, 8]),
   },
   {
     id: 21,
@@ -258,7 +266,7 @@ export const units: UnitDto[] = [
     type: 'Apartemen',
     image: '/demo/kontrakan.jpg',
     facilities: ['1 Kamar Tidur', 'AC', 'Gym', 'Keamanan 24 Jam'],
-    booked_dates: [1, 2, 3, 4],
+    booked_dates: hariBulanIni([1, 2, 3, 4]),
   },
   {
     id: 22,
@@ -270,7 +278,7 @@ export const units: UnitDto[] = [
     type: 'Kamar Kos',
     image: '/demo/kos.jpg',
     facilities: ['KM Dalam', 'Kasur', 'WiFi'],
-    booked_dates: [6],
+    booked_dates: hariBulanIni([6]),
   },
   {
     id: 23,
@@ -294,6 +302,8 @@ export const units: UnitDto[] = [
     type: 'Kamar Kos',
     image: '/demo/kos.jpg',
     facilities: ['KM Dalam', 'Kasur', 'WiFi', 'Lemari'],
-    booked_dates: [9],
+    booked_dates: hariBulanIni([9]),
   },
 ]
+
+export const units: UnitDto[] = daftarUnit.map((unit) => ({ ...unit, blocked_dates: [] }))

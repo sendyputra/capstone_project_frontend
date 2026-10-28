@@ -41,6 +41,21 @@ describe('adaptor kontrak', () => {
     expect(baris).toMatchObject({ status: 'Aktif', total_price: 4_500_000, renter_name: 'Siti' })
   })
 
+  /* API asli mengirim relasi bersarang (`tenant`, `unit.owner`), bukan bidang
+     datar yang dipakai data contoh. Adaptor harus membaca keduanya. */
+  it('membaca bentuk bersarang dari API asli', () => {
+    const baris = keKontrak({
+      id: 1, unit_id: 2, tenant_id: 3, start_date: '2026-11-01', end_date: '2027-01-31',
+      total_price: 7_500_000, status: 'pending',
+      tenant: { name: 'Siti', ktp_status: 'verified' },
+      unit: { name: 'Kos A', owner: { name: 'Pak Wahyu' } },
+    })
+    expect(baris.renter_name).toBe('Siti')
+    expect(baris.unit_title).toBe('Kos A')
+    expect(baris.owner_name).toBe('Pak Wahyu')
+    expect(baris.ktp).toBe('Terverifikasi')
+  })
+
   it('menerima daftar langsung', () => {
     expect(keDaftarKontrak([])).toEqual([])
   })
