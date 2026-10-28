@@ -1,9 +1,12 @@
-import { screen, within } from '@testing-library/react'
+import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { http, HttpResponse } from 'msw'
 import { describe, expect, it } from 'vitest'
+import { server } from '@/api/mocks/server'
 import { OwnerContractsPage } from '@/features/contracts/pages/owner-contracts-page'
 import { pantauMetode } from '@/test/metode'
 import { masukSebagai } from '@/test/sesi'
+import { stubUnduhan } from '@/test/unduh'
 import { renderWithProviders } from '@/test/render'
 
 describe('OwnerContractsPage', () => {
@@ -64,5 +67,31 @@ describe('OwnerContractsPage', () => {
 
     expect(rekaman).toContainEqual(expect.stringMatching(/^PUT \/contracts\/\d+$/))
     expect(rekaman.filter((permintaan) => permintaan.startsWith('PATCH'))).toEqual([])
+  })
+
+  it('mengunduh laporan kontrak dari server', async () => {
+    masukSebagai(402, 'pemilik', 'Pak Wahyu')
+    renderWithProviders(<OwnerContractsPage />)
+    const rekaman = pantauMetode()
+    const unduh = stubUnduhan()
+    await screen.findAllByText('Siti Sarah')
+
+    await userEvent.click(screen.getByRole('button', { name: 'Unduh CSV' }))
+
+    await waitFor(() => expect(rekaman).toContain('GET /contracts/export'))
+    await waitFor(() => expect(unduh.nama[0]).toMatch(/^laporan-kontrak-\d{8}\.csv$/))
+  })
+
+  it('menampilkan pesan galat saat unduhan kontrak gagal', async () => {
+    server.use(
+      http.get('/contracts/export', () => HttpResponse.json({ message: 'Laporan gagal dibuat.' }, { status: 500 })),
+    )
+    masukSebagai(402, 'pemilik', 'Pak Wahyu')
+    renderWithProviders(<OwnerContractsPage />)
+    await screen.findAllByText('Siti Sarah')
+
+    await userEvent.click(screen.getByRole('button', { name: 'Unduh CSV' }))
+
+    expect(await screen.findByText('Laporan gagal dibuat.')).toBeInTheDocument()
   })
 })
