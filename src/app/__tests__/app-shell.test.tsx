@@ -65,6 +65,7 @@ describe('AppShell', () => {
     expect(screen.getByRole('link', { name: /Bantuan/ })).toHaveAttribute('href', '/bantuan')
     expect(screen.queryByRole('link', { name: /Pengajuan Sewa/ })).not.toBeInTheDocument()
     expect(screen.queryByRole('link', { name: /Tagihan Saya/ })).not.toBeInTheDocument()
+    expect(await screen.findByRole('button', { name: 'Notifikasi' })).toBeInTheDocument()
   })
 
   /* Kelola penyewa milik pemilik sendiri; penyewa tidak boleh melihat jalan
@@ -85,5 +86,6 @@ describe('AppShell', () => {
     expect(screen.getByRole('link', { name: 'Beranda' })).toHaveAttribute('href', '/')
     expect(screen.getByRole('link', { name: 'Cari Unit' })).toHaveAttribute('href', '/katalog')
     expect(screen.queryByRole('link', { name: /Tagihan Saya/ })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Notifikasi' })).not.toBeInTheDocument()
   })
 })
