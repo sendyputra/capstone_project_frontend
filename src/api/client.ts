@@ -22,6 +22,33 @@ function jenisGalat(status: number): ApiError['kind'] {
   return 'server'
 }
 
+/* Laravel mengirim galat isian sebagai larik pesan per bidang; layar hanya
+   menampilkan pesan pertama, jadi ratakan di sini sekali saja. */
+async function lemparGalat(respons: Response, sesi: ReturnType<typeof readSession>): Promise<never> {
+  const teks = await respons.text()
+  let muatan: unknown = {}
+  try {
+    muatan = teks ? JSON.parse(teks) : {}
+  } catch {
+    muatan = {}
+  }
+
+  const kind = jenisGalat(respons.status)
+  /* Permintaan bertoken yang ditolak berarti sesinya tidak berlaku lagi —
+     buang sekali di sini supaya penjaga rute mengantar kembali ke /masuk.
+     Permintaan tanpa sesi (mis. login gagal) tidak mengubah apa pun. */
+  if (kind === 'unauthorized' && sesi) {
+    clearSession()
+    tandaiSesiKedaluwarsa()
+  }
+
+  const mentah = (muatan as { errors?: Record<string, string | string[]> }).errors ?? {}
+  const fields = Object.fromEntries(
+    Object.entries(mentah).map(([kunci, nilai]) => [kunci, Array.isArray(nilai) ? nilai[0] : nilai]),
+  )
+  throw new ApiError(kind, respons.status, (muatan as { message?: string }).message ?? pesanUmum[kind], fields)
+}
+
 export async function apiFetch<T>(
   path: string,
   options: { method?: string; body?: unknown; signal?: AbortSignal } = {},
@@ -49,30 +76,43 @@ export async function apiFetch<T>(
     throw new ApiError('network', 0, pesanUmum.network)
   }
 
+  if (!respons.ok) await lemparGalat(respons, sesi)
+
   if (respons.status === 204) return undefined as T
 
   const teks = await respons.text()
-  const muatan = teks ? JSON.parse(teks) : {}
+  return (teks ? JSON.parse(teks) : {}) as T
+}
 
-  if (!respons.ok) {
-    const kind = jenisGalat(respons.status)
-    /* Permintaan bertoken yang ditolak berarti sesinya tidak berlaku lagi —
-       buang sekali di sini supaya penjaga rute mengantar kembali ke /masuk.
-       Permintaan tanpa sesi (mis. login gagal) tidak mengubah apa pun. */
-    if (kind === 'unauthorized' && sesi) {
-      clearSession()
-      tandaiSesiKedaluwarsa()
-    }
-    /* Laravel mengirim galat isian sebagai larik pesan per bidang; layar hanya
-       menampilkan pesan pertama, jadi ratakan di sini sekali saja. */
-    const mentah = (muatan as { errors?: Record<string, string | string[]> }).errors ?? {}
-    const fields = Object.fromEntries(
-      Object.entries(mentah).map(([kunci, nilai]) => [kunci, Array.isArray(nilai) ? nilai[0] : nilai]),
-    )
-    throw new ApiError(kind, respons.status, (muatan as { message?: string }).message ?? pesanUmum[kind], fields)
+export async function apiDownload(path: string, namaCadangan: string): Promise<void> {
+  const sesi = readSession()
+  const headers: Record<string, string> = {}
+  if (sesi) headers.Authorization = `Bearer ${sesi.token}`
+
+  let respons: Response
+  try {
+    respons = await fetch(BASE_URL + path, { headers })
+  } catch {
+    throw new ApiError('network', 0, pesanUmum.network)
   }
 
-  return muatan as T
+  if (!respons.ok) await lemparGalat(respons, sesi)
+
+  const disposisi = respons.headers.get('Content-Disposition') ?? ''
+  const nama =
+    disposisi.match(/filename="([^"]+)"/)?.[1] ??
+    disposisi.match(/filename=([^;]+)/)?.[1]?.trim() ??
+    namaCadangan
+
+  const url = URL.createObjectURL(await respons.blob())
+  const tautan = document.createElement('a')
+  tautan.href = url
+  tautan.download = nama
+  tautan.rel = 'noopener'
+  document.body.append(tautan)
+  tautan.click()
+  tautan.remove()
+  URL.revokeObjectURL(url)
 }
 
 /* Sebagian besar endpoint Laravel membungkus muatan sebagai { data: ... };
