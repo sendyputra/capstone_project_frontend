@@ -45,6 +45,11 @@ export const paymentHandlers = [
   http.get('/payments/export', ({ request }) => {
     const { sub, peran } = pemanggil(request)
     if (!peran) return HttpResponse.json({ message: 'Unauthenticated.' }, { status: 401 })
+    /* Akun penyewa tanpa baris tenant tidak punya kontrak untuk dilaporkan;
+       backend menjawab 404, bukan CSV kosong. */
+    if (peran === 'penyewa' && !tenantByUserId(sub)) {
+      return HttpResponse.json({ message: 'Profil tenant tidak ditemukan.' }, { status: 404 })
+    }
 
     const terpilih =
       peran === 'penyewa'
@@ -62,8 +67,15 @@ export const paymentHandlers = [
         ? ['Bulan', 'Unit', 'Pemilik', 'Jumlah', 'Status', 'Bukti', 'Diunggah']
         : ['Bulan', 'Unit', 'Penyewa', 'Jumlah', 'Status', 'Bukti', 'Diunggah']
 
+    /* Sama seperti backend: unggahan ber-id terbesar yang menang, bukan yang
+       kebetulan tersimpan lebih dulu di array. */
     const diunggah = (contractId: number, month: string) => {
-      const baris = payments.find((pembayaran) => pembayaran.contract_id === contractId && pembayaran.month === month)
+      const baris = payments
+        .filter((pembayaran) => pembayaran.contract_id === contractId && pembayaran.month === month)
+        .reduce<PaymentDto | null>(
+          (terbaru, pembayaran) => (!terbaru || pembayaran.id > terbaru.id ? pembayaran : terbaru),
+          null,
+        )
       return baris ? (baris.created_at ?? `${month}-01 00:00`) : ''
     }
 

@@ -9,7 +9,7 @@ export function kirimCsv(nama: string, kolom: string[], baris: NilaiCsv[][]) {
   return new HttpResponse(susunCsv(kolom, baris), {
     headers: {
       'Content-Type': 'text/csv; charset=UTF-8',
-      'Content-Disposition': `attachment; filename="${nama}-${tanggal}.csv"`,
+      'Content-Disposition': `attachment; filename=${nama}-${tanggal}.csv`,
     },
   })
 }

@@ -82,6 +82,28 @@ describe('apiDownload', () => {
     expect(unduh.revoked).toHaveBeenCalled()
   })
 
+  /* Laravel `streamDownload` mengirim nama berkas tanpa kutip, jadi cabang
+     tanpa kutip di `apiDownload` juga harus terbaca. */
+  it('membaca nama berkas tanpa kutip', async () => {
+    const unduh = stubUnduhan()
+    server.use(
+      http.get(
+        '/berkas',
+        () =>
+          new HttpResponse('a;b\r\n', {
+            headers: {
+              'Content-Type': 'text/csv; charset=UTF-8',
+              'Content-Disposition': 'attachment; filename=laporan-uji.csv',
+            },
+          }),
+      ),
+    )
+
+    await apiDownload('/berkas', 'cadangan.csv')
+
+    expect(unduh.nama).toEqual(['laporan-uji.csv'])
+  })
+
   it('memakai nama cadangan bila Content-Disposition tidak ada', async () => {
     const unduh = stubUnduhan()
     server.use(http.get('/berkas', () => new HttpResponse('a;b\r\n', { headers: { 'Content-Type': 'text/csv' } })))
