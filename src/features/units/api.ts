@@ -1,7 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { apiFetch, buka, bukaEntitas } from '@/api/client'
+import { keBlok, keDaftarBlok } from '@/api/adapters/blocks'
 import { dariStatusUnit, keDaftarUnit, keUnit } from '@/api/adapters/units'
-import type { UnitInput, UnitRow } from '@/api/types'
+import type { UnitBlockRow, UnitInput, UnitRow } from '@/api/types'
 import { useSession } from '@/features/auth/api'
 
 /* Formulir memakai label tampilan; API memakai enum backend. Penerjemahan arah
@@ -16,6 +17,8 @@ export const unitKeys = {
   publik: ['units', 'publik'] as const,
   detail: (id: number) => ['unit', id] as const,
 }
+
+export const blockKeys = { list: (unitId: number) => ['unit-blocks', unitId] as const }
 
 /* Katalog terbuka untuk pengunjung: rutenya tidak memeriksa token, dan cakupan
    barisnya tidak bergantung pada sesi. */
@@ -82,5 +85,38 @@ export function useDeleteUnit() {
   return useMutation({
     mutationFn: (id: number) => apiFetch<void>(`/units/${id}`, { method: 'DELETE' }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['units'] }),
+  })
+}
+
+/* Blok mengubah `booked_dates` unit, jadi daftar blok dan detail unit
+   disegarkan bersama; kalender membaca keduanya dari detail. */
+export function useUnitBlocks(unitId: number) {
+  return useQuery({
+    queryKey: blockKeys.list(unitId),
+    enabled: unitId > 0,
+    queryFn: async (): Promise<UnitBlockRow[]> => keDaftarBlok(await apiFetch(`/units/${unitId}/blocks`)),
+  })
+}
+
+export function useTambahBlok(unitId: number) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (masukan: { start_date: string; end_date: string; note?: string }) =>
+      keBlok(bukaEntitas(await apiFetch(`/units/${unitId}/blocks`, { method: 'POST', body: masukan }), 'block')),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: blockKeys.list(unitId) })
+      queryClient.invalidateQueries({ queryKey: unitKeys.detail(unitId) })
+    },
+  })
+}
+
+export function useHapusBlok(unitId: number) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (id: number) => apiFetch<void>(`/units/${unitId}/blocks/${id}`, { method: 'DELETE' }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: blockKeys.list(unitId) })
+      queryClient.invalidateQueries({ queryKey: unitKeys.detail(unitId) })
+    },
   })
 }

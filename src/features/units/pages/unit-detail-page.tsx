@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router'
 import { useSession } from '@/features/auth/api'
 import { useBuatKontrak } from '@/features/contracts/api'
 import { useUnit } from '@/features/units/api'
+import { BlokirTanggal } from '@/features/units/components/blokir-tanggal'
 import { KalenderKetersediaan } from '@/features/units/components/kalender-ketersediaan'
 import { formatRupiah } from '@/lib/format'
 import { hitungSewa } from '@/lib/sewa'
@@ -84,15 +85,8 @@ export function UnitDetailPage({ mode = 'penyewa' }: { mode?: 'penyewa' | 'pemil
 
           <div className="space-y-2">
             <h2 className="text-ui font-bold text-brand-text">Kalender Ketersediaan Tanggal:</h2>
-            <KalenderKetersediaan tanggalTerisi={unit.data.booked_dates} />
-            <div className="flex items-center gap-4 pt-1 text-micro">
-              <span className="flex items-center gap-1 text-brand-text-muted">
-                <span className="inline-block h-3 w-3 rounded-full bg-brand-success" /> Tersedia
-              </span>
-              <span className="flex items-center gap-1 text-brand-text-muted">
-                <span className="inline-block h-3 w-3 rounded-full bg-brand-danger" /> Terisi / Booked
-              </span>
-            </div>
+            <KalenderKetersediaan tanggalTerisi={unit.data.booked_dates} tanggalDiblokir={unit.data.blocked_dates} />
+            {mode === 'pemilik' && <BlokirTanggal unitId={unitId} />}
           </div>
 
           <div className="space-y-2 pt-3">
