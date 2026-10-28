@@ -3,7 +3,7 @@ import { renderHook, waitFor } from '@testing-library/react'
 import { HttpResponse, http } from 'msw'
 import { describe, expect, it } from 'vitest'
 import { server } from '@/api/mocks/server'
-import { useCreateUnit, useMyUnits, usePublicUnits, useUnit } from '@/features/units/api'
+import { useCreateUnit, useMyUnits, usePublicUnits, useUbahStatusUnit, useUnit } from '@/features/units/api'
 import { pantauMetode } from '@/test/metode'
 import { writeSession } from '@/features/auth/session'
 import type { ReactNode } from 'react'
@@ -78,5 +78,39 @@ describe('useCreateUnit', () => {
     result.current.mutate({ name: 'Kos Kamar 09', address: 'Bandung', price: 1200000, status: 'Perawatan' })
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
     expect(terkirim).toEqual([{ name: 'Kos Kamar 09', address: 'Bandung', price: 1200000, status: 'maintenance' }])
+  })
+
+  /* API asli membalas `{message, unit}`, bukan `{data: …}`. Tanpa pembuka
+     beramplop, hasil mutasi terbaca sebagai objek tanpa `id` dan layar
+     menampilkan baris kosong setelah simpan. */
+  it('membaca amplop `unit` dari API asli', async () => {
+    writeSession({ token: 'mock.abc.tanda', user: { id: 402, name: 'Pak Wahyu', email: 'wahyu@umkm.id', role: 'pemilik' } })
+    server.use(
+      http.post('/units', () =>
+        HttpResponse.json(
+          { message: 'Unit berhasil disimpan.', unit: { id: 77, owner_id: 402, name: 'Kos Baru', price: 900000, status: 'available' } },
+          { status: 201 },
+        ),
+      ),
+    )
+    const { result } = renderHook(() => useCreateUnit(), { wrapper: pembungkus() })
+    result.current.mutate({ name: 'Kos Baru', address: 'Bandung', price: 900000, status: 'Tersedia' })
+    await waitFor(() => expect(result.current.isSuccess).toBe(true))
+    expect(result.current.data?.id).toBe(77)
+  })
+})
+
+describe('useUbahStatusUnit', () => {
+  it('membaca amplop `unit` dari API asli', async () => {
+    writeSession({ token: 'mock.abc.tanda', user: { id: 402, name: 'Pak Wahyu', email: 'wahyu@umkm.id', role: 'pemilik' } })
+    server.use(
+      http.patch('/units/1/status', () =>
+        HttpResponse.json({ message: 'Status unit berhasil diperbarui.', unit: { id: 1, name: 'Kos Kamar 01', status: 'maintenance' } }),
+      ),
+    )
+    const { result } = renderHook(() => useUbahStatusUnit(), { wrapper: pembungkus() })
+    result.current.mutate({ id: 1, status: 'Perawatan' })
+    await waitFor(() => expect(result.current.isSuccess).toBe(true))
+    expect(result.current.data).toMatchObject({ id: 1, status: 'Perawatan' })
   })
 })

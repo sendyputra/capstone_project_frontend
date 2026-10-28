@@ -48,6 +48,16 @@ describe('adaptor pembayaran', () => {
     expect(keDaftarPembayaran('bukan-daftar')).toEqual([])
   })
 
+  /* API asli mengirim relasi bersarang lewat `contract`, bukan bidang datar. */
+  it('membaca relasi bersarang dari API asli', () => {
+    const baris = kePembayaran({
+      id: 1, contract_id: 2, month: '2026-10', amount: '1500000', status: 'paid',
+      contract: { tenant: { name: 'Siti' }, unit: { name: 'Kos A' } },
+    })
+    expect(baris.renter_name).toBe('Siti')
+    expect(baris.unit_title).toBe('Kos A')
+  })
+
   it('memberi nilai aman saat bidang hilang atau bertipe salah', () => {
     expect(kePembayaran({})).toMatchObject({
       month: '',

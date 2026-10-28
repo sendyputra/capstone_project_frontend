@@ -122,3 +122,12 @@ export function buka<T>(muatan: unknown): T {
   if (muatan && typeof muatan === 'object' && 'data' in muatan) return (muatan as { data: T }).data
   return muatan as T
 }
+
+/* Mutasi Laravel membalas `{message, unit: ...}` — bukan `{data: ...}`.
+   Pembuka ini mengambil bidang bernama itu, lalu jatuh ke `buka` supaya
+   respons berbentuk `{data: ...}` atau objek langsung tetap terbaca. */
+export function bukaEntitas<T>(muatan: unknown, kunci: string): T {
+  const isi = buka<Record<string, unknown>>(muatan)
+  if (isi && typeof isi === 'object' && kunci in isi) return isi[kunci] as T
+  return isi as T
+}

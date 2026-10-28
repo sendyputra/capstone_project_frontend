@@ -64,6 +64,7 @@ export const unitHandlers = [
       facilities: muatan.facilities ?? [],
       image: muatan.image ?? '/demo/kos.jpg',
       booked_dates: [],
+      blocked_dates: [],
     }
     units.push(unit)
     return HttpResponse.json({ data: barisUnit(unit) }, { status: 201 })

@@ -28,6 +28,9 @@ export function dariStatusBayar(nilai: PaymentRow['status']): PaymentStatusDto {
 
 export function kePembayaran(dto: unknown): PaymentRow {
   const p = (dto ?? {}) as Record<string, unknown>
+  const contract = (p.contract ?? {}) as Record<string, unknown>
+  const tenant = (contract.tenant ?? {}) as Record<string, unknown>
+  const unit = (contract.unit ?? {}) as Record<string, unknown>
   const jumlah = Number(p.amount ?? 0)
   return {
     id: Number(p.id),
@@ -38,8 +41,8 @@ export function kePembayaran(dto: unknown): PaymentRow {
     amount: Number.isFinite(jumlah) ? jumlah : 0,
     status: keStatusBayar(String(p.status)),
     proof_url: String(p.proof_url ?? ''),
-    renter_name: String(p.renter_name ?? ''),
-    unit_title: String(p.unit_title ?? ''),
+    renter_name: String(p.renter_name ?? tenant.name ?? ''),
+    unit_title: String(p.unit_title ?? unit.name ?? ''),
   }
 }
 

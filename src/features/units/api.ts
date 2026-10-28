@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { apiFetch, buka } from '@/api/client'
+import { apiFetch, buka, bukaEntitas } from '@/api/client'
 import { dariStatusUnit, keDaftarUnit, keUnit } from '@/api/adapters/units'
 import type { UnitInput, UnitRow } from '@/api/types'
 import { useSession } from '@/features/auth/api'
@@ -51,7 +51,7 @@ export function useUnit(id: number) {
 export function useCreateUnit() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async (nilai: UnitInput) => keUnit(buka(await apiFetch('/units', { method: 'POST', body: muatanUnit(nilai) }))),
+    mutationFn: async (nilai: UnitInput) => keUnit(bukaEntitas(await apiFetch('/units', { method: 'POST', body: muatanUnit(nilai) }), 'unit')),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['units'] }),
   })
 }
@@ -60,7 +60,7 @@ export function useUpdateUnit() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async ({ id, ...nilai }: { id: number } & Partial<UnitInput>) =>
-      keUnit(buka(await apiFetch(`/units/${id}`, { method: 'PUT', body: muatanUnit(nilai) }))),
+      keUnit(bukaEntitas(await apiFetch(`/units/${id}`, { method: 'PUT', body: muatanUnit(nilai) }), 'unit')),
     onSuccess: (_hasil, variabel) => {
       queryClient.invalidateQueries({ queryKey: ['units'] })
       queryClient.invalidateQueries({ queryKey: unitKeys.detail(variabel.id) })
@@ -72,7 +72,7 @@ export function useUbahStatusUnit() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async ({ id, status }: { id: number; status: UnitRow['status'] }) =>
-      keUnit(buka(await apiFetch(`/units/${id}/status`, { method: 'PATCH', body: { status: dariStatusUnit(status) } }))),
+      keUnit(bukaEntitas(await apiFetch(`/units/${id}/status`, { method: 'PATCH', body: { status: dariStatusUnit(status) } }), 'unit')),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['units'] }),
   })
 }
