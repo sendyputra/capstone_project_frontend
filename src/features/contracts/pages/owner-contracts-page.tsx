@@ -1,7 +1,6 @@
 import type { ContractRow } from '@/api/types'
-import { useContracts, useUbahStatusKontrak } from '@/features/contracts/api'
+import { useContracts, useUbahStatusKontrak, useUnduhLaporanKontrak } from '@/features/contracts/api'
 import { formatRupiah, formatTanggal } from '@/lib/format'
-import { unduhCsv } from '@/lib/csv'
 import { ErrorState } from '@/ui/error-state'
 import { Skeleton } from '@/ui/skeleton'
 import { StatusChip } from '@/ui/status-chip'
@@ -19,6 +18,7 @@ function urutkanMenungguDulu(daftar: ContractRow[]): ContractRow[] {
 export function OwnerContractsPage() {
   const kontrak = useContracts()
   const ubah = useUbahStatusKontrak()
+  const unduhLaporan = useUnduhLaporanKontrak()
   const { tampilkan } = useToast()
   const daftar = urutkanMenungguDulu(kontrak.data ?? [])
   const aktif = daftar.filter((baris) => baris.status === 'Aktif').length
@@ -43,26 +43,11 @@ export function OwnerContractsPage() {
     )
   }
 
-  /* Laporan kontrak diunduh sebagai CSV: bisa dibuka langsung di Excel dan
-     tidak menambah ketergantungan pustaka spreadsheet di bundel. */
   function unduh() {
-    unduhCsv(
-      `kontrak-sewa-${new Date().toISOString().slice(0, 10)}.csv`,
-      ['ID', 'Penyewa', 'Unit', 'Pemilik', 'Mulai', 'Selesai', 'Durasi', 'Harga per Bulan', 'Nilai Kontrak', 'KTP', 'Status'],
-      daftar.map((baris) => [
-        baris.id,
-        baris.renter_name,
-        baris.unit_title,
-        baris.owner_name,
-        baris.start_date,
-        baris.end_date,
-        baris.term,
-        baris.monthly,
-        baris.total_price,
-        baris.ktp ?? 'Belum',
-        baris.status,
-      ]),
-    )
+    unduhLaporan.mutate(undefined, {
+      onSuccess: () => tampilkan('Laporan kontrak diunduh.', 'success'),
+      onError: (galat) => tampilkan((galat as Error).message, 'danger'),
+    })
   }
 
   return (
@@ -75,11 +60,11 @@ export function OwnerContractsPage() {
         <div className="flex items-center gap-2">
           <button
             type="button"
-            disabled={daftar.length === 0}
+            disabled={unduhLaporan.isPending}
             onClick={unduh}
             className="rounded-lg border border-brand-border px-3 py-2 text-micro font-bold text-brand-text-muted disabled:opacity-60"
           >
-            Unduh CSV
+            {unduhLaporan.isPending ? 'Mengunduh…' : 'Unduh CSV'}
           </button>
           <span className="rounded-full bg-brand-success-soft px-3 py-2 text-micro font-bold text-brand-success-soft-fg">{aktif} Aktif</span>
         </div>

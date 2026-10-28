@@ -12,16 +12,3 @@ export function susunCsv(kolom: string[], baris: NilaiCsv[][]): string {
   }
   return `\uFEFF${[kolom, ...baris].map((isi) => isi.map(sel).join(';')).join('\r\n')}`
 }
-
-export function unduhCsv(nama: string, kolom: string[], baris: NilaiCsv[][]) {
-  const berkas = new Blob([susunCsv(kolom, baris)], { type: 'text/csv;charset=utf-8' })
-  const url = URL.createObjectURL(berkas)
-  const tautan = document.createElement('a')
-  tautan.href = url
-  tautan.download = nama
-  tautan.rel = 'noopener'
-  document.body.append(tautan)
-  tautan.click()
-  tautan.remove()
-  URL.revokeObjectURL(url)
-}

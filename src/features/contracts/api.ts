@@ -1,8 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { dariStatusKontrak, keDaftarKontrak, keKontrak } from '@/api/adapters/contracts'
-import { apiFetch, buka } from '@/api/client'
+import { apiDownload, apiFetch, buka } from '@/api/client'
 import type { ContractRow } from '@/api/types'
 import { useSession } from '@/features/auth/api'
+import { tanggalHariIni } from '@/lib/tanggal'
 
 /* Kunci kueri memuat id pengguna, seperti `paymentKeys` dan `unitKeys`: cache
    satu sesi tidak boleh dibaca sesi lain. Invalidasi memakai kunci yang sama,
@@ -19,6 +20,14 @@ export function useContracts() {
     queryKey: contractKeys.list(userId),
     enabled: Boolean(session),
     queryFn: async (): Promise<ContractRow[]> => keDaftarKontrak(await apiFetch<unknown>('/contracts')),
+  })
+}
+
+/* Semua status kontrak ikut terunduh — laporan pemilik bukan sekadar daftar
+   aktif, berbeda dari laporan tagihan. */
+export function useUnduhLaporanKontrak() {
+  return useMutation({
+    mutationFn: () => apiDownload('/contracts/export', `laporan-kontrak-${tanggalHariIni().replaceAll('-', '')}.csv`),
   })
 }
 
