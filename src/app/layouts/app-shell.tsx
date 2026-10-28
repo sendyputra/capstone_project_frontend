@@ -4,6 +4,7 @@ import { Link, NavLink, Outlet, ScrollRestoration } from 'react-router'
 import type { Role } from '@/api/types'
 import { jabatanPeran, toDataRole } from '@/features/auth/roles'
 import { useLogout, useSession } from '@/features/auth/api'
+import { LoncengNotifikasi } from '@/features/notifications/components/lonceng-notifikasi'
 import { inisial } from '@/lib/format'
 import { useTheme } from '@/lib/use-theme'
 import { Button } from '@/ui/button'
@@ -73,6 +74,7 @@ export function AppShell() {
           </nav>
 
           <div className="ml-auto flex items-center gap-3 md:ml-0">
+            {session && <LoncengNotifikasi />}
             <button
               type="button"
               onClick={toggle}
