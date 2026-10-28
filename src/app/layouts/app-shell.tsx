@@ -20,6 +20,7 @@ const TAUTAN: Record<Role, { ke: string; label: string }[]> = {
     { ke: '/pemilik', label: 'Dashboard' },
     { ke: '/pemilik/unit', label: 'Unit Saya' },
     { ke: '/pemilik/kontrak', label: 'Kontrak' },
+    { ke: '/pemilik/penyewa', label: 'Penyewa' },
     { ke: '/pemilik/pembayaran', label: 'Pembayaran' },
   ],
 }

@@ -60,10 +60,21 @@ describe('AppShell', () => {
     expect(await screen.findByRole('link', { name: /Dashboard/ })).toHaveAttribute('href', '/pemilik')
     expect(screen.getByRole('link', { name: /Unit Saya/ })).toHaveAttribute('href', '/pemilik/unit')
     expect(screen.getByRole('link', { name: /Kontrak/ })).toHaveAttribute('href', '/pemilik/kontrak')
+    expect(screen.getByRole('link', { name: /Penyewa/ })).toHaveAttribute('href', '/pemilik/penyewa')
     expect(screen.getByRole('link', { name: /Pembayaran/ })).toHaveAttribute('href', '/pemilik/pembayaran')
     expect(screen.getByRole('link', { name: /Bantuan/ })).toHaveAttribute('href', '/bantuan')
     expect(screen.queryByRole('link', { name: /Pengajuan Sewa/ })).not.toBeInTheDocument()
     expect(screen.queryByRole('link', { name: /Tagihan Saya/ })).not.toBeInTheDocument()
+  })
+
+  /* Kelola penyewa milik pemilik sendiri; penyewa tidak boleh melihat jalan
+     masuk ke sana. */
+  it('tidak menampilkan tautan penyewa kepada penyewa', async () => {
+    writeSession({ ...sesi, user: { id: 405, name: 'Siti Sarah', email: 'siti@mail.com', role: 'penyewa' } })
+    renderShell()
+
+    expect(await screen.findByRole('link', { name: /Tagihan Saya/ })).toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: /Penyewa/ })).not.toBeInTheDocument()
   })
 
   it('menawarkan masuk dan daftar kepada tamu, plus jalan ke katalog', async () => {
