@@ -1,9 +1,16 @@
 import { http, HttpResponse, type HttpResponseResolver } from 'msw'
+import { keKontrak } from '@/api/adapters/contracts'
+import { kePembayaran } from '@/api/adapters/payments'
+import { kirimCsv } from '@/api/mocks/csv'
 import { contracts, type ContractDto } from '@/api/mocks/data/contracts'
 import { payments, type PaymentDto } from '@/api/mocks/data/payments'
 import { tenants } from '@/api/mocks/data/tenants'
+import { barisKontrak } from '@/api/mocks/handlers/contracts'
 import { gagalSekali } from '@/api/mocks/handlers/simulasi'
-import { pemanggil, unitById } from '@/api/mocks/join'
+import { pemanggil, tenantByUserId, unitById } from '@/api/mocks/join'
+import { namaBerkas } from '@/lib/format'
+import { susunTagihan } from '@/lib/tagihan'
+import { tanggalHariIni } from '@/lib/tanggal'
 
 export type PaymentDtoRow = PaymentDto & { renter_name: string; unit_title: string }
 
@@ -30,6 +37,52 @@ const ubahPembayaran: HttpResponseResolver<{ id: string }> = async ({ params, re
 }
 
 export const paymentHandlers = [
+  /* Laporan tagihan dibentuk dari kontrak + pembayaran terbaru, bukan dari baris
+     pembayaran mentah — bulan yang belum dibayar tidak punya baris dan tetap
+     harus muncul. `barisKontrak` masih membawa status enum backend (`active`),
+     sedangkan `susunTagihan` menyaring `Aktif`; `keKontrak` menerjemahkannya
+     sekaligus menghitung biaya bulanan dengan aturan yang sama seperti backend. */
+  http.get('/payments/export', ({ request }) => {
+    const { sub, peran } = pemanggil(request)
+    if (!peran) return HttpResponse.json({ message: 'Unauthenticated.' }, { status: 401 })
+
+    const terpilih =
+      peran === 'penyewa'
+        ? contracts.filter((kontrak) => kontrak.tenant_id === tenantByUserId(sub)?.id)
+        : peran === 'pemilik'
+          ? contracts.filter((kontrak) => unitById(kontrak.unit_id)?.owner_id === sub)
+          : []
+
+    const kontrak = terpilih.map((baris) => keKontrak(barisKontrak(baris)))
+    const tagihan = susunTagihan(kontrak, payments.map((baris) => kePembayaran(barisTagihan(baris))), tanggalHariIni())
+    const petaKontrak = new Map(kontrak.map((baris) => [baris.id, baris]))
+
+    const kolom =
+      peran === 'penyewa'
+        ? ['Bulan', 'Unit', 'Pemilik', 'Jumlah', 'Status', 'Bukti', 'Diunggah']
+        : ['Bulan', 'Unit', 'Penyewa', 'Jumlah', 'Status', 'Bukti', 'Diunggah']
+
+    const diunggah = (contractId: number, month: string) => {
+      const baris = payments.find((pembayaran) => pembayaran.contract_id === contractId && pembayaran.month === month)
+      return baris ? (baris.created_at ?? `${month}-01 00:00`) : ''
+    }
+
+    const isi = tagihan.map((baris) => {
+      const induk = petaKontrak.get(baris.contract_id)!
+      return [
+        baris.month,
+        baris.unit_title,
+        peran === 'penyewa' ? induk.owner_name : induk.renter_name,
+        baris.amount,
+        baris.status,
+        namaBerkas(baris.proof_url),
+        diunggah(baris.contract_id, baris.month),
+      ]
+    })
+
+    return kirimCsv('laporan-tagihan', kolom, isi)
+  }),
+
   http.get('/payments', ({ request }) => {
     const { sub, peran } = pemanggil(request)
 

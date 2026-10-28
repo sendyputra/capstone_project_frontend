@@ -2,7 +2,7 @@ import type { Payment, PaymentStatusDto } from '@/api/types'
 
 /* Baris tabel `payments` seperti yang dikirim API asli: bentuknya sama dengan
    `Payment`, hanya statusnya enum backend (`paid`), bukan label tampilan. */
-export type PaymentDto = Omit<Payment, 'status'> & { status: PaymentStatusDto }
+export type PaymentDto = Omit<Payment, 'status'> & { status: PaymentStatusDto; created_at?: string }
 
 /* `month` memakai format `YYYY-MM` seperti ERD; `proof_url` menyimpan nama
    berkas bukti, sebagaimana purwarupa menampilkan `proofName`.
