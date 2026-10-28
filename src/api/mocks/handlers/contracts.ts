@@ -83,6 +83,7 @@ export const contractHandlers = [
      bulanan tidak dihitung ulang dengan aturan berbeda. */
   http.get('/contracts/export', ({ request }) => {
     const { sub, peran } = pemanggil(request)
+    if (!peran) return HttpResponse.json({ message: 'Unauthenticated.' }, { status: 401 })
     if (peran !== 'pemilik') return HttpResponse.json({ message: 'Unauthorized access' }, { status: 403 })
 
     const baris = contracts

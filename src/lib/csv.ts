@@ -10,5 +10,5 @@ export function susunCsv(kolom: string[], baris: NilaiCsv[][]): string {
     const teks = /^[=+\-@\t\r]/.test(mentah) ? `'${mentah}` : mentah
     return /[";\r\n]/.test(teks) ? `"${teks.replace(/"/g, '""')}"` : teks
   }
-  return `\uFEFF${[kolom, ...baris].map((isi) => isi.map(sel).join(';')).join('\r\n')}`
+  return `\uFEFF${[kolom, ...baris].map((isi) => isi.map(sel).join(';')).join('\r\n')}\r\n`
 }
