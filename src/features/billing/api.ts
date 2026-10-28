@@ -45,6 +45,17 @@ export function useUnggahBukti() {
   })
 }
 
+/* Pencatatan manual oleh pemilik: tanpa berkas, jadi JSON — berbeda dari
+   unggahan bukti penyewa yang memakai `FormData`. */
+export function useCatatPembayaran() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (masukan: { contract_id: number; month: string; amount: number }) =>
+      kePembayaran(bukaEntitas(await apiFetch<unknown>('/payments', { method: 'POST', body: masukan }), 'payment')),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['payments'] }),
+  })
+}
+
 export function useVerifikasiPembayaran() {
   const queryClient = useQueryClient()
   return useMutation({

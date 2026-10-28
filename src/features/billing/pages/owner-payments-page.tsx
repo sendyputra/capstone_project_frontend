@@ -1,5 +1,9 @@
-import { usePayments, useUnduhLaporanTagihan, useVerifikasiPembayaran } from '@/features/billing/api'
+import { useState, type FormEvent } from 'react'
+import { useCatatPembayaran, usePayments, useUnduhLaporanTagihan, useVerifikasiPembayaran } from '@/features/billing/api'
+import { useContracts } from '@/features/contracts/api'
 import { formatBulan, formatRupiah, namaBerkas } from '@/lib/format'
+import { susunTagihan } from '@/lib/tagihan'
+import { tanggalHariIni } from '@/lib/tanggal'
 import { ErrorState } from '@/ui/error-state'
 import { Skeleton } from '@/ui/skeleton'
 import { StatusChip } from '@/ui/status-chip'
@@ -12,9 +16,71 @@ export function OwnerPaymentsPage() {
   const verifikasi = useVerifikasiPembayaran()
   const unduhLaporan = useUnduhLaporanTagihan()
   const konfirmasi = useKonfirmasi()
+  const catat = useCatatPembayaran()
+  const kontrak = useContracts()
   const { tampilkan } = useToast()
   const daftar = tagihan.data ?? []
   const menunggu = daftar.filter((baris) => baris.status === 'Menunggu Verifikasi').length
+  const [bukaForm, setBukaForm] = useState(false)
+  const [kontrakId, setKontrakId] = useState('')
+  const [bulan, setBulan] = useState('')
+  const [jumlah, setJumlah] = useState(0)
+  const [galatForm, setGalatForm] = useState('')
+
+  const kontrakAktif = (kontrak.data ?? []).filter((baris) => baris.status === 'Aktif')
+  const kontrakDipilih = kontrakAktif.find((baris) => baris.id === Number(kontrakId))
+  /* Hanya bulan tanpa pembayaran lunas/menunggu yang bisa dicatat ulang;
+     `Ditolak` boleh diisi manual karena bukti lamanya sudah tidak berlaku. */
+  const bulanTersedia = kontrakDipilih
+    ? susunTagihan([kontrakDipilih], daftar, tanggalHariIni()).filter(
+        (baris) => baris.status === 'Belum Bayar' || baris.status === 'Ditolak',
+      )
+    : []
+
+  function tutupForm() {
+    setBukaForm(false)
+    setKontrakId('')
+    setBulan('')
+    setJumlah(0)
+    setGalatForm('')
+  }
+
+  function pilihKontrak(nilai: string) {
+    setKontrakId(nilai)
+    setGalatForm('')
+    const dipilih = kontrakAktif.find((baris) => baris.id === Number(nilai))
+    const tersedia = dipilih
+      ? susunTagihan([dipilih], daftar, tanggalHariIni()).filter(
+          (baris) => baris.status === 'Belum Bayar' || baris.status === 'Ditolak',
+        )
+      : []
+    setBulan(tersedia[0]?.month ?? '')
+    setJumlah(tersedia[0]?.amount ?? 0)
+  }
+
+  function pilihBulan(nilai: string) {
+    setBulan(nilai)
+    setJumlah(bulanTersedia.find((baris) => baris.month === nilai)?.amount ?? 0)
+  }
+
+  function simpanPembayaran(peristiwa: FormEvent) {
+    peristiwa.preventDefault()
+    if (!kontrakDipilih || !bulan) {
+      setGalatForm('Kontrak dan bulan wajib dipilih.')
+      return
+    }
+    catat.mutate(
+      { contract_id: kontrakDipilih.id, month: bulan, amount: jumlah },
+      {
+        onSuccess: () => {
+          const nama = kontrakDipilih.renter_name
+          tutupForm()
+          tampilkan(`Pembayaran ${nama} untuk ${formatBulan(bulan)} dicatat.`, 'success')
+        },
+        onError: (eror) => setGalatForm((eror as Error).message),
+      },
+    )
+  }
 
   /* `month` datang dari API sebagai `YYYY-MM`; toast dan dialog memakai label
      bulan yang sama dengan kolom tabel, bukan nilai mentahnya. */
@@ -67,9 +133,74 @@ export function OwnerPaymentsPage() {
           >
             {unduhLaporan.isPending ? 'Mengunduh…' : 'Unduh CSV'}
           </button>
+          <button
+            type="button"
+            onClick={() => (bukaForm ? tutupForm() : setBukaForm(true))}
+            className="rounded-lg bg-brand-accent px-3 py-2 text-micro font-bold text-brand-accent-fg"
+          >
+            {bukaForm ? 'Tutup' : 'Catat Pembayaran'}
+          </button>
           <span className="rounded-full bg-brand-warning-soft px-3 py-2 text-micro font-bold text-brand-warning-soft-fg">{menunggu} Menunggu</span>
         </div>
       </div>
+
+      {bukaForm && (
+        <form onSubmit={simpanPembayaran} aria-label="Form catat pembayaran" className="grid gap-3 rounded-xl border border-brand-border bg-brand-bg p-4 sm:grid-cols-4">
+          <label className="block text-ui font-semibold text-brand-text">
+            Kontrak
+            <select
+              value={kontrakId}
+              onChange={(e) => pilihKontrak(e.target.value)}
+              className="mt-1 w-full rounded-lg border border-brand-border px-3 py-2"
+            >
+              <option value="">Pilih kontrak</option>
+              {kontrakAktif.map((baris) => (
+                <option key={baris.id} value={baris.id}>{baris.renter_name} — {baris.unit_title}</option>
+              ))}
+            </select>
+          </label>
+          <label className="block text-ui font-semibold text-brand-text">
+            Bulan
+            <select
+              value={bulan}
+              onChange={(e) => pilihBulan(e.target.value)}
+              disabled={bulanTersedia.length === 0}
+              className="mt-1 w-full rounded-lg border border-brand-border px-3 py-2 disabled:opacity-60"
+            >
+              {bulanTersedia.map((baris) => (
+                <option key={baris.kunci} value={baris.month}>{formatBulan(baris.month)}</option>
+              ))}
+            </select>
+          </label>
+          <label className="block text-ui font-semibold text-brand-text">
+            Jumlah
+            <input
+              type="number"
+              min={1}
+              value={jumlah}
+              onChange={(e) => setJumlah(Number(e.target.value))}
+              className="mt-1 w-full rounded-lg border border-brand-border px-3 py-2"
+            />
+          </label>
+          <div className="flex items-end">
+            <button
+              type="submit"
+              disabled={catat.isPending || bulanTersedia.length === 0}
+              className="w-full rounded-lg bg-brand-accent px-4 py-2 text-ui font-semibold text-brand-accent-fg disabled:opacity-70"
+            >
+              {catat.isPending ? 'Menyimpan…' : 'Simpan Pembayaran'}
+            </button>
+          </div>
+          {kontrakDipilih && bulanTersedia.length === 0 && (
+            <p className="sm:col-span-4 text-micro text-brand-text-muted">Semua bulan sudah dibayar.</p>
+          )}
+          {galatForm && (
+            <p role="alert" className="sm:col-span-4 rounded-lg border border-brand-danger-border bg-brand-danger-soft p-3 text-ui text-brand-danger-soft-fg">
+              {galatForm}
+            </p>
+          )}
+        </form>
+      )}
 
       {tagihan.isPending && <Skeleton className="h-40" />}
       {tagihan.isError && <ErrorState message={(tagihan.error as Error).message} onRetry={() => tagihan.refetch()} />}
