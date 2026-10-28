@@ -80,6 +80,22 @@ describe('adaptor kontrak', () => {
     expect(keKontrak({ ...dto, ktp: 'Menunggu', ktp_status: 'Terverifikasi' }).ktp).toBe('Menunggu')
   })
 
+  /* Laravel menyerialkan kolom `date` sebagai tengah malam UTC, sehingga
+     `2026-10-01` datang sebagai `2026-09-30T17:00:00.000000Z`. Memotong string
+     apa adanya menggeser bulan tagihan ke September dan backend menolak
+     pembayarannya. */
+  it('mengembalikan tanggal kalender WIB dari serialisasi UTC', () => {
+    const baris = keKontrak({
+      ...dto,
+      start_date: '2026-09-30T17:00:00.000000Z',
+      end_date: '2027-09-29T17:00:00.000000Z',
+      total_price: '18000000',
+    })
+    expect(baris.start_date).toBe('2026-10-01')
+    expect(baris.end_date).toBe('2027-09-30')
+    expect(baris).toMatchObject({ term: '12 bulan', monthly: 1_500_000 })
+  })
+
   it('menerima daftar beramplop', () => {
     expect(keDaftarKontrak({ data: [dto] })).toHaveLength(1)
     expect(keDaftarKontrak('bukan-daftar')).toEqual([])

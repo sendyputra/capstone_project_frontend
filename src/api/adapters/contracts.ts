@@ -1,6 +1,7 @@
 import { buka } from '@/api/client'
 import type { ContractRow, ContractStatusDto, KtpStatus } from '@/api/types'
 import { hitungBulanSewa } from '@/lib/sewa'
+import { tanggalKalender } from '@/lib/tanggal'
 
 /* Dua tabel, satu per arah: enum backend ke label tampilan, dan sebaliknya.
    Nilai di luar enum backend jatuh ke `Menunggu`, bukan diteruskan mentah —
@@ -59,14 +60,16 @@ export function keKontrak(dto: unknown): ContractRow {
   const unit = (k.unit ?? {}) as Record<string, unknown>
   const owner = (unit.owner ?? {}) as Record<string, unknown>
   const total = keAngka(k.total_price)
-  const bulan = hitungBulan(String(k.start_date ?? ''), String(k.end_date ?? ''))
+  const mulai = tanggalKalender(String(k.start_date ?? ''))
+  const akhir = tanggalKalender(String(k.end_date ?? ''))
+  const bulan = hitungBulan(mulai, akhir)
   const ktp = bacaKtp(tenant, k)
   return {
     id: Number(k.id),
     unit_id: Number(k.unit_id),
     tenant_id: Number(k.tenant_id ?? 0),
-    start_date: String(k.start_date ?? ''),
-    end_date: String(k.end_date ?? ''),
+    start_date: mulai,
+    end_date: akhir,
     total_price: total,
     status: keStatusKontrak(String(k.status)),
     renter_name: String(k.renter_name ?? tenant.name ?? ''),
