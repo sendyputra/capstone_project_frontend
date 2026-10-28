@@ -1,4 +1,6 @@
 import { http, HttpResponse, type HttpResponseResolver } from 'msw'
+import { keKontrak } from '@/api/adapters/contracts'
+import { kirimCsv } from '@/api/mocks/csv'
 import { contracts, type ContractDto } from '@/api/mocks/data/contracts'
 import { namaPengguna, pemanggil, tenantById, tenantByUserId, termBulan, unitById } from '@/api/mocks/join'
 import type { KtpStatus } from '@/api/types'
@@ -76,6 +78,36 @@ const buatKontrak: HttpResponseResolver = async ({ request }) => {
 }
 
 export const contractHandlers = [
+  /* Laporan kontrak memuat semua status, cakupannya tetap unit milik pemilik.
+     Baris memakai `term` dan `monthly` hasil adaptor supaya durasi dan biaya
+     bulanan tidak dihitung ulang dengan aturan berbeda. */
+  http.get('/contracts/export', ({ request }) => {
+    const { sub, peran } = pemanggil(request)
+    if (peran !== 'pemilik') return HttpResponse.json({ message: 'Unauthorized access' }, { status: 403 })
+
+    const baris = contracts
+      .filter((kontrak) => unitById(kontrak.unit_id)?.owner_id === sub)
+      .map((kontrak) => keKontrak(barisKontrak(kontrak)))
+      .map((kontrak) => [
+        kontrak.id,
+        kontrak.renter_name,
+        kontrak.unit_title,
+        kontrak.owner_name,
+        kontrak.start_date,
+        kontrak.end_date,
+        kontrak.term,
+        kontrak.monthly,
+        kontrak.total_price,
+        kontrak.status,
+      ])
+
+    return kirimCsv(
+      'laporan-kontrak',
+      ['ID', 'Penyewa', 'Unit', 'Pemilik', 'Mulai', 'Selesai', 'Durasi', 'Harga per Bulan', 'Nilai Kontrak', 'Status'],
+      baris,
+    )
+  }),
+
   /* Cakupan dari token, sama seperti `GET /payments`: pemilik hanya kontrak yang
      unitnya miliknya, penyewa hanya kontrak atas namanya sendiri. Cakupan penyewa
      bukan hiasan — tagihan diturunkan dari kontrak, jadi kontrak yang bocor ikut

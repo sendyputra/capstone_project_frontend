@@ -15,4 +15,8 @@ describe('susunCsv', () => {
       '\uFEFFA\r\n"Siti; Sarah"\r\n"kata ""kutip"""\r\n"dua\nbaris"',
     )
   })
+
+  it('memberi awalan kutip pada sel yang bisa jadi formula', () => {
+    expect(susunCsv(['A'], [['=1+1'], ['-1'], ['@SUM(A1)']])).toBe("\uFEFFA\r\n'=1+1\r\n'-1\r\n'@SUM(A1)")
+  })
 })
