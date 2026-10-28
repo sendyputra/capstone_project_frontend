@@ -31,12 +31,22 @@ export function useUnduhLaporanKontrak() {
   })
 }
 
+/* Pemilik wajib menyertakan `tenant_id` penyewa yang ia kelola; penyewa yang
+   mengajukan sendiri tidak mengirimnya dan servernya memakai profil dari token. */
+export type MasukanKontrak = {
+  unit_id: number
+  start_date: string
+  end_date: string
+  total_price: number
+  tenant_id?: number
+}
+
 export function useBuatKontrak() {
   const queryClient = useQueryClient()
   const { session } = useSession()
   const userId = session?.user.id ?? 0
   return useMutation({
-    mutationFn: async (masukan: { unit_id: number; start_date: string; end_date: string; total_price: number }) =>
+    mutationFn: async (masukan: MasukanKontrak) =>
       /* Jawaban server dilewatkan adaptor seperti daftar: pemanggil menerima
          baris siap tampil, bukan DTO mentah yang bentuknya lain. */
       keKontrak(bukaEntitas(await apiFetch<unknown>('/contracts', { method: 'POST', body: masukan }), 'contract')),
