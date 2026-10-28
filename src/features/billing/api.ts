@@ -1,10 +1,19 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { dariStatusBayar, keDaftarPembayaran, kePembayaran } from '@/api/adapters/payments'
-import { apiFetch, buka } from '@/api/client'
+import { apiDownload, apiFetch, buka } from '@/api/client'
 import type { PaymentRow } from '@/api/types'
 import { useSession } from '@/features/auth/api'
+import { tanggalHariIni } from '@/lib/tanggal'
 
 export const paymentKeys = { list: (userId: number) => ['payments', { userId }] as const }
+
+/* Nama cadangan dipakai saat `Content-Disposition` tidak sampai ke peramban
+   (mis. origin lain tanpa header terekspos). */
+export function useUnduhLaporanTagihan() {
+  return useMutation({
+    mutationFn: () => apiDownload('/payments/export', `laporan-tagihan-${tanggalHariIni().replaceAll('-', '')}.csv`),
+  })
+}
 
 export function usePayments() {
   const { session } = useSession()
