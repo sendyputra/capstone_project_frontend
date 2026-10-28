@@ -37,7 +37,7 @@ export function useMyUnits() {
   return useQuery({
     queryKey: unitKeys.list(userId),
     enabled: Boolean(session),
-    queryFn: async () => keDaftarUnit(await apiFetch('/units')),
+    queryFn: async () => keDaftarUnit(await apiFetch('/units?status=all')),
   })
 }
 

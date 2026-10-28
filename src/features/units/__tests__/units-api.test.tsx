@@ -43,6 +43,16 @@ describe('useMyUnits', () => {
     expect(result.current.data?.every((unit) => unit.owner_id === 402)).toBe(true)
   })
 
+  /* API tanpa parameter `status` hanya mengembalikan unit `available`; unit
+     yang sedang disewa atau dirawat hilang dari layar pemilik. */
+  it('meminta semua status unit, bukan hanya yang tersedia', async () => {
+    writeSession({ token: 'mock.abc.tanda', user: { id: 402, name: 'Pak Wahyu', email: 'wahyu@umkm.id', role: 'pemilik' } })
+    const rekaman = pantauMetode()
+    const { result } = renderHook(() => useMyUnits(), { wrapper: pembungkus() })
+    await waitFor(() => expect(result.current.isSuccess).toBe(true))
+    expect(rekaman).toContain('GET /units?status=all')
+  })
+
   it('tidak menampilkan unit milik pemilik lain saat token menunjuk pemilik berbeda', async () => {
     const token = `mock.${btoa(JSON.stringify({ sub: 403 }))}.tanda`
     writeSession({ token, user: { id: 403, name: 'Bu Rina', email: 'rina@umkm.id', role: 'pemilik' } })
