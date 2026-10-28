@@ -12,6 +12,7 @@ import { TagihanPage } from '@/features/billing/pages/tagihan-page'
 import { OwnerPaymentsPage } from '@/features/billing/pages/owner-payments-page'
 import { OwnerContractsPage } from '@/features/contracts/pages/owner-contracts-page'
 import { OwnerDashboardPage } from '@/features/dashboard/pages/owner-dashboard-page'
+import { OwnerTenantsPage } from '@/features/tenants/pages/owner-tenants-page'
 import { KatalogPage } from '@/features/units/pages/katalog-page'
 import { UnitDetailPage } from '@/features/units/pages/unit-detail-page'
 import { UnitFormPage } from '@/features/units/pages/unit-form-page'
@@ -40,6 +41,7 @@ export const routes: RouteObject[] = [
       { path: '/pemilik/unit/baru', element: <RequireRole role="pemilik"><UnitFormPage /></RequireRole> },
       { path: '/pemilik/unit/:id', element: <RequireRole role="pemilik"><UnitDetailPage mode="pemilik" /></RequireRole> },
       { path: '/pemilik/kontrak', element: <RequireRole role="pemilik"><OwnerContractsPage /></RequireRole> },
+      { path: '/pemilik/penyewa', element: <RequireRole role="pemilik"><OwnerTenantsPage /></RequireRole> },
       { path: '/pemilik/pembayaran', element: <RequireRole role="pemilik"><OwnerPaymentsPage /></RequireRole> },
       { path: '*', element: <NotFoundPage /> },
     ],

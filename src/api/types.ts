@@ -18,6 +18,9 @@ export type KtpStatus = 'Terverifikasi' | 'Menunggu' | 'Belum'
 export type Tenant = {
   id: number
   user_id: number | null
+  /* Penyewa yang dibuat pemilik membawa `owner_id`; penyewa lama dari data
+     contoh boleh kosong dan tetap terlihat lewat kontraknya. */
+  owner_id?: number | null
   name: string
   phone: string
   ktp: KtpStatus
