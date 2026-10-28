@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { usePayments, useUnggahBukti } from '@/features/billing/api'
+import { usePayments, useUnduhLaporanTagihan, useUnggahBukti } from '@/features/billing/api'
 import { useContracts } from '@/features/contracts/api'
 import { formatBulan, formatRupiah, namaBerkas } from '@/lib/format'
 import { susunTagihan, type Tagihan } from '@/lib/tagihan'
@@ -16,6 +16,7 @@ export function TagihanPage() {
   const kontrak = useContracts()
   const tagihan = usePayments()
   const unggah = useUnggahBukti()
+  const unduhLaporan = useUnduhLaporanTagihan()
   const { tampilkan } = useToast()
   const [galat, setGalat] = useState('')
   const [berkas, setBerkas] = useState('')
@@ -51,7 +52,22 @@ export function TagihanPage() {
           <h1 className="text-heading-m font-bold text-brand-text">Tagihan &amp; Pembayaran</h1>
           <p className="mt-1 text-ui text-brand-text-muted">Unggah bukti bayar untuk tiap tagihan bulanan yang belum lunas.</p>
         </div>
-        <span className="rounded-full bg-brand-warning-soft px-3 py-2 text-micro font-bold text-brand-warning-soft-fg">{belumBayar} Belum Dibayar</span>
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="rounded-full bg-brand-warning-soft px-3 py-2 text-micro font-bold text-brand-warning-soft-fg">{belumBayar} Belum Dibayar</span>
+          <button
+            type="button"
+            disabled={unduhLaporan.isPending}
+            onClick={() =>
+              unduhLaporan.mutate(undefined, {
+                onSuccess: () => tampilkan('Laporan tagihan diunduh.', 'success'),
+                onError: (eror) => tampilkan((eror as Error).message, 'danger'),
+              })
+            }
+            className="rounded-lg border border-brand-border px-3 py-2 text-micro font-bold text-brand-text-muted disabled:opacity-60"
+          >
+            {unduhLaporan.isPending ? 'Mengunduh…' : 'Unduh CSV'}
+          </button>
+        </div>
       </div>
 
       {(kontrak.isPending || tagihan.isPending) && <Skeleton className="h-40 rounded-2xl" />}
