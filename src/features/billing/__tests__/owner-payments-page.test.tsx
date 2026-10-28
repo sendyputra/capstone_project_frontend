@@ -1,9 +1,10 @@
-import { screen, within } from '@testing-library/react'
+import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 import { OwnerPaymentsPage } from '@/features/billing/pages/owner-payments-page'
 import { pantauMetode } from '@/test/metode'
 import { masukSebagai } from '@/test/sesi'
+import { stubUnduhan } from '@/test/unduh'
 import { renderWithProviders } from '@/test/render'
 
 describe('OwnerPaymentsPage', () => {
@@ -52,5 +53,18 @@ describe('OwnerPaymentsPage', () => {
 
     expect(rekaman).toContainEqual(expect.stringMatching(/^PUT \/payments\/\d+$/))
     expect(rekaman.filter((permintaan) => permintaan.startsWith('PATCH'))).toEqual([])
+  })
+
+  it('mengunduh laporan tagihan dari server, bukan menyusun di peramban', async () => {
+    masukSebagai(402, 'pemilik', 'Pak Wahyu')
+    renderWithProviders(<OwnerPaymentsPage />)
+    const rekaman = pantauMetode()
+    const unduh = stubUnduhan()
+    await screen.findAllByText('Siti Sarah')
+
+    await userEvent.click(screen.getByRole('button', { name: 'Unduh CSV' }))
+
+    await waitFor(() => expect(rekaman).toContain('GET /payments/export'))
+    await waitFor(() => expect(unduh.nama[0]).toMatch(/^laporan-tagihan-\d{8}\.csv$/))
   })
 })

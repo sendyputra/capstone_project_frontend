@@ -1,6 +1,5 @@
-import { usePayments, useVerifikasiPembayaran } from '@/features/billing/api'
+import { usePayments, useUnduhLaporanTagihan, useVerifikasiPembayaran } from '@/features/billing/api'
 import { formatBulan, formatRupiah, namaBerkas } from '@/lib/format'
-import { unduhCsv } from '@/lib/csv'
 import { ErrorState } from '@/ui/error-state'
 import { Skeleton } from '@/ui/skeleton'
 import { StatusChip } from '@/ui/status-chip'
@@ -11,6 +10,7 @@ import { useToast } from '@/ui/toast'
 export function OwnerPaymentsPage() {
   const tagihan = usePayments()
   const verifikasi = useVerifikasiPembayaran()
+  const unduhLaporan = useUnduhLaporanTagihan()
   const konfirmasi = useKonfirmasi()
   const { tampilkan } = useToast()
   const daftar = tagihan.data ?? []
@@ -45,11 +45,10 @@ export function OwnerPaymentsPage() {
   }
 
   function unduh() {
-    unduhCsv(
-      `pembayaran-${new Date().toISOString().slice(0, 10)}.csv`,
-      ['ID', 'Penyewa', 'Unit', 'Bulan', 'Jumlah', 'Status', 'Bukti'],
-      daftar.map((baris) => [baris.id, baris.renter_name, baris.unit_title, baris.month, baris.amount, baris.status, namaBerkas(baris.proof_url)]),
-    )
+    unduhLaporan.mutate(undefined, {
+      onSuccess: () => tampilkan('Laporan tagihan diunduh.', 'success'),
+      onError: (galat) => tampilkan((galat as Error).message, 'danger'),
+    })
   }
 
   return (
@@ -62,11 +61,11 @@ export function OwnerPaymentsPage() {
         <div className="flex items-center gap-2">
           <button
             type="button"
-            disabled={daftar.length === 0}
+            disabled={unduhLaporan.isPending}
             onClick={unduh}
             className="rounded-lg border border-brand-border px-3 py-2 text-micro font-bold text-brand-text-muted disabled:opacity-60"
           >
-            Unduh CSV
+            {unduhLaporan.isPending ? 'Mengunduh…' : 'Unduh CSV'}
           </button>
           <span className="rounded-full bg-brand-warning-soft px-3 py-2 text-micro font-bold text-brand-warning-soft-fg">{menunggu} Menunggu</span>
         </div>
