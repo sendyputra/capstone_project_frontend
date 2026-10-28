@@ -8,6 +8,7 @@ import { aktifkanSimulasi, gagalSekali } from '@/api/mocks/handlers/simulasi'
 import { UnitDetailPage } from '@/features/units/pages/unit-detail-page'
 import { masukSebagai } from '@/test/sesi'
 import { renderWithProviders } from '@/test/render'
+import { tanggalHariIni } from '@/lib/tanggal'
 
 /* Mock sudah punya `POST /contracts`, tetapi tidak mensimulasikan kegagalan
    jaringan — bagian itu khas demo. Tes ini memasang handler sementaranya sendiri
@@ -49,12 +50,13 @@ function pasangHandlerKontrak() {
   )
 }
 
-function renderDetail(id = '1') {
-  masukSebagai(405, 'penyewa', 'Siti Sarah')
+function renderDetail(id = '1', mode: 'penyewa' | 'pemilik' = 'penyewa') {
+  if (mode === 'pemilik') masukSebagai(402, 'pemilik', 'Pak Wahyu')
+  else masukSebagai(405, 'penyewa', 'Siti Sarah')
   const router = createMemoryRouter(
     [
       { path: '/katalog', element: <p>Katalog unit</p> },
-      { path: '/katalog/:id', element: <UnitDetailPage /> },
+      { path: '/katalog/:id', element: <UnitDetailPage mode={mode} /> },
     ],
     { initialEntries: [`/katalog/${id}`] },
   )
@@ -87,8 +89,49 @@ describe('UnitDetailPage', () => {
     expect(screen.getByText('KM Dalam')).toBeInTheDocument()
     expect(screen.getByText('Fasilitas Unit:')).toBeInTheDocument()
     expect(screen.getByText('Kalender Ketersediaan Tanggal:')).toBeInTheDocument()
-    expect(screen.getByTestId('hari-5')).toHaveClass('bg-brand-danger-soft')
-    expect(screen.getByTestId('hari-1')).toHaveClass('bg-brand-success-soft')
+    const bulan = tanggalHariIni().slice(0, 7)
+    expect(screen.getByTestId(`tanggal-${bulan}-05`)).toHaveClass('bg-brand-danger-soft')
+    expect(screen.getByTestId(`tanggal-${bulan}-01`)).toHaveClass('bg-brand-success-soft')
+  })
+
+  it('pemilik melihat panel blokir', async () => {
+    renderDetail('1', 'pemilik')
+
+    expect(await screen.findByLabelText('Mulai blokir')).toBeInTheDocument()
+  })
+
+  it('penyewa tidak melihat panel blokir', async () => {
+    renderDetail()
+
+    await screen.findByRole('heading', { name: 'Kos Kamar 01' })
+    expect(screen.queryByLabelText('Mulai blokir')).not.toBeInTheDocument()
+  })
+
+  it('pemilik memblokir rentang dan baris muncul', async () => {
+    renderDetail('1', 'pemilik')
+    await screen.findByRole('heading', { name: 'Kos Kamar 01' })
+
+    fireEvent.change(screen.getByLabelText('Mulai blokir'), { target: { value: '2026-11-10' } })
+    fireEvent.change(screen.getByLabelText('Selesai blokir'), { target: { value: '2026-11-12' } })
+    await userEvent.click(screen.getByRole('button', { name: 'Blokir Tanggal' }))
+
+    expect(await screen.findByText('10 Nov 2026 – 12 Nov 2026')).toBeInTheDocument()
+  })
+
+  it('galat overlap ditampilkan', async () => {
+    server.use(
+      http.post('/units/1/blocks', () =>
+        HttpResponse.json({ message: 'Tanggal yang dipilih sudah terisi atau diblokir.' }, { status: 422 }),
+      ),
+    )
+    renderDetail('1', 'pemilik')
+    await screen.findByRole('heading', { name: 'Kos Kamar 01' })
+
+    fireEvent.change(screen.getByLabelText('Mulai blokir'), { target: { value: '2026-11-10' } })
+    fireEvent.change(screen.getByLabelText('Selesai blokir'), { target: { value: '2026-11-12' } })
+    await userEvent.click(screen.getByRole('button', { name: 'Blokir Tanggal' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('sudah terisi atau diblokir')
   })
 
   it('mengirim pengajuan: gagal sekali, lalu berhasil dan kembali', async () => {
