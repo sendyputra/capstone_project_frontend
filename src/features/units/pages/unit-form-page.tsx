@@ -73,7 +73,9 @@ export function UnitFormPage() {
   }
 
   const onSubmit = form.handleSubmit((nilai) => {
-    if (mengirim.current) return
+    /* Foto yang ditolak tidak boleh lolos sebagai unit tanpa gambar: belum ada
+       layar edit, jadi berkasnya tidak bisa ditambahkan kemudian. */
+    if (mengirim.current || galatFoto) return
     mengirim.current = true
     simpan.mutate(
       { ...nilai, facilities: pecahFasilitas(nilai.facilities), image: foto ?? undefined },
@@ -179,7 +181,7 @@ export function UnitFormPage() {
           {!pratinjau && !galatFoto && <p className="text-ui text-brand-text-subtle">Opsional. Format JPEG, PNG, atau WebP, maksimal 2 MB.</p>}
         </div>
 
-        <Button type="submit" className="w-full" disabled={simpan.isPending}>
+        <Button type="submit" className="w-full" disabled={simpan.isPending || Boolean(galatFoto)}>
           {simpan.isPending ? 'Menyimpan…' : 'Simpan Unit'}
         </Button>
       </form>

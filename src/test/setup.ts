@@ -35,8 +35,10 @@ async function salinKeKelasNode(badan: FormData, FileNode: typeof globalThis.Fil
   const FormDataKelas = await FormDataNode()
   const salinan = new FormDataKelas()
   for (const [nama, nilai] of badan) {
-    if (typeof nilai === 'string') salinan.set(nama, nilai)
-    else salinan.set(nama, new FileNode([await nilai.arrayBuffer()], nilai.name, { type: nilai.type }))
+    /* `append`, bukan `set`: `set` membuang butir berama ganda, jadi
+       `facilities[]` tinggal satu nilai sebelum MSW sempat membacanya. */
+    if (typeof nilai === 'string') salinan.append(nama, nilai)
+    else salinan.append(nama, new FileNode([await nilai.arrayBuffer()], nilai.name, { type: nilai.type }))
   }
   return salinan
 }
