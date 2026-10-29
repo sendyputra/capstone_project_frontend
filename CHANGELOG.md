@@ -3,6 +3,34 @@
 Semua perubahan penting dicatat di sini. Format mengikuti [Conventional Commits](https://www.conventionalcommits.org/).
 
 
+## [0.2.0](https://github.com/sendyputra/capstone_project_frontend/compare/v0.1.0...v0.2.0) (2026-10-29)
+
+### Fitur
+
+* **contracts:** owner creates contracts for managed tenants ([73086f6](https://github.com/sendyputra/capstone_project_frontend/commit/73086f64fead285c213fe53dd62a3d77dd44bb26))
+* **export:** apiDownload membaca nama berkas dari Content-Disposition ([bc6a4dd](https://github.com/sendyputra/capstone_project_frontend/commit/bc6a4dd17e514d81f725b477c4098f1a09df3236))
+* **export:** handler MSW laporan tagihan dan kontrak ([185b09f](https://github.com/sendyputra/capstone_project_frontend/commit/185b09f11254abc5bffb8f2afb09e29db6bd68d4))
+* **export:** layar kontrak pemilik memakai laporan server ([7b18202](https://github.com/sendyputra/capstone_project_frontend/commit/7b18202682d167541652a1a2a8a6cf13e8bf0450))
+* **export:** layar pembayaran pemilik mengunduh laporan server ([859fa40](https://github.com/sendyputra/capstone_project_frontend/commit/859fa4060a94c40f3f12c7b42156a07a4d20a5b7))
+* **export:** tombol unduh laporan tagihan penyewa ([cfcb7d4](https://github.com/sendyputra/capstone_project_frontend/commit/cfcb7d411d104c62fa43797b72b89c45d992f283))
+* **notifications:** in-app reminder bell ([f4fd6ae](https://github.com/sendyputra/capstone_project_frontend/commit/f4fd6ae190d9188a4a26c2b228bdbab308531d69))
+* **payments:** owner records manual payments ([0ae0002](https://github.com/sendyputra/capstone_project_frontend/commit/0ae0002b920cb15833d6ffd4ed90f709cc68e4b0))
+* **tenants:** owner tenant management screen ([37efc48](https://github.com/sendyputra/capstone_project_frontend/commit/37efc480dd164a1a32823e31a2bc48a650db9e37))
+* **units:** real month calendar and date blocking ([9970a06](https://github.com/sendyputra/capstone_project_frontend/commit/9970a068cb7a24eb4ad53ef27e3bf2892231c113))
+
+### Perbaikan
+
+* **api:** iso dates, nested rows, and mutation envelopes ([e1728f3](https://github.com/sendyputra/capstone_project_frontend/commit/e1728f340f94f9d31393d224b43caa54c1d308e1))
+* **contracts:** keep calendar dates from shifting a month ([b5649cc](https://github.com/sendyputra/capstone_project_frontend/commit/b5649cc1e559de79f8f74c614daf8f55352f000f))
+* **msw:** samakan laporan export dengan jawaban server ([58f651f](https://github.com/sendyputra/capstone_project_frontend/commit/58f651f14e34905084d4f3dc000b830e6b3596e0))
+* **units:** include every status in the owner unit list ([27a7a41](https://github.com/sendyputra/capstone_project_frontend/commit/27a7a41d17a5d4b73f2616af0e247382651899a9))
+
+### CI
+
+* **deploy:** hanya deploy pada tag rilis ([2927dcd](https://github.com/sendyputra/capstone_project_frontend/commit/2927dcdb2af6f18f47b48ee095b27cfec029165f))
+* **deploy:** pakai API asli di live dan preview ([208107e](https://github.com/sendyputra/capstone_project_frontend/commit/208107ea8f090f02f5822df56381f0eaa72094f5))
+* hapus mode mock dari runtime ([30a0b79](https://github.com/sendyputra/capstone_project_frontend/commit/30a0b79b2d64f26b5798b332136057eedb127bc8))
+
 ## 0.1.0 (2026-10-23)
 
 ### Fitur
