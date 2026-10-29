@@ -23,7 +23,7 @@ async function muatanUnitDto(request: Request): Promise<Partial<UnitDto>> {
     address: teks('address'),
     price: Number(teks('price')),
     status: (teks('status') || undefined) as UnitDto['status'] | undefined,
-    type: teks('type') || undefined,
+    type: (teks('type') || undefined) as UnitDto['type'] | undefined,
     facilities: badan.getAll('facilities[]').map(String),
     image: berkas && typeof berkas !== 'string' ? `/demo/${berkas.name}` : teks('image') || undefined,
   }
