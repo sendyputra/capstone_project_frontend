@@ -17,7 +17,7 @@ export type Tagihan = {
 
 /* `month` dan tanggal ERD memakai `YYYY-MM`/`YYYY-MM-DD`; bulan cukup dipotong
    dari tanggalnya, tanpa zona waktu yang bisa menggeser bulan. */
-const BENTUK_BULAN = /^\d{4}-(0[1-9]|1[0-2])$/
+export const BENTUK_BULAN = /^\d{4}-(0[1-9]|1[0-2])$/
 
 /* Backend membalas pembayaran urut `created_at`, jadi bulan lintas kontrak
    datang acak. Tampilan mengelompokkan per kontrak (urutan kemunculan pertama)
@@ -41,7 +41,7 @@ function bulanDari(tanggal: string) {
    menambah baris, tidak menimpa yang lama. Yang mewakili keadaan sekarang adalah
    baris ber-`id` terbesar — tanpa ini, `Ditolak` dari unggahan lama tetap
    menutupi unggahan barunya, dan `Lunas` bisa tertutup baris yang lebih tua. */
-function pembayaranTerbaru(pembayaran: PaymentRow[]): Map<string, PaymentRow> {
+export function pembayaranTerbaru(pembayaran: PaymentRow[]): Map<string, PaymentRow> {
   const peta = new Map<string, PaymentRow>()
   for (const baris of pembayaran) {
     const kunci = `${baris.contract_id}-${bulanDari(baris.month)}`
