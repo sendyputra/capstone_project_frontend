@@ -1,4 +1,4 @@
-import { buka } from '@/api/client'
+import { buka, urlAset } from '@/api/client'
 import { TIPE_UNIT, type UnitRow, type UnitStatus, type UnitStatusDto, type UnitType } from '@/api/types'
 
 /* Satu tabel per arah: `STATUS` menerjemahkan enum backend ke label tampilan,
@@ -61,7 +61,7 @@ export function keUnit(dto: unknown): UnitRow {
     status: keStatusUnit(String(baris.status)),
     type: keTipe(baris.type),
     facilities: keDaftarTeks(baris.facilities),
-    image: String(baris.image ?? ''),
+    image: urlAset(String(baris.image ?? '')),
     booked_dates: keDaftarTanggal(baris.booked_dates),
     blocked_dates: keDaftarTanggal(baris.blocked_dates),
     owner_name: String(baris.owner_name ?? (baris.owner as { name?: unknown } | undefined)?.name ?? ''),

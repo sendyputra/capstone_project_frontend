@@ -36,6 +36,14 @@ describe('adaptor unit', () => {
     expect(dariStatusUnit('Perawatan')).toBe('maintenance')
   })
 
+  /* Backend boleh menyimpan `image` relatif (`/uploads/...`). Pelengkapan origin
+     API diuji di `client.test.ts`; di sini cukup memastikan adaptor memakai
+     jalur yang aman saat env kosong (seperti di tes). */
+  it('membiarkan gambar absolut dan aset mock apa adanya', () => {
+    expect(keUnit({ ...dto, image: 'https://cdn.example/kos.jpg' }).image).toBe('https://cdn.example/kos.jpg')
+    expect(keUnit({ ...dto, image: '/demo/kos.jpg' }).image).toBe('/demo/kos.jpg')
+  })
+
   it('meneruskan tanggal ISO apa adanya', () => {
     const unit = keUnit({ id: 1, booked_dates: ['2026-11-02'], blocked_dates: ['2026-11-05'] })
     expect(unit.booked_dates).toEqual(['2026-11-02'])

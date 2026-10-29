@@ -5,6 +5,7 @@ import { useBuatKontrak } from '@/features/contracts/api'
 import { useUnit } from '@/features/units/api'
 import { BlokirTanggal } from '@/features/units/components/blokir-tanggal'
 import { KalenderKetersediaan } from '@/features/units/components/kalender-ketersediaan'
+import { GambarUnit } from '@/features/units/components/gambar-unit'
 import { formatRupiah, formatTanggalPendek } from '@/lib/format'
 import { hitungSewa, tanggalBentrok } from '@/lib/sewa'
 import { tanggalHariIni } from '@/lib/tanggal'
@@ -79,7 +80,7 @@ export function UnitDetailPage({ mode = 'penyewa' }: { mode?: 'penyewa' | 'pemil
 
       {unit.data && (
         <div className="space-y-4 rounded-2xl border border-brand-border bg-brand-surface p-6 shadow-sm">
-          <img src={unit.data.image} alt={unit.data.name} className="h-56 w-full rounded-xl border border-brand-border object-cover" />
+          <GambarUnit src={unit.data.image} alt={unit.data.name} className="h-56 w-full rounded-xl border border-brand-border object-cover" />
           <div className="flex items-start justify-between">
             <div>
               <h1 className="text-heading-m font-bold text-brand-text">{unit.data.name}</h1>

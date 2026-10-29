@@ -1,6 +1,7 @@
 import { MapPin } from 'lucide-react'
 import { Link } from 'react-router'
 import type { UnitRow } from '@/api/types'
+import { GambarUnit } from '@/features/units/components/gambar-unit'
 import { formatRupiah } from '@/lib/format'
 
 /* Lencana duduk di atas foto, jadi butuh latar pekat, bukan nada lembut seperti
@@ -16,7 +17,7 @@ export function UnitCard({ unit }: { unit: UnitRow }) {
     <article className="flex flex-col justify-between overflow-hidden rounded-xl border border-brand-border bg-brand-surface shadow-sm">
       <div>
         <div className="relative">
-          <img src={unit.image} alt={unit.name} className="h-48 w-full object-cover" />
+          <GambarUnit src={unit.image} alt={unit.name} className="h-48 w-full object-cover" />
           <span
             className={`absolute left-3 top-3 rounded-full px-3 py-1 text-micro font-semibold shadow ${nadaStatus[unit.status] ?? 'bg-brand-warning-soft text-brand-warning-soft-fg'}`}
           >

@@ -16,3 +16,18 @@ export function pantauMetode(): string[] {
   onTestFinished(() => pantau.mockRestore())
   return rekaman
 }
+
+/* Badan FormData yang *dikirim* klien direkam sebelum menyusup ke serializer
+   MSW: serializer itu menggugurkan bidang berama ganda kecuali yang terakhir,
+   satu-satunya tempat semua butir masih utuh adalah `init.body`. */
+export function pantauBadanForm(): FormData[] {
+  const rekaman: FormData[] = []
+  const asli = globalThis.fetch
+  const pantau = vi.spyOn(globalThis, 'fetch').mockImplementation((input, init) => {
+    const badan = init?.body
+    if (badan instanceof FormData) rekaman.push(badan)
+    return asli(input, init)
+  })
+  onTestFinished(() => pantau.mockRestore())
+  return rekaman
+}

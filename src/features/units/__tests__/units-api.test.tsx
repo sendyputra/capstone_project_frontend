@@ -4,7 +4,7 @@ import { HttpResponse, http } from 'msw'
 import { describe, expect, it } from 'vitest'
 import { server } from '@/api/mocks/server'
 import { useCreateUnit, useMyUnits, usePublicUnits, useUbahStatusUnit, useUnit } from '@/features/units/api'
-import { pantauMetode } from '@/test/metode'
+import { pantauBadanForm, pantauMetode } from '@/test/metode'
 import { writeSession } from '@/features/auth/session'
 import type { ReactNode } from 'react'
 
@@ -74,20 +74,16 @@ describe('useCreateUnit', () => {
 
   /* Formulir memakai label tampilan; yang berangkat ke API harus enum backend.
      Tanpa kunci ini, `status: 'Tersedia'` bisa kembali terkirim dan baru ketahuan
-     di backend asli. */
+     di backend asli. Badan mutasi unit kini FormData (berkas foto ikut); badan
+     direkam lewat spy `init.body` — serializer MSW menggugurkan bidang berama
+     ganda, jadi inilah satu-satunya tempat FormData masih utuh. */
   it('mengirim enum backend, bukan label tampilan', async () => {
     writeSession({ token: 'mock.abc.tanda', user: { id: 402, name: 'Pak Wahyu', email: 'wahyu@umkm.id', role: 'pemilik' } })
-    const terkirim: unknown[] = []
-    server.use(
-      http.post('/units', async ({ request }) => {
-        terkirim.push(await request.json())
-        return HttpResponse.json({ data: { id: 99 } }, { status: 201 })
-      }),
-    )
+    const badan = pantauBadanForm()
     const { result } = renderHook(() => useCreateUnit(), { wrapper: pembungkus() })
     result.current.mutate({ name: 'Kos Kamar 09', address: 'Bandung', price: 1200000, status: 'Perawatan' })
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
-    expect(terkirim).toEqual([{ name: 'Kos Kamar 09', address: 'Bandung', price: 1200000, status: 'maintenance' }])
+    expect(badan[0]?.get('status')).toBe('maintenance')
   })
 
   /* API asli membalas `{message, unit}`, bukan `{data: …}`. Tanpa pembuka
@@ -107,6 +103,36 @@ describe('useCreateUnit', () => {
     result.current.mutate({ name: 'Kos Baru', address: 'Bandung', price: 900000, status: 'Tersedia' })
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
     expect(result.current.data?.id).toBe(77)
+  })
+
+  /* Bentuk bidang FormData: fasilitas satu bagian per butir di bawah nama
+     `facilities[]`, berkas foto satu bagian `image`, harga teks angka.
+     Perekamannya lewat spy `init.body` (satu-satunya FormData utuh). */
+  it('menyisipkan fasilitas dan berkas foto ke FormData', async () => {
+    writeSession({ token: 'mock.abc.tanda', user: { id: 402, name: 'Pak Wahyu', email: 'wahyu@umkm.id', role: 'pemilik' } })
+    const badan = pantauBadanForm()
+    const { result } = renderHook(() => useCreateUnit(), { wrapper: pembungkus() })
+    result.current.mutate({
+      name: 'Kos Foto', address: 'Bandung', price: 1000000, status: 'Tersedia',
+      facilities: ['WiFi', 'AC'], image: new File(['x'], 'foto.jpg', { type: 'image/jpeg' }),
+    })
+    await waitFor(() => expect(result.current.isSuccess).toBe(true))
+    const isi = badan[0]!
+    expect(isi.getAll('facilities[]')).toEqual(['WiFi', 'AC'])
+    const berkas = isi.get('image')
+    expect(berkas instanceof File ? berkas.name : 'BUKAN BERKAS').toBe('foto.jpg')
+    expect(isi.get('price')).toBe('1000000')
+  })
+
+  /* Backend ('image' => 'nullable|file|…') hanya menerima berkas: gambar string
+     URL tidak boleh ikut FormData, kalau tidak API asli menjawab 422. */
+  it('tidak mengirim image bila berupa string URL (bukan berkas)', async () => {
+    writeSession({ token: 'mock.abc.tanda', user: { id: 402, name: 'Pak Wahyu', email: 'wahyu@umkm.id', role: 'pemilik' } })
+    const badan = pantauBadanForm()
+    const { result } = renderHook(() => useCreateUnit(), { wrapper: pembungkus() })
+    result.current.mutate({ name: 'Kos Tanpa Berkas', address: 'Bandung', price: 1000000, status: 'Tersedia', image: 'https://contoh.id/f.jpg' })
+    await waitFor(() => expect(result.current.isSuccess).toBe(true))
+    expect(badan[0]?.get('image')).toBeNull()
   })
 })
 

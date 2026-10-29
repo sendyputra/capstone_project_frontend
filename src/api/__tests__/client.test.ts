@@ -1,6 +1,6 @@
 import { http, HttpResponse } from 'msw'
 import { describe, expect, it } from 'vitest'
-import { apiDownload, apiFetch, apiSemuaHalaman } from '@/api/client'
+import { apiDownload, apiFetch, apiSemuaHalaman, urlAset } from '@/api/client'
 import { ApiError } from '@/api/types'
 import { server } from '@/api/mocks/server'
 import { readSession, writeSession } from '@/features/auth/session'
@@ -181,5 +181,20 @@ describe('apiDownload', () => {
     server.use(http.get('/berkas', () => HttpResponse.json({ message: 'Gagal.' }, { status: 500 })))
 
     await expect(apiDownload('/berkas', 'cadangan.csv')).rejects.toMatchObject({ kind: 'server', status: 500 })
+  })
+})
+
+describe('urlAset', () => {
+  it('melengkapi jalur unggahan dengan origin API', () => {
+    expect(urlAset('/uploads/demo/kos-a.jpg', 'http://localhost:8555')).toBe(
+      'http://localhost:8555/uploads/demo/kos-a.jpg',
+    )
+  })
+
+  /* Gambar MSW tinggal di `public/demo/` frontend, jadi jangan ikut ditempeli
+     origin API. URL absolut juga sudah lengkap. */
+  it('membiarkan URL absolut dan aset non-unggahan', () => {
+    expect(urlAset('https://cdn.example/kos.jpg', 'http://localhost:8555')).toBe('https://cdn.example/kos.jpg')
+    expect(urlAset('/demo/kos.jpg', 'http://localhost:8555')).toBe('/demo/kos.jpg')
   })
 })

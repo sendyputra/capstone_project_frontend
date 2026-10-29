@@ -113,6 +113,46 @@ describe('data contoh', () => {
     expect(unit.status).toBe('rented')
   })
 
+  /* Formulir tambah unit mengirim FormData (berkas foto ikut). Handler harus
+     membaca multipart, bukan hanya JSON. */
+  it('membuat unit lewat multipart: fasilitas dan foto ikut tersimpan', async () => {
+    writeSession(pemilik)
+    const badan = multipart(
+      { name: 'Kos Multipart', address: 'Bandung', price: '1200000', status: 'available', type: 'Kamar Kos', 'facilities[]': ['WiFi', 'AC'] },
+      { nama: 'foto-unit.jpg', isi: 'x', bidang: 'image' },
+    )
+    const res = await kirim('/units', badan)
+    expect(res.status).toBe(201)
+    const jawaban = (await res.json()) as { data: { facilities: string[]; image: string } }
+    expect(jawaban.data.facilities).toEqual(['WiFi', 'AC'])
+    expect(jawaban.data.image).toBe('/demo/foto-unit.jpg')
+  })
+
+  it('mengubah unit lewat PUT multipart tanpa baris JSON', async () => {
+    writeSession(pemilik)
+    const badan = multipart(
+      { name: 'Kos Multipart Ubah', price: '1300000', 'facilities[]': ['Parkir'] },
+      { nama: 'ubah.jpg', isi: 'x', bidang: 'image' },
+    )
+    const res = await kirim('/units/1', badan, 'PUT')
+    expect(res.status).toBe(200)
+    const jawaban = (await res.json()) as { data: { name: string; image: string } }
+    expect(jawaban.data).toMatchObject({ name: 'Kos Multipart Ubah', image: '/demo/ubah.jpg' })
+  })
+
+  /* Pembaruan sebagian: bidang yang tidak ikut dalam FormData tidak boleh
+     menimpa nilai lama — `Number('')` jadi 0 dan string kosong merusak baris. */
+  it('mengubah unit lewat PUT multipart tanpa harga: harga lama bertahan', async () => {
+    writeSession(pemilik)
+    const sebelum = (await apiFetch<{ data: UnitDtoRow }>('/units/1')).data.price
+    expect(sebelum).toBeGreaterThan(0)
+    const badan = multipart({ name: 'Kos Multipart Harga'})
+    const res = await kirim('/units/1', badan, 'PUT')
+    expect(res.status).toBe(200)
+    const jawaban = (await res.json()) as { data: { price: number } }
+    expect(jawaban.data.price).toBe(sebelum)
+  })
+
   it('mengubah status kontrak lewat PUT', async () => {
     writeSession(pemilik)
     await apiFetch('/contracts/205', { method: 'PUT', body: { status: 'active' } })
@@ -270,14 +310,20 @@ type BadanMultipart = { tipe: string; isi: string }
 /* Badan `multipart/form-data` asli: batas, bagian teks per bidang, satu bagian
    berkas opsional, lalu penutup. `fetch` menerima string dengan header batas
    yang sama persis, dan handler membacanya lewat `request.formData()`. Nama
-   bidang berkas bisa dipilih karena pendaftaran memakai `ktp`, bukan `proof`. */
+   bidang berkas bisa dipilih karena pendaftaran memakai `ktp`, bukan `proof`.
+   Bidang berlarik (mis. `facilities[]`) kirim `string[]` — setiap elemen jadi
+   satu bagian dengan nama yang sama, seperti FormData aslinya. */
 function multipart(
-  bidang: Record<string, string>,
+  bidang: Record<string, string | string[]>,
   berkas?: { nama: string; isi: string; bidang?: string },
 ): BadanMultipart {
   const batas = '----nusantara-booking'
   const baris = [
-    ...Object.entries(bidang).flatMap(([nama, nilai]) => [`--${batas}`, `Content-Disposition: form-data; name="${nama}"`, '', nilai]),
+    ...Object.entries(bidang).flatMap(([nama, nilai]) =>
+      Array.isArray(nilai)
+        ? nilai.flatMap((butir) => [`--${batas}`, `Content-Disposition: form-data; name="${nama}"`, '', butir])
+        : [`--${batas}`, `Content-Disposition: form-data; name="${nama}"`, '', nilai],
+    ),
     ...(berkas
       ? [
           `--${batas}`,
@@ -303,7 +349,7 @@ function multipart(
    ada saat tes, di lingkungan Node. */
 const modulBuffer = 'node:buffer'
 
-async function kirim(jalur: string, badan: BadanMultipart): Promise<Response> {
+async function kirim(jalur: string, badan: BadanMultipart, metode: string = 'POST'): Promise<Response> {
   const { File: FileNode, Blob: BlobNode } = (await import(/* @vite-ignore */ modulBuffer)) as {
     File: typeof globalThis.File
     Blob: typeof globalThis.Blob
@@ -312,7 +358,7 @@ async function kirim(jalur: string, badan: BadanMultipart): Promise<Response> {
   globalThis.File = FileNode
   globalThis.Blob = BlobNode
   try {
-    return await fetch(jalur, { method: 'POST', headers: { 'Content-Type': badan.tipe }, body: badan.isi })
+    return await fetch(jalur, { method: metode, headers: { 'Content-Type': badan.tipe }, body: badan.isi })
   } finally {
     globalThis.File = asli.File
     globalThis.Blob = asli.Blob
