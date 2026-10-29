@@ -3,6 +3,18 @@ import { clearSession, readSession, tandaiSesiKedaluwarsa } from '@/features/aut
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? ''
 
+/* Origin API tanpa `/api`, untuk menyusun alamat berkas media. */
+const ASAL_API = BASE_URL.replace(/\/api\/?$/, '')
+
+/* Backend menyajikan berkas media di `/uploads` dan DB boleh menyimpan jalurnya
+   relatif — nilainya bergantung APP_URL saat baris dibuat. `<img src>` yang
+   menerima jalur relatif akan menempel ke origin halaman, bukan origin API,
+   jadi lengkapi di sini. Jalur lain, termasuk gambar MSW di `public/demo/`,
+   dibiarkan apa adanya. */
+export function urlAset(jalur: string, asal: string = ASAL_API): string {
+  return jalur.startsWith('/uploads/') ? asal + jalur : jalur
+}
+
 const pesanUmum: Record<string, string> = {
   server: 'Terjadi gangguan di server. Coba lagi sebentar lagi.',
   network: 'Koneksi terputus. Periksa jaringan, lalu coba lagi.',
