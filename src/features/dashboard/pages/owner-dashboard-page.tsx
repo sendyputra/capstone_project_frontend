@@ -4,6 +4,8 @@ import { useContracts } from '@/features/contracts/api'
 import { usePayments } from '@/features/billing/api'
 import { useMyUnits } from '@/features/units/api'
 import { OwnerStats } from '@/features/dashboard/components/owner-stats'
+import { OccupancyChart } from '@/features/dashboard/components/occupancy-chart'
+import { RevenueChart } from '@/features/dashboard/components/revenue-chart'
 import { formatBulan, formatRupiah, formatTanggal } from '@/lib/format'
 import { susunTagihan } from '@/lib/tagihan'
 import { cn } from '@/lib/utils'
@@ -71,6 +73,13 @@ export function OwnerDashboardPage() {
         />
       )}
       {daftar.isSuccess && daftar.data.length > 0 && <OwnerStats units={daftar.data} />}
+
+      {daftar.isSuccess && daftar.data.length > 0 && (
+        <div className="grid gap-5 md:grid-cols-2">
+          <OccupancyChart units={daftar.data} />
+          {pembayaran.isSuccess && <RevenueChart pembayaran={pembayaran.data} />}
+        </div>
+      )}
 
       {(kontrak.isPending || pembayaran.isPending) && (
         <div className="grid gap-5 md:grid-cols-2">
