@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { dariStatusKontrak, keDaftarKontrak, keKontrak } from '@/api/adapters/contracts'
-import { apiDownload, apiFetch, bukaEntitas } from '@/api/client'
+import { apiDownload, apiFetch, apiSemuaHalaman, bukaEntitas } from '@/api/client'
 import type { ContractRow } from '@/api/types'
 import { useSession } from '@/features/auth/api'
 import { tanggalHariIni } from '@/lib/tanggal'
@@ -19,7 +19,8 @@ export function useContracts() {
   return useQuery({
     queryKey: contractKeys.list(userId),
     enabled: Boolean(session),
-    queryFn: async (): Promise<ContractRow[]> => keDaftarKontrak(await apiFetch<unknown>('/contracts?status=all')),
+    /* `apiSemuaHalaman`, bukan `apiFetch`: server memaginasi 10 baris. */
+    queryFn: async (): Promise<ContractRow[]> => keDaftarKontrak(await apiSemuaHalaman<unknown>('/contracts?status=all')),
   })
 }
 

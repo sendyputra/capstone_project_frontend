@@ -50,7 +50,7 @@ describe('useMyUnits', () => {
     const rekaman = pantauMetode()
     const { result } = renderHook(() => useMyUnits(), { wrapper: pembungkus() })
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
-    expect(rekaman).toContain('GET /units?status=all')
+    expect(rekaman).toContain('GET /units?status=all&page=1')
   })
 
   it('tidak menampilkan unit milik pemilik lain saat token menunjuk pemilik berbeda', async () => {

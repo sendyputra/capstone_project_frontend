@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { apiFetch, buka, bukaEntitas } from '@/api/client'
+import { apiFetch, apiSemuaHalaman, buka, bukaEntitas } from '@/api/client'
 import { keBlok, keDaftarBlok } from '@/api/adapters/blocks'
 import { dariStatusUnit, keDaftarUnit, keUnit } from '@/api/adapters/units'
 import type { UnitBlockRow, UnitInput, UnitRow } from '@/api/types'
@@ -37,7 +37,8 @@ export function useMyUnits() {
   return useQuery({
     queryKey: unitKeys.list(userId),
     enabled: Boolean(session),
-    queryFn: async () => keDaftarUnit(await apiFetch('/units?status=all')),
+    /* `apiSemuaHalaman`: server memaginasi 10 baris, dan pemilik boleh punya lebih. */
+    queryFn: async () => keDaftarUnit(await apiSemuaHalaman<unknown>('/units?status=all')),
   })
 }
 

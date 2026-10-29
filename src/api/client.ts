@@ -9,12 +9,13 @@ const pesanUmum: Record<string, string> = {
   not_found: 'Data yang diminta tidak ditemukan.',
   conflict: 'Perubahan bentrok dengan data terbaru. Muat ulang halaman.',
   unauthorized: 'Sesi Anda berakhir. Silakan masuk kembali.',
+  forbidden: 'Anda tidak berwenang melakukan tindakan ini.',
   validation: 'Ada isian yang perlu diperbaiki.',
 }
 
 function jenisGalat(status: number): ApiError['kind'] {
   if (status === 401) return 'unauthorized'
-  if (status === 403) return 'unauthorized'
+  if (status === 403) return 'forbidden'
   if (status === 404) return 'not_found'
   if (status === 409) return 'conflict'
   if (status === 422) return 'validation'
@@ -34,10 +35,11 @@ async function lemparGalat(respons: Response, sesi: ReturnType<typeof readSessio
   }
 
   const kind = jenisGalat(respons.status)
-  /* Permintaan bertoken yang ditolak berarti sesinya tidak berlaku lagi —
-     buang sekali di sini supaya penjaga rute mengantar kembali ke /masuk.
-     Permintaan tanpa sesi (mis. login gagal) tidak mengubah apa pun. */
-  if (kind === 'unauthorized' && sesi) {
+  /* Hanya 401 yang berarti sesinya tidak berlaku lagi. 403 adalah penolakan
+     izin atas sesi yang masih sah — membuangnya akan me-logout pengguna yang
+     sesinya benar. Permintaan tanpa sesi (mis. login gagal) juga tidak
+     mengubah apa pun. */
+  if (respons.status === 401 && sesi) {
     clearSession()
     tandaiSesiKedaluwarsa()
   }
@@ -81,7 +83,29 @@ export async function apiFetch<T>(
   if (respons.status === 204) return undefined as T
 
   const teks = await respons.text()
-  return (teks ? JSON.parse(teks) : {}) as T
+  if (!teks) return {} as T
+  try {
+    return JSON.parse(teks) as T
+  } catch {
+    /* 2xx yang bukan JSON datang dari proxy atau halaman galat, bukan API.
+       Tanpa ini `SyntaxError` mentah bocor ke layar tanpa `kind`/`status`. */
+    throw new ApiError('server', respons.status, 'Respons server tidak dikenali.')
+  }
+}
+
+/* Backend memaginasi daftar 10 baris per halaman secara bawaan. Layar butuh
+   daftar utuh — tagihan bulan lama yang tidak terbaca akan tampil sebagai
+   belum dibayar — jadi seluruh halaman diikuti, bukan hanya halaman pertama. */
+export async function apiSemuaHalaman<T>(path: string): Promise<T[]> {
+  const baris: T[] = []
+  for (let halaman = 1; ; halaman += 1) {
+    const pemisah = path.includes('?') ? '&' : '?'
+    const muatan = await apiFetch<{ data?: T[]; last_page?: number }>(`${path}${pemisah}page=${halaman}`)
+    if (Array.isArray(muatan?.data)) baris.push(...muatan.data)
+    /* `Number(...) || 1`: `last_page` yang bukan angka tidak boleh membuat
+       perbandingan selalu salah dan perulangan tak berujung. */
+    if (halaman >= (Number(muatan?.last_page) || 1)) return baris
+  }
 }
 
 export async function apiDownload(path: string, namaCadangan: string): Promise<void> {

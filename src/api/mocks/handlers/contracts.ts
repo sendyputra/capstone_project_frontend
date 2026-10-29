@@ -1,6 +1,7 @@
 import { http, HttpResponse, type HttpResponseResolver } from 'msw'
 import { keKontrak } from '@/api/adapters/contracts'
 import { kirimCsv } from '@/api/mocks/csv'
+import { halamanLaravel } from '@/api/mocks/halaman'
 import { contracts, type ContractDto } from '@/api/mocks/data/contracts'
 import { namaPengguna, pemanggil, tenantById, tenantByUserId, termBulan, unitById } from '@/api/mocks/join'
 import type { KtpStatus } from '@/api/types'
@@ -142,7 +143,7 @@ export const contractHandlers = [
         : peran === 'penyewa'
           ? contracts.filter((kontrak) => kontrak.tenant_id === tenantByUserId(sub)?.id)
           : contracts
-    return HttpResponse.json({ data: data.map(barisKontrak) })
+    return halamanLaravel(request, data.map(barisKontrak))
   }),
 
   http.post('/contracts', buatKontrak),

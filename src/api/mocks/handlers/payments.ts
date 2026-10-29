@@ -2,6 +2,7 @@ import { http, HttpResponse, type HttpResponseResolver } from 'msw'
 import { keKontrak } from '@/api/adapters/contracts'
 import { kePembayaran } from '@/api/adapters/payments'
 import { kirimCsv } from '@/api/mocks/csv'
+import { halamanLaravel } from '@/api/mocks/halaman'
 import { contracts, type ContractDto } from '@/api/mocks/data/contracts'
 import { payments, type PaymentDto } from '@/api/mocks/data/payments'
 import { tenants } from '@/api/mocks/data/tenants'
@@ -163,13 +164,13 @@ export const paymentHandlers = [
         const kontrak = kontrakDari(pembayaran)
         return tenants.find((tenant) => tenant.id === kontrak?.tenant_id)?.user_id === sub
       })
-      return HttpResponse.json({ data: milik.map(barisTagihan) })
+      return halamanLaravel(request, milik.map(barisTagihan))
     }
     if (peran === 'pemilik') {
       const milik = payments.filter((pembayaran) => unitById(kontrakDari(pembayaran)?.unit_id ?? 0)?.owner_id === sub)
-      return HttpResponse.json({ data: milik.map(barisTagihan) })
+      return halamanLaravel(request, milik.map(barisTagihan))
     }
-    return HttpResponse.json({ data: payments.map(barisTagihan) })
+    return halamanLaravel(request, payments.map(barisTagihan))
   }),
 
   /* Unggah bukti bayar: `multipart/form-data`, seperti rute API asli. Nomor

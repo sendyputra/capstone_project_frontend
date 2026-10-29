@@ -97,7 +97,7 @@ describe('OwnerContractsPage', () => {
     renderWithProviders(<OwnerContractsPage />)
     await screen.findAllByText('Siti Sarah')
 
-    expect(rekaman).toContain('GET /contracts?status=all')
+    expect(rekaman).toContain('GET /contracts?status=all&page=1')
   })
 
   it('mengunduh laporan kontrak dari server', async () => {

@@ -1,6 +1,6 @@
 import { http, HttpResponse } from 'msw'
 import { describe, expect, it } from 'vitest'
-import { apiDownload, apiFetch } from '@/api/client'
+import { apiDownload, apiFetch, apiSemuaHalaman } from '@/api/client'
 import { ApiError } from '@/api/types'
 import { server } from '@/api/mocks/server'
 import { readSession, writeSession } from '@/features/auth/session'
@@ -54,6 +54,59 @@ describe('apiFetch', () => {
   it('memetakan kegagalan jaringan menjadi galat jaringan', async () => {
     server.use(http.get('/percobaan', () => HttpResponse.error()))
     await expect(apiFetch('/percobaan')).rejects.toMatchObject({ kind: 'network' })
+  })
+
+  /* Backend menjawab 403 "Unauthorized access" saat peran atau kepemilikan
+     ditolak. Sesi masih sah, jadi 403 tidak boleh diperlakukan seperti 401. */
+  it('tidak membuang sesi saat 403 dan memakai galat terlarang', async () => {
+    writeSession({ token: 'mock.abc.tanda', user: { id: 402, name: 'Pak Wahyu', email: 'wahyu@umkm.id', role: 'pemilik' } })
+    server.use(http.get('/percobaan', () => HttpResponse.json({ message: 'Unauthorized access' }, { status: 403 })))
+
+    const galat = (await apiFetch('/percobaan').catch((e: unknown) => e)) as ApiError
+
+    expect(galat.kind).toBe('forbidden')
+    expect(readSession()).not.toBeNull()
+  })
+
+  /* Balasan 2xx yang bukan JSON (halaman HTML proxy, badan kosong) harus tetap
+     menjadi ApiError, bukan SyntaxError mentah yang tidak punya `kind`. */
+  it('membungkus balasan 2xx non-JSON sebagai galat server', async () => {
+    server.use(http.get('/percobaan', () => new HttpResponse('<html>gerbang</html>', { headers: { 'Content-Type': 'text/html' } })))
+
+    await expect(apiFetch('/percobaan')).rejects.toMatchObject({ kind: 'server', status: 200 })
+  })
+})
+
+/* Backend memaginasi 10 baris per halaman. Daftar yang dipakai layar harus
+   utuh, jadi halaman diikuti sampai `last_page` — kalau tidak, tagihan bulan
+   lama tidak terlihat dan dashboard melaporkannya sebagai belum dibayar. */
+describe('apiSemuaHalaman', () => {
+  it('mengikuti seluruh halaman dan menggabungkan barisnya', async () => {
+    server.use(
+      http.get('/percobaan', ({ request }) => {
+        const halaman = Number(new URL(request.url).searchParams.get('page') ?? 1)
+        return HttpResponse.json({
+          current_page: halaman,
+          last_page: 2,
+          data: halaman === 1 ? [{ id: 1 }, { id: 2 }] : [{ id: 3 }],
+        })
+      }),
+    )
+
+    await expect(apiSemuaHalaman('/percobaan')).resolves.toEqual([{ id: 1 }, { id: 2 }, { id: 3 }])
+  })
+
+  it('berhenti di satu halaman bila server tidak memaginasi', async () => {
+    let panggilan = 0
+    server.use(
+      http.get('/percobaan', () => {
+        panggilan += 1
+        return HttpResponse.json({ data: [{ id: 1 }] })
+      }),
+    )
+
+    await expect(apiSemuaHalaman('/percobaan')).resolves.toEqual([{ id: 1 }])
+    expect(panggilan).toBe(1)
   })
 })
 
