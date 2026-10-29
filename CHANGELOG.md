@@ -3,6 +3,37 @@
 Semua perubahan penting dicatat di sini. Format mengikuti [Conventional Commits](https://www.conventionalcommits.org/).
 
 
+## [0.3.0](https://github.com/sendyputra/capstone_project_frontend/compare/v0.2.0...v0.3.0) (2026-10-29)
+
+### Fitur
+
+* **api:** add urlAset function for media path handling ([4d3015d](https://github.com/sendyputra/capstone_project_frontend/commit/4d3015d1368ff5821a851ecd087b84596339aeeb))
+* **auth:** login tabs with demo accounts ([e191b3f](https://github.com/sendyputra/capstone_project_frontend/commit/e191b3f3b9a32396d76d2a12c909db9b4483f76e))
+* form tambah unit mengirim fasilitas dan foto unit ([dd60a4d](https://github.com/sendyputra/capstone_project_frontend/commit/dd60a4d6f5a4d2a7ad82b800c5266d4842edc0a1))
+* mutasi unit mengirim FormData berisi fasilitas dan foto ([2078296](https://github.com/sendyputra/capstone_project_frontend/commit/207829668b4fecd6195b24640c0b3f2b79dcc622))
+* unit tanpa foto menampilkan placeholder ([ef9139a](https://github.com/sendyputra/capstone_project_frontend/commit/ef9139a7d959393369bb0e7b3605184b5302da36))
+
+### Perbaikan
+
+* **api:** follow Laravel pagination and tell 403 apart from 401 ([0b55026](https://github.com/sendyputra/capstone_project_frontend/commit/0b55026373584e6e84831b54d35ca6590f4f9809))
+* **billing:** do not record a payment before the invoices load ([d263c90](https://github.com/sendyputra/capstone_project_frontend/commit/d263c90c19c2952b14873f2ba0932d4364867af7))
+* **katalog:** request 50 units so the public catalog is not capped at ten ([ea5b2c0](https://github.com/sendyputra/capstone_project_frontend/commit/ea5b2c0197567420f2d0de31d274323433d65f38))
+* muatanUnitDto tipe properti disempitkan ke enum backend ([7bddd4f](https://github.com/sendyputra/capstone_project_frontend/commit/7bddd4f8b659c628dafba0dcee20877fe896c40c))
+* PUT sebagian tidak menimpa harga lama dan image string tidak terkirim ([99be204](https://github.com/sendyputra/capstone_project_frontend/commit/99be20438c12fb6a923af4f471c0b28a900a26ac))
+* simpan ditahan saat foto ditolak dan fasilitas ganda utuh sampai mock ([39a5255](https://github.com/sendyputra/capstone_project_frontend/commit/39a52557059a2402692c9aa726a0daa00517b695))
+* **ui:** semantic status colours, aligned action column, invoice order ([f4c0081](https://github.com/sendyputra/capstone_project_frontend/commit/f4c008173a7dac31c30b591ce06853481b49eba7))
+* **units:** refuse a lease that runs into a booked day ([b6ecd71](https://github.com/sendyputra/capstone_project_frontend/commit/b6ecd719ea5aec915996ecbee66a9f1087de2da9))
+* **units:** require the property type when adding a unit ([6445674](https://github.com/sendyputra/capstone_project_frontend/commit/64456740a82274b75ccb68896386a74c34823986))
+
+### Pemeliharaan
+
+* **hosting:** add security headers to Firebase Hosting ([32ffca6](https://github.com/sendyputra/capstone_project_frontend/commit/32ffca6e47b5e54b325ce0aafb13fffc403ffeb3))
+
+### Pengujian
+
+* **auth:** add tests for role selection in registration ([dcd7156](https://github.com/sendyputra/capstone_project_frontend/commit/dcd715623e471a9cb973bb399a5c64aef886eb26))
+* multipart POST/PUT /units di mock menerima fasilitas dan foto ([59ba26b](https://github.com/sendyputra/capstone_project_frontend/commit/59ba26b872c4a48a160ebc2e37406b970a30f0b9))
+
 ## [0.2.0](https://github.com/sendyputra/capstone_project_frontend/compare/v0.1.0...v0.2.0) (2026-10-29)
 
 ### Fitur
