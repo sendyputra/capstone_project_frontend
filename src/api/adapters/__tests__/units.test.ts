@@ -36,10 +36,15 @@ describe('adaptor unit', () => {
     expect(dariStatusUnit('Perawatan')).toBe('maintenance')
   })
 
-  it('hanya menyimpan tanggal terisi yang berupa angka', () => {
-    expect(keUnit(dto).booked_dates).toEqual([])
-    expect(keUnit({ ...dto, booked_dates: [5, '7', 'bukan-angka', null, '', Number.NaN] }).booked_dates).toEqual([5, 7])
-    expect(keUnit({ ...dto, booked_dates: '5' }).booked_dates).toEqual([])
+  it('meneruskan tanggal ISO apa adanya', () => {
+    const unit = keUnit({ id: 1, booked_dates: ['2026-11-02'], blocked_dates: ['2026-11-05'] })
+    expect(unit.booked_dates).toEqual(['2026-11-02'])
+    expect(unit.blocked_dates).toEqual(['2026-11-05'])
+  })
+
+  it('membuang tanggal yang bukan ISO', () => {
+    expect(keUnit({ id: 1, booked_dates: [5, '2026-11-02', 'besok'], blocked_dates: [null, '', '2026-11-05'] }).booked_dates).toEqual(['2026-11-02'])
+    expect(keUnit({ ...dto, booked_dates: [5, '2026-11-02', 'besok'] }).blocked_dates).toEqual([])
   })
 
   it('memberi nilai aman saat bidang hilang atau bertipe salah', () => {
@@ -53,6 +58,7 @@ describe('adaptor unit', () => {
       facilities: [],
       image: '',
       booked_dates: [],
+      blocked_dates: [],
       owner_name: '',
     })
     expect(keUnit({ ...dto, price: 'bukan-angka' }).price).toBe(0)

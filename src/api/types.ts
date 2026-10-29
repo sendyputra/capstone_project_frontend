@@ -18,6 +18,9 @@ export type KtpStatus = 'Terverifikasi' | 'Menunggu' | 'Belum'
 export type Tenant = {
   id: number
   user_id: number | null
+  /* Penyewa yang dibuat pemilik membawa `owner_id`; penyewa lama dari data
+     contoh boleh kosong dan tetap terlihat lewat kontraknya. */
+  owner_id?: number | null
   name: string
   phone: string
   ktp: KtpStatus
@@ -42,7 +45,19 @@ export type Unit = {
   type: UnitType
   facilities: string[]
   image: string
-  booked_dates: number[]
+  /* Tanggal ISO `YYYY-MM-DD`: kontrak aktif digabung blok pemilik. */
+  booked_dates: string[]
+  blocked_dates: string[]
+}
+
+/* Blok tanggal yang dipasang pemilik. `booked_dates` unit = kontrak aktif +
+   `blocked_dates`; kalender memakai `blocked_dates` untuk membedakan keduanya. */
+export type UnitBlockRow = {
+  id: number
+  unit_id: number
+  start_date: string
+  end_date: string
+  note: string
 }
 
 /* Masukan formulir unit: bidang yang diisi pengguna. Purwarupa memilih tipe dan
@@ -86,6 +101,31 @@ export type ContractRow = Contract & { renter_name: string; unit_title: string; 
   ktp?: KtpStatus
 }
 export type PaymentRow = Payment & { renter_name: string; unit_title: string }
+
+/* Penyewa yang dikelola pemilik: `user_id` null berarti belum punya akun.
+   `contracts_count` dihitung server dan menentukan boleh-tidaknya menghapus. */
+export type TenantRow = {
+  id: number
+  user_id: number | null
+  owner_id: number | null
+  name: string
+  phone: string
+  ktp: KtpStatus
+  contracts_count: number
+  joined: string
+}
+
+/* Notifikasi in-app dari penjadwal pengingat; `id` adalah uuid bawaan Laravel. */
+export type NotificationRow = {
+  id: string
+  type: string
+  message: string
+  month: string
+  amount: number
+  contract_id: number
+  read_at: string | null
+  created_at: string
+}
 
 export type ApiErrorKind = 'unauthorized' | 'validation' | 'not_found' | 'conflict' | 'server' | 'network'
 

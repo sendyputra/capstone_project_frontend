@@ -1,9 +1,10 @@
 import { http, HttpResponse } from 'msw'
 import { describe, expect, it } from 'vitest'
-import { apiFetch } from '@/api/client'
+import { apiDownload, apiFetch } from '@/api/client'
 import { ApiError } from '@/api/types'
 import { server } from '@/api/mocks/server'
 import { readSession, writeSession } from '@/features/auth/session'
+import { stubUnduhan } from '@/test/unduh'
 
 describe('apiFetch', () => {
   it('menyisipkan token dari sesi', async () => {
@@ -53,5 +54,79 @@ describe('apiFetch', () => {
   it('memetakan kegagalan jaringan menjadi galat jaringan', async () => {
     server.use(http.get('/percobaan', () => HttpResponse.error()))
     await expect(apiFetch('/percobaan')).rejects.toMatchObject({ kind: 'network' })
+  })
+})
+
+describe('apiDownload', () => {
+  it('menyisipkan token dan memakai nama dari Content-Disposition', async () => {
+    writeSession({ token: 'mock.abc.tanda', user: { id: 402, name: 'Pak Wahyu', email: 'wahyu@umkm.id', role: 'pemilik' } })
+    const unduh = stubUnduhan()
+    let terlihat: string | null = null
+    server.use(
+      http.get('/berkas', ({ request }) => {
+        terlihat = request.headers.get('Authorization')
+        return new HttpResponse('a;b\r\n', {
+          headers: {
+            'Content-Type': 'text/csv; charset=UTF-8',
+            'Content-Disposition': 'attachment; filename="laporan-uji.csv"',
+          },
+        })
+      }),
+    )
+
+    await apiDownload('/berkas', 'cadangan.csv')
+
+    expect(terlihat).toBe('Bearer mock.abc.tanda')
+    expect(unduh.nama).toEqual(['laporan-uji.csv'])
+    expect(unduh.berkas[0].type).toContain('text/csv')
+    expect(unduh.revoked).toHaveBeenCalled()
+  })
+
+  /* Laravel `streamDownload` mengirim nama berkas tanpa kutip, jadi cabang
+     tanpa kutip di `apiDownload` juga harus terbaca. */
+  it('membaca nama berkas tanpa kutip', async () => {
+    const unduh = stubUnduhan()
+    server.use(
+      http.get(
+        '/berkas',
+        () =>
+          new HttpResponse('a;b\r\n', {
+            headers: {
+              'Content-Type': 'text/csv; charset=UTF-8',
+              'Content-Disposition': 'attachment; filename=laporan-uji.csv',
+            },
+          }),
+      ),
+    )
+
+    await apiDownload('/berkas', 'cadangan.csv')
+
+    expect(unduh.nama).toEqual(['laporan-uji.csv'])
+  })
+
+  it('memakai nama cadangan bila Content-Disposition tidak ada', async () => {
+    const unduh = stubUnduhan()
+    server.use(http.get('/berkas', () => new HttpResponse('a;b\r\n', { headers: { 'Content-Type': 'text/csv' } })))
+
+    await apiDownload('/berkas', 'cadangan.csv')
+
+    expect(unduh.nama).toEqual(['cadangan.csv'])
+  })
+
+  it('membuang sesi saat 401', async () => {
+    writeSession({ token: 'mock.abc.tanda', user: { id: 402, name: 'Pak Wahyu', email: 'wahyu@umkm.id', role: 'pemilik' } })
+    stubUnduhan()
+    server.use(http.get('/berkas', () => HttpResponse.json({ message: 'Sesi tidak sah.' }, { status: 401 })))
+
+    await apiDownload('/berkas', 'cadangan.csv').catch(() => undefined)
+
+    expect(readSession()).toBeNull()
+  })
+
+  it('memetakan 500 menjadi ApiError server', async () => {
+    stubUnduhan()
+    server.use(http.get('/berkas', () => HttpResponse.json({ message: 'Gagal.' }, { status: 500 })))
+
+    await expect(apiDownload('/berkas', 'cadangan.csv')).rejects.toMatchObject({ kind: 'server', status: 500 })
   })
 })

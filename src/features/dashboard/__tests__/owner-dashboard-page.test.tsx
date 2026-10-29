@@ -8,7 +8,7 @@ import { renderWithProviders } from '@/test/render'
 import type { Unit } from '@/api/types'
 
 function unit(over: Partial<Unit>): Unit {
-  return { id: 1, owner_id: 402, name: 'A', address: 'X', price: 100, status: 'Tersedia', type: 'Kamar Kos', facilities: [], image: '', booked_dates: [], ...over }
+  return { id: 1, owner_id: 402, name: 'A', address: 'X', price: 100, status: 'Tersedia', type: 'Kamar Kos', facilities: [], image: '', booked_dates: [], blocked_dates: [], ...over }
 }
 
 describe('hitungStatistik', () => {

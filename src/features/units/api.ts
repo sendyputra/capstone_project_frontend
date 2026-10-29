@@ -1,7 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { apiFetch, buka } from '@/api/client'
+import { apiFetch, buka, bukaEntitas } from '@/api/client'
+import { keBlok, keDaftarBlok } from '@/api/adapters/blocks'
 import { dariStatusUnit, keDaftarUnit, keUnit } from '@/api/adapters/units'
-import type { UnitInput, UnitRow } from '@/api/types'
+import type { UnitBlockRow, UnitInput, UnitRow } from '@/api/types'
 import { useSession } from '@/features/auth/api'
 
 /* Formulir memakai label tampilan; API memakai enum backend. Penerjemahan arah
@@ -16,6 +17,8 @@ export const unitKeys = {
   publik: ['units', 'publik'] as const,
   detail: (id: number) => ['unit', id] as const,
 }
+
+export const blockKeys = { list: (unitId: number) => ['unit-blocks', unitId] as const }
 
 /* Katalog terbuka untuk pengunjung: rutenya tidak memeriksa token, dan cakupan
    barisnya tidak bergantung pada sesi. */
@@ -34,7 +37,7 @@ export function useMyUnits() {
   return useQuery({
     queryKey: unitKeys.list(userId),
     enabled: Boolean(session),
-    queryFn: async () => keDaftarUnit(await apiFetch('/units')),
+    queryFn: async () => keDaftarUnit(await apiFetch('/units?status=all')),
   })
 }
 
@@ -51,7 +54,7 @@ export function useUnit(id: number) {
 export function useCreateUnit() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async (nilai: UnitInput) => keUnit(buka(await apiFetch('/units', { method: 'POST', body: muatanUnit(nilai) }))),
+    mutationFn: async (nilai: UnitInput) => keUnit(bukaEntitas(await apiFetch('/units', { method: 'POST', body: muatanUnit(nilai) }), 'unit')),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['units'] }),
   })
 }
@@ -60,7 +63,7 @@ export function useUpdateUnit() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async ({ id, ...nilai }: { id: number } & Partial<UnitInput>) =>
-      keUnit(buka(await apiFetch(`/units/${id}`, { method: 'PUT', body: muatanUnit(nilai) }))),
+      keUnit(bukaEntitas(await apiFetch(`/units/${id}`, { method: 'PUT', body: muatanUnit(nilai) }), 'unit')),
     onSuccess: (_hasil, variabel) => {
       queryClient.invalidateQueries({ queryKey: ['units'] })
       queryClient.invalidateQueries({ queryKey: unitKeys.detail(variabel.id) })
@@ -72,7 +75,7 @@ export function useUbahStatusUnit() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async ({ id, status }: { id: number; status: UnitRow['status'] }) =>
-      keUnit(buka(await apiFetch(`/units/${id}/status`, { method: 'PATCH', body: { status: dariStatusUnit(status) } }))),
+      keUnit(bukaEntitas(await apiFetch(`/units/${id}/status`, { method: 'PATCH', body: { status: dariStatusUnit(status) } }), 'unit')),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['units'] }),
   })
 }
@@ -82,5 +85,38 @@ export function useDeleteUnit() {
   return useMutation({
     mutationFn: (id: number) => apiFetch<void>(`/units/${id}`, { method: 'DELETE' }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['units'] }),
+  })
+}
+
+/* Blok mengubah `booked_dates` unit, jadi daftar blok dan detail unit
+   disegarkan bersama; kalender membaca keduanya dari detail. */
+export function useUnitBlocks(unitId: number) {
+  return useQuery({
+    queryKey: blockKeys.list(unitId),
+    enabled: unitId > 0,
+    queryFn: async (): Promise<UnitBlockRow[]> => keDaftarBlok(await apiFetch(`/units/${unitId}/blocks`)),
+  })
+}
+
+export function useTambahBlok(unitId: number) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (masukan: { start_date: string; end_date: string; note?: string }) =>
+      keBlok(bukaEntitas(await apiFetch(`/units/${unitId}/blocks`, { method: 'POST', body: masukan }), 'block')),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: blockKeys.list(unitId) })
+      queryClient.invalidateQueries({ queryKey: unitKeys.detail(unitId) })
+    },
+  })
+}
+
+export function useHapusBlok(unitId: number) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (id: number) => apiFetch<void>(`/units/${unitId}/blocks/${id}`, { method: 'DELETE' }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: blockKeys.list(unitId) })
+      queryClient.invalidateQueries({ queryKey: unitKeys.detail(unitId) })
+    },
   })
 }

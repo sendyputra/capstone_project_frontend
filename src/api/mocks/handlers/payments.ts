@@ -1,9 +1,16 @@
 import { http, HttpResponse, type HttpResponseResolver } from 'msw'
+import { keKontrak } from '@/api/adapters/contracts'
+import { kePembayaran } from '@/api/adapters/payments'
+import { kirimCsv } from '@/api/mocks/csv'
 import { contracts, type ContractDto } from '@/api/mocks/data/contracts'
 import { payments, type PaymentDto } from '@/api/mocks/data/payments'
 import { tenants } from '@/api/mocks/data/tenants'
+import { barisKontrak } from '@/api/mocks/handlers/contracts'
 import { gagalSekali } from '@/api/mocks/handlers/simulasi'
-import { pemanggil, unitById } from '@/api/mocks/join'
+import { pemanggil, tenantByUserId, unitById } from '@/api/mocks/join'
+import { namaBerkas } from '@/lib/format'
+import { susunTagihan } from '@/lib/tagihan'
+import { tanggalHariIni } from '@/lib/tanggal'
 
 export type PaymentDtoRow = PaymentDto & { renter_name: string; unit_title: string }
 
@@ -29,7 +36,123 @@ const ubahPembayaran: HttpResponseResolver<{ id: string }> = async ({ params, re
   return HttpResponse.json({ data: barisTagihan(pembayaran) })
 }
 
+/* Pencatatan manual pemilik: JSON tanpa berkas, status langsung `paid`, dan
+   `proof_url` kosong. Aturannya sama dengan `recordManual` backend: bulan harus
+   bagian masa tagihan kontrak, belum berjalan, dan belum punya pembayaran
+   lunas/menunggu. */
+async function catatManual(request: Request) {
+  const { sub, peran } = pemanggil(request)
+  if (!peran) return HttpResponse.json({ message: 'Unauthenticated.' }, { status: 401 })
+  if (peran !== 'pemilik') return HttpResponse.json({ message: 'Unauthorized access' }, { status: 403 })
+
+  const badan = (await request.json()) as { contract_id?: unknown; month?: unknown; amount?: unknown }
+  const kontrakId = Number(badan.contract_id)
+  const bulan = String(badan.month ?? '')
+  const jumlah = Number(badan.amount)
+
+  const kontrak = contracts.find((kandidat) => kandidat.id === kontrakId)
+  if (!kontrak) return HttpResponse.json({ message: 'Kontrak tidak ditemukan.' }, { status: 422 })
+  if (unitById(kontrak.unit_id)?.owner_id !== sub) {
+    return HttpResponse.json({ message: 'Unauthorized access' }, { status: 403 })
+  }
+  if (!/^\d{4}-\d{2}$/.test(bulan)) {
+    return HttpResponse.json({ message: 'Bulan tagihan wajib berformat YYYY-MM.' }, { status: 422 })
+  }
+  if (bulan > tanggalHariIni().slice(0, 7)) {
+    return HttpResponse.json({ message: 'Bulan tagihan belum berjalan.' }, { status: 422 })
+  }
+
+  const tagihan = susunTagihan(
+    [keKontrak(barisKontrak(kontrak))],
+    payments.map((baris) => kePembayaran(barisTagihan(baris))),
+    tanggalHariIni(),
+  )
+  if (!tagihan.some((baris) => baris.month === bulan)) {
+    return HttpResponse.json({ message: 'Bulan tidak termasuk masa tagihan kontrak.' }, { status: 422 })
+  }
+
+  const terbaru = payments
+    .filter((pembayaran) => pembayaran.contract_id === kontrakId && pembayaran.month === bulan)
+    .reduce<PaymentDto | null>((pilihan, pembayaran) => (!pilihan || pembayaran.id > pilihan.id ? pembayaran : pilihan), null)
+  if (terbaru && (terbaru.status === 'paid' || terbaru.status === 'pending')) {
+    return HttpResponse.json({ message: 'Bulan ini sudah memiliki pembayaran.' }, { status: 409 })
+  }
+
+  if (!Number.isFinite(jumlah) || jumlah <= 0) {
+    return HttpResponse.json({ message: 'Jumlah pembayaran wajib lebih dari nol.' }, { status: 422 })
+  }
+
+  const baris: PaymentDto = {
+    id: Math.max(0, ...payments.map((kandidat) => kandidat.id)) + 1,
+    contract_id: kontrakId,
+    month: bulan,
+    amount: jumlah,
+    status: 'paid',
+    proof_url: '',
+  }
+  payments.push(baris)
+  return HttpResponse.json({ message: 'Pembayaran berhasil dicatat.', payment: barisTagihan(baris) }, { status: 201 })
+}
+
 export const paymentHandlers = [
+  /* Laporan tagihan dibentuk dari kontrak + pembayaran terbaru, bukan dari baris
+     pembayaran mentah — bulan yang belum dibayar tidak punya baris dan tetap
+     harus muncul. `barisKontrak` masih membawa status enum backend (`active`),
+     sedangkan `susunTagihan` menyaring `Aktif`; `keKontrak` menerjemahkannya
+     sekaligus menghitung biaya bulanan dengan aturan yang sama seperti backend. */
+  http.get('/payments/export', ({ request }) => {
+    const { sub, peran } = pemanggil(request)
+    if (!peran) return HttpResponse.json({ message: 'Unauthenticated.' }, { status: 401 })
+    /* Akun penyewa tanpa baris tenant tidak punya kontrak untuk dilaporkan;
+       backend menjawab 404, bukan CSV kosong. */
+    if (peran === 'penyewa' && !tenantByUserId(sub)) {
+      return HttpResponse.json({ message: 'Profil tenant tidak ditemukan.' }, { status: 404 })
+    }
+
+    const terpilih =
+      peran === 'penyewa'
+        ? contracts.filter((kontrak) => kontrak.tenant_id === tenantByUserId(sub)?.id)
+        : peran === 'pemilik'
+          ? contracts.filter((kontrak) => unitById(kontrak.unit_id)?.owner_id === sub)
+          : []
+
+    const kontrak = terpilih.map((baris) => keKontrak(barisKontrak(baris)))
+    const tagihan = susunTagihan(kontrak, payments.map((baris) => kePembayaran(barisTagihan(baris))), tanggalHariIni())
+    const petaKontrak = new Map(kontrak.map((baris) => [baris.id, baris]))
+
+    const kolom =
+      peran === 'penyewa'
+        ? ['Bulan', 'Unit', 'Pemilik', 'Jumlah', 'Status', 'Bukti', 'Diunggah']
+        : ['Bulan', 'Unit', 'Penyewa', 'Jumlah', 'Status', 'Bukti', 'Diunggah']
+
+    /* Sama seperti backend: unggahan ber-id terbesar yang menang, bukan yang
+       kebetulan tersimpan lebih dulu di array. */
+    const diunggah = (contractId: number, month: string) => {
+      const baris = payments
+        .filter((pembayaran) => pembayaran.contract_id === contractId && pembayaran.month === month)
+        .reduce<PaymentDto | null>(
+          (terbaru, pembayaran) => (!terbaru || pembayaran.id > terbaru.id ? pembayaran : terbaru),
+          null,
+        )
+      return baris ? (baris.created_at ?? `${month}-01 00:00`) : ''
+    }
+
+    const isi = tagihan.map((baris) => {
+      const induk = petaKontrak.get(baris.contract_id)!
+      return [
+        baris.month,
+        baris.unit_title,
+        peran === 'penyewa' ? induk.owner_name : induk.renter_name,
+        baris.amount,
+        baris.status,
+        namaBerkas(baris.proof_url),
+        diunggah(baris.contract_id, baris.month),
+      ]
+    })
+
+    return kirimCsv('laporan-tagihan', kolom, isi)
+  }),
+
   http.get('/payments', ({ request }) => {
     const { sub, peran } = pemanggil(request)
 
@@ -57,6 +180,8 @@ export const paymentHandlers = [
      kelas `File` di lingkungan uji (jsdom) berbeda realm dari kelas yang dipakai
      parser multipart, sehingga `instanceof` di sini menolak unggahan yang sah. */
   http.post('/payments', async ({ request }) => {
+    if ((request.headers.get('content-type') ?? '').includes('application/json')) return catatManual(request)
+
     const badan = await request.formData()
     const kontrakId = Number(badan.get('contract_id'))
     const bulan = String(badan.get('month') ?? '')

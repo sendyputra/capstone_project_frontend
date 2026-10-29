@@ -1,6 +1,7 @@
 import { buka } from '@/api/client'
 import type { ContractRow, ContractStatusDto, KtpStatus } from '@/api/types'
 import { hitungBulanSewa } from '@/lib/sewa'
+import { tanggalKalender } from '@/lib/tanggal'
 
 /* Dua tabel, satu per arah: enum backend ke label tampilan, dan sebaliknya.
    Nilai di luar enum backend jatuh ke `Menunggu`, bukan diteruskan mentah —
@@ -27,38 +28,53 @@ export function dariStatusKontrak(nilai: ContractRow['status']): ContractStatusD
   return DARI_STATUS[nilai] ?? 'pending'
 }
 
-/* Status verifikasi KTP penyewa memakai tiga label yang sama dengan pengguna.
-   Nilai di luar ketiganya diabaikan (bukan diteruskan), sehingga kolom "KTP"
-   jatuh ke "Belum" alih-alih menampilkan teks asing. */
-const STATUS_KTP: KtpStatus[] = ['Terverifikasi', 'Menunggu', 'Belum']
-
-function keKtp(nilai: unknown): KtpStatus | undefined {
-  return STATUS_KTP.find((status) => status === String(nilai ?? ''))
+/* Status verifikasi KTP penyewa memakai tiga label tampilan. Backend asli
+   menyimpan enum Inggris (`verified`/`pending`/`unverified`); keduanya
+   diterima, nilai lain diabaikan sehingga kolom "KTP" jatuh ke "Belum". */
+const STATUS_KTP: Record<string, KtpStatus> = {
+  verified: 'Terverifikasi',
+  pending: 'Menunggu',
+  unverified: 'Belum',
+  Terverifikasi: 'Terverifikasi',
+  Menunggu: 'Menunggu',
+  Belum: 'Belum',
 }
 
-/* Dua ejaan bidang diterima, sama seperti adaptor sesi: DTO lama menamainya
-   `ktp`, DTO baru `ktp_status`. Menerima keduanya membuat kolom "KTP" tetap
-   terisi di tengah migrasi; nilai asing tetap ditolak. */
-function bacaKtp(baris: Record<string, unknown>): KtpStatus | undefined {
-  return keKtp(baris.ktp ?? baris.ktp_status)
+function keKtp(nilai: unknown): KtpStatus | undefined {
+  return STATUS_KTP[String(nilai ?? '')]
+}
+
+/* Dua ejaan bidang diterima (`ktp` dari DTO lama, `ktp_status` dari backend),
+   dan baris bersarang didahulukan atas baris datar. */
+function bacaKtp(...baris: Record<string, unknown>[]): KtpStatus | undefined {
+  for (const sumber of baris) {
+    const ktp = keKtp(sumber.ktp ?? sumber.ktp_status)
+    if (ktp) return ktp
+  }
+  return undefined
 }
 
 export function keKontrak(dto: unknown): ContractRow {
   const k = (dto ?? {}) as Record<string, unknown>
+  const tenant = (k.tenant ?? {}) as Record<string, unknown>
+  const unit = (k.unit ?? {}) as Record<string, unknown>
+  const owner = (unit.owner ?? {}) as Record<string, unknown>
   const total = keAngka(k.total_price)
-  const bulan = hitungBulan(String(k.start_date ?? ''), String(k.end_date ?? ''))
-  const ktp = bacaKtp(k)
+  const mulai = tanggalKalender(String(k.start_date ?? ''))
+  const akhir = tanggalKalender(String(k.end_date ?? ''))
+  const bulan = hitungBulan(mulai, akhir)
+  const ktp = bacaKtp(tenant, k)
   return {
     id: Number(k.id),
     unit_id: Number(k.unit_id),
     tenant_id: Number(k.tenant_id ?? 0),
-    start_date: String(k.start_date ?? ''),
-    end_date: String(k.end_date ?? ''),
+    start_date: mulai,
+    end_date: akhir,
     total_price: total,
     status: keStatusKontrak(String(k.status)),
-    renter_name: String(k.renter_name ?? ''),
-    unit_title: String(k.unit_title ?? ''),
-    owner_name: String(k.owner_name ?? ''),
+    renter_name: String(k.renter_name ?? tenant.name ?? ''),
+    unit_title: String(k.unit_title ?? unit.name ?? ''),
+    owner_name: String(k.owner_name ?? owner.name ?? ''),
     term: `${bulan} bulan`,
     /* Biaya bulanan dihitung dari nilai kontrak dan masa sewa, bukan dibaca dari
        `monthly` kiriman server: dua sumber untuk satu angka bisa berselisih. */
