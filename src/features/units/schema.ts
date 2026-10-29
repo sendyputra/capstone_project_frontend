@@ -10,6 +10,9 @@ export const unitFormSchema = z.object({
   price: z.coerce
     .number({ message: 'Harga belum diisi atau bukan angka. Masukkan harga per bulan, misalnya 1200000.' })
     .positive('Harga harus lebih besar dari nol. Masukkan harga per bulan, misalnya 1200000.'),
+  /* Teks mentah koma; bukan daftar. Pemecahannya di halaman: tiap butir dipangkas
+     dan yang kosong dibuang sebelum masuk FormData `facilities[]`. */
+  facilities: z.string().trim(),
   status: z.enum(['Tersedia', 'Terisi']),
 })
 

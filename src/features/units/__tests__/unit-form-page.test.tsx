@@ -1,4 +1,4 @@
-import { screen, waitFor } from '@testing-library/react'
+import { fireEvent, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router'
 import { describe, expect, it } from 'vitest'
@@ -7,6 +7,7 @@ import { RequireRole } from '@/app/guards'
 import { readSession, writeSession } from '@/features/auth/session'
 import { aktifkanSimulasi } from '@/api/mocks/handlers/simulasi'
 import { units } from '@/api/mocks/data/units'
+import { pantauBadanForm } from '@/test/metode'
 import { renderWithProviders } from '@/test/render'
 
 function renderHalaman() {
@@ -42,6 +43,40 @@ describe('UnitFormPage', () => {
 
     await waitFor(() => expect(screen.getByText('Daftar unit')).toBeInTheDocument())
     expect(units.find((unit) => unit.name === 'Ruko Uji Tipe')?.type).toBe('Ruang Usaha')
+  })
+
+  /* Fasilitas satu bagian per butir di bawah `facilities[]`; perekamannya lewat
+     spy `init.body` karena serializer MSW menggugurkan bidang berama ganda. */
+  it('mengirim fasilitas hasil pecahan koma, tanpa string kosong', async () => {
+    const badan = pantauBadanForm()
+    renderHalaman()
+    await userEvent.type(screen.getByLabelText('Nama / Judul Unit'), 'Kos Fasilitas Uji')
+    await userEvent.type(screen.getByLabelText('Lokasi Singkat'), 'Surabaya')
+    await userEvent.type(screen.getByLabelText('Harga per Bulan (Rp)'), '1200000')
+    await userEvent.selectOptions(screen.getByLabelText('Tipe Properti'), 'Kamar Kos')
+    await userEvent.type(screen.getByLabelText('Fasilitas (pisahkan dengan koma)'), ' WiFi,  , AC, ')
+    await userEvent.click(screen.getByRole('button', { name: 'Simpan Unit' }))
+    await waitFor(() => expect(screen.getByText('Daftar unit')).toBeInTheDocument())
+    expect(badan[0]?.getAll('facilities[]')).toEqual(['WiFi', 'AC'])
+  })
+
+  /* `userEvent.upload` diam pada berkas di luar `accept` input, jadi cabang
+     "jenis salah" diuji dengan `fireEvent.change` dan `files` ditanam — jalur
+     handler sama seperti pilihan peramban lewat penyaring "Semua berkas". */
+  it('menolak foto yang bukan gambar dengan pesan sebab dan saran', async () => {
+    renderHalaman()
+    const input = screen.getByLabelText('Foto unit')
+    const nota = new File(['x'], 'nota.txt', { type: 'text/plain' })
+    Object.defineProperty(input, 'files', { value: [nota], configurable: true })
+    fireEvent.change(input)
+    expect(await screen.findByText(/Jenis berkas tidak didukung/i)).toBeInTheDocument()
+  })
+
+  it('menolak foto di atas 2 MB', async () => {
+    renderHalaman()
+    const besar = new File([new ArrayBuffer(2 * 1024 * 1024 + 1)], 'gede.jpg', { type: 'image/jpeg' })
+    await userEvent.upload(screen.getByLabelText('Foto unit'), besar)
+    expect(await screen.findByText(/melebihi 2 MB/i)).toBeInTheDocument()
   })
 
   it('menyimpan sekali walau tombol ditekan dua kali cepat', async () => {
