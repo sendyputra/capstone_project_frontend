@@ -6,10 +6,33 @@ import { barisUnit, pemanggil, subPemanggil } from '@/api/mocks/join'
 
 let urutan = units.length
 
+/* POST dan PUT /units menerima JSON maupun multipart: formulir tambah unit
+   memakai FormData karena berkas foto ikut terkirim. Bagian berkas diperiksa
+   dari bentuknya, bukan lewat `instanceof File` — kelas `File` di jsdom berbeda
+   realm dari kelas yang dipakai parser multipart, pembatasan yang sama dengan
+   handler pembayaran. */
+async function muatanUnitDto(request: Request): Promise<Partial<UnitDto>> {
+  if ((request.headers.get('content-type') ?? '').includes('application/json')) {
+    return (await request.json()) as Partial<UnitDto>
+  }
+  const badan = await request.formData()
+  const berkas = badan.get('image')
+  const teks = (nama: string) => String(badan.get(nama) ?? '')
+  return {
+    name: teks('name'),
+    address: teks('address'),
+    price: Number(teks('price')),
+    status: (teks('status') || undefined) as UnitDto['status'] | undefined,
+    type: teks('type') || undefined,
+    facilities: badan.getAll('facilities[]').map(String),
+    image: berkas && typeof berkas !== 'string' ? `/demo/${berkas.name}` : teks('image') || undefined,
+  }
+}
+
 const ubahUnit: HttpResponseResolver<{ id: string }> = async ({ params, request }) => {
   const unit = units.find((kandidat) => kandidat.id === Number(params.id))
   if (!unit) return HttpResponse.json({ message: 'Unit tidak ditemukan.' }, { status: 404 })
-  const muatan = (await request.json()) as Partial<UnitDto>
+  const muatan = await muatanUnitDto(request)
   Object.assign(unit, muatan, { price: muatan.price === undefined ? unit.price : Number(muatan.price) })
   return HttpResponse.json({ data: barisUnit(unit) })
 }
@@ -44,7 +67,7 @@ export const unitHandlers = [
   }),
 
   http.post('/units', async ({ request }) => {
-    const muatan = (await request.json()) as Partial<UnitDto>
+    const muatan = await muatanUnitDto(request)
     if (gagalSekali('POST /units')) {
       return HttpResponse.json({ message: 'Unit gagal disimpan karena koneksi terputus.' }, { status: 500 })
     }
