@@ -2,6 +2,7 @@ import { Moon, Sun } from 'lucide-react'
 import { useEffect } from 'react'
 import { Link, NavLink, Outlet, ScrollRestoration } from 'react-router'
 import type { Role } from '@/api/types'
+import logoMark from '@/assets/logo-nusantara-mark.png'
 import { jabatanPeran, toDataRole } from '@/features/auth/roles'
 import { useLogout, useSession } from '@/features/auth/api'
 import { LoncengNotifikasi } from '@/features/notifications/components/lonceng-notifikasi'
@@ -48,14 +49,17 @@ export function AppShell() {
     <div className="flex min-h-screen flex-col bg-brand-bg text-brand-text">
       <header className="sticky top-0 z-10 border-b border-brand-border bg-brand-surface">
         <div className="mx-auto flex h-appbar max-w-container items-center gap-4 px-4">
-          <Link to="/" className="flex items-center gap-3">
-            <img src="/demo/logo.jpg" alt="Logo Nusantara Booking" className="h-10 w-auto rounded-md object-contain" />
-            <span className="font-heading text-heading-s font-bold whitespace-nowrap">
+          <Link to="/" className="flex min-w-0 items-center gap-3">
+            {/* Lambang saja: logo penuh memuat wordmark yang tidak terbaca di 36px.
+                Wordmark di sebelahnya baru muat mulai lg, jadi di bawahnya disembunyikan
+                bersama navigasi supaya bilah atas tidak meluber. */}
+            <img src={logoMark} alt="Logo Nusantara Booking" className="h-9 w-auto object-contain" />
+            <span className="hidden font-heading text-heading-s font-bold whitespace-nowrap lg:inline">
               NUSANTARA <span className="text-brand-accent">BOOKING</span>
             </span>
           </Link>
 
-          <nav className="ml-auto hidden items-center gap-5 md:flex" aria-label="Navigasi utama">
+          <nav className="ml-auto hidden items-center gap-5 whitespace-nowrap md:flex" aria-label="Navigasi utama">
             {(session ? TAUTAN[session.user.role] : [{ ke: '/', label: 'Beranda' }, { ke: '/katalog', label: 'Cari Unit' }]).map((tautan) => (
               <NavLink
                 key={tautan.ke}
@@ -105,8 +109,8 @@ export function AppShell() {
                 <Link to="/masuk" className="px-3 py-2 text-ui font-medium text-brand-text">
                   Masuk
                 </Link>
-                <Link to="/daftar" className="rounded-lg bg-brand-accent px-4 py-2 text-ui font-medium text-brand-accent-fg shadow-md">
-                  Daftar (OCR KTP)
+                <Link to="/daftar" className="rounded-lg bg-brand-accent px-4 py-2 text-ui font-medium whitespace-nowrap text-brand-accent-fg shadow-md">
+                  Daftar
                 </Link>
               </>
             )}

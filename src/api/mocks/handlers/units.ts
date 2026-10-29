@@ -1,6 +1,7 @@
 import { http, HttpResponse, type HttpResponseResolver } from 'msw'
 import { units, type UnitDto } from '@/api/mocks/data/units'
 import { gagalSekali } from '@/api/mocks/handlers/simulasi'
+import { halamanLaravel } from '@/api/mocks/halaman'
 import { barisUnit, pemanggil, subPemanggil } from '@/api/mocks/join'
 
 let urutan = units.length
@@ -19,7 +20,7 @@ export const unitHandlers = [
   http.get('/units', ({ request }) => {
     const { sub, peran } = pemanggil(request)
     const data = peran === 'pemilik' ? units.filter((unit) => unit.owner_id === sub) : units
-    return HttpResponse.json({ data: data.map(barisUnit) })
+    return halamanLaravel(request, data.map(barisUnit))
   }),
 
   /* Katalog publik: seluruh unit lintas pemilik, tanpa pemeriksaan token. */

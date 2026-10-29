@@ -19,6 +19,20 @@ export type Tagihan = {
    dari tanggalnya, tanpa zona waktu yang bisa menggeser bulan. */
 const BENTUK_BULAN = /^\d{4}-(0[1-9]|1[0-2])$/
 
+/* Backend membalas pembayaran urut `created_at`, jadi bulan lintas kontrak
+   datang acak. Tampilan mengelompokkan per kontrak (urutan kemunculan pertama)
+   dan menaruh bulan terbaru di atas. Setiap kelompok diurutkan sendiri, bukan
+   seluruh daftar, supaya kontrak tidak saling menyela. */
+export function urutkanTagihan<T extends { contract_id: number; month: string }>(daftar: T[]): T[] {
+  const perKontrak = new Map<number, T[]>()
+  for (const baris of daftar) {
+    const kelompok = perKontrak.get(baris.contract_id)
+    if (kelompok) kelompok.push(baris)
+    else perKontrak.set(baris.contract_id, [baris])
+  }
+  return [...perKontrak.values()].flatMap((kelompok) => kelompok.sort((a, b) => b.month.localeCompare(a.month)))
+}
+
 function bulanDari(tanggal: string) {
   return tanggal.slice(0, 7)
 }

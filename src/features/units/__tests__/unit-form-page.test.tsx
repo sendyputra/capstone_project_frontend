@@ -30,11 +30,26 @@ describe('UnitFormPage', () => {
     expect(screen.getByRole('alert')).toHaveTextContent(/Ada isian yang perlu diperbaiki/i)
   })
 
+  /* Backend mewajibkan `type`. Tanpa bidang ini POST /units ditolak 422 dengan
+     pesan mentah Laravel, dan pemilik tidak bisa menambah unit sama sekali. */
+  it('mengirim tipe properti yang dipilih', async () => {
+    renderHalaman()
+    await userEvent.type(screen.getByLabelText('Nama / Judul Unit'), 'Ruko Uji Tipe')
+    await userEvent.type(screen.getByLabelText('Lokasi Singkat'), 'Surabaya')
+    await userEvent.type(screen.getByLabelText('Harga per Bulan (Rp)'), '3000000')
+    await userEvent.selectOptions(screen.getByLabelText('Tipe Properti'), 'Ruang Usaha')
+    await userEvent.click(screen.getByRole('button', { name: 'Simpan Unit' }))
+
+    await waitFor(() => expect(screen.getByText('Daftar unit')).toBeInTheDocument())
+    expect(units.find((unit) => unit.name === 'Ruko Uji Tipe')?.type).toBe('Ruang Usaha')
+  })
+
   it('menyimpan sekali walau tombol ditekan dua kali cepat', async () => {
     renderHalaman()
     await userEvent.type(screen.getByLabelText('Nama / Judul Unit'), 'Kos Kamar 09')
     await userEvent.type(screen.getByLabelText('Lokasi Singkat'), 'Bandung')
     await userEvent.type(screen.getByLabelText('Harga per Bulan (Rp)'), '1200000')
+    await userEvent.selectOptions(screen.getByLabelText('Tipe Properti'), 'Kamar Kos')
     const tombol = screen.getByRole('button', { name: 'Simpan Unit' })
     await userEvent.dblClick(tombol)
     await waitFor(() => expect(screen.getByText('Daftar unit')).toBeInTheDocument())
@@ -47,6 +62,7 @@ describe('UnitFormPage', () => {
     await userEvent.type(screen.getByLabelText('Nama / Judul Unit'), 'Kos Kamar 11')
     await userEvent.type(screen.getByLabelText('Lokasi Singkat'), 'Bandung')
     await userEvent.type(screen.getByLabelText('Harga per Bulan (Rp)'), '1500000')
+    await userEvent.selectOptions(screen.getByLabelText('Tipe Properti'), 'Kamar Kos')
     await userEvent.click(screen.getByRole('button', { name: 'Simpan Unit' }))
     expect(await screen.findByRole('alert')).toHaveTextContent(/koneksi terputus/i)
     await userEvent.click(screen.getByRole('button', { name: 'Simpan Unit' }))
@@ -79,6 +95,7 @@ describe('UnitFormPage', () => {
     await userEvent.type(await screen.findByLabelText('Nama / Judul Unit'), 'Kos Kamar 13')
     await userEvent.type(screen.getByLabelText('Lokasi Singkat'), 'Bandung')
     await userEvent.type(screen.getByLabelText('Harga per Bulan (Rp)'), '1200000')
+    await userEvent.selectOptions(screen.getByLabelText('Tipe Properti'), 'Kamar Kos')
     await userEvent.click(screen.getByRole('button', { name: 'Simpan Unit' }))
     expect(await screen.findByText('Layar masuk')).toBeInTheDocument()
     expect(readSession()).toBeNull()

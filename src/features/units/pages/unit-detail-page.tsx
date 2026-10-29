@@ -5,8 +5,9 @@ import { useBuatKontrak } from '@/features/contracts/api'
 import { useUnit } from '@/features/units/api'
 import { BlokirTanggal } from '@/features/units/components/blokir-tanggal'
 import { KalenderKetersediaan } from '@/features/units/components/kalender-ketersediaan'
-import { formatRupiah } from '@/lib/format'
-import { hitungSewa } from '@/lib/sewa'
+import { formatRupiah, formatTanggalPendek } from '@/lib/format'
+import { hitungSewa, tanggalBentrok } from '@/lib/sewa'
+import { tanggalHariIni } from '@/lib/tanggal'
 import { ErrorState } from '@/ui/error-state'
 import { useToast } from '@/ui/toast'
 import { Skeleton } from '@/ui/skeleton'
@@ -20,8 +21,11 @@ export function UnitDetailPage({ mode = 'penyewa' }: { mode?: 'penyewa' | 'pemil
   const navigate = useNavigate()
   const { tampilkan } = useToast()
   const [galat, setGalat] = useState('')
-  const [mulai, setMulai] = useState(() => new Date().toISOString().slice(0, 10))
+  /* Tanggal kalender WIB, bukan potongan `toISOString()` yang masih UTC: nilai
+     awalnya sekaligus `min` input, jadi keduanya harus memakai sumber yang sama. */
+  const [mulai, setMulai] = useState(tanggalHariIni)
   const [durasi, setDurasi] = useState(3)
+  const hariIni = tanggalHariIni()
 
   function kirim() {
     /* Katalog terbuka untuk pengunjung; yang menuntut akun hanya pengajuannya. */
@@ -36,8 +40,20 @@ export function UnitDetailPage({ mode = 'penyewa' }: { mode?: 'penyewa' | 'pemil
       setGalat('Tanggal mulai sewa wajib diisi.')
       return
     }
-    setGalat('')
+    if (mulai < hariIni) {
+      setGalat('Tanggal mulai sewa tidak boleh sebelum hari ini.')
+      return
+    }
     const { akhir, total } = hitungSewa(mulai, durasi, unit.data.price)
+    /* `booked_dates` sudah gabungan kontrak aktif dan tanggal diblokir, jadi satu
+       daftar itu cukup untuk menolak lebih awal — pengguna melihat tanggal mana
+       yang menabrak, bukan pesan 422 dari server setelah menunggu. */
+    const bentrok = tanggalBentrok(mulai, akhir, unit.data.booked_dates)
+    if (bentrok) {
+      setGalat(`Tanggal ${formatTanggalPendek(bentrok)} sudah terisi atau diblokir. Pilih tanggal lain.`)
+      return
+    }
+    setGalat('')
     buatKontrak.mutate(
       { unit_id: unitId, start_date: mulai, end_date: akhir, total_price: total },
       {
@@ -99,7 +115,7 @@ export function UnitDetailPage({ mode = 'penyewa' }: { mode?: 'penyewa' | 'pemil
               <>
                 <label className="block text-ui font-semibold text-brand-text">
                   Mulai sewa
-                  <input type="date" required value={mulai} onChange={(e) => setMulai(e.target.value)} className="mt-1 w-full rounded-lg border border-brand-border px-3 py-2" />
+                  <input type="date" required min={hariIni} value={mulai} onChange={(e) => setMulai(e.target.value)} className="mt-1 w-full rounded-lg border border-brand-border px-3 py-2" />
                 </label>
                 <label className="block text-ui font-semibold text-brand-text">
                   Durasi

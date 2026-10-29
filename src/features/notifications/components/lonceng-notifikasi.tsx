@@ -2,6 +2,7 @@ import { Bell } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useNotifications, useTandaiNotifikasi, useTandaiSemua } from '@/features/notifications/api'
 import { formatTanggal } from '@/lib/format'
+import { useToast } from '@/ui/toast'
 
 /* Lonceng pengingat tagihan: badge jumlah belum dibaca, panel 50 notifikasi
    terbaru, dan penandaan dibaca per baris atau sekaligus. */
@@ -10,6 +11,7 @@ export function LoncengNotifikasi() {
   const notifikasi = useNotifications()
   const tandai = useTandaiNotifikasi()
   const tandaiSemua = useTandaiSemua()
+  const { tampilkan } = useToast()
   const rows = notifikasi.data?.rows ?? []
   const unread = notifikasi.data?.unread ?? 0
 
@@ -51,7 +53,9 @@ export function LoncengNotifikasi() {
               <button
                 type="button"
                 disabled={tandaiSemua.isPending}
-                onClick={() => tandaiSemua.mutate()}
+                onClick={() =>
+                  tandaiSemua.mutate(undefined, { onError: (galat) => tampilkan((galat as Error).message, 'danger') })
+                }
                 className="text-micro font-semibold text-brand-accent disabled:opacity-60"
               >
                 Tandai semua dibaca
@@ -60,13 +64,20 @@ export function LoncengNotifikasi() {
           </div>
 
           <div className="max-h-80 divide-y divide-brand-border overflow-y-auto">
-            {rows.length === 0 && <p className="py-4 text-center text-micro text-brand-text-subtle">Belum ada notifikasi.</p>}
+            {/* Kegagalan kueri bukan "belum ada notifikasi": pengingat tagihan
+                yang tidak terbaca harus terlihat sebagai gangguan. */}
+            {notifikasi.isError && (
+              <p className="py-4 text-center text-micro text-brand-danger-soft-fg">{(notifikasi.error as Error).message}</p>
+            )}
+            {!notifikasi.isError && rows.length === 0 && (
+              <p className="py-4 text-center text-micro text-brand-text-subtle">Belum ada notifikasi.</p>
+            )}
             {rows.map((baris) => (
               <button
                 key={baris.id}
                 type="button"
                 disabled={baris.read_at !== null}
-                onClick={() => tandai.mutate(baris.id)}
+                onClick={() => tandai.mutate(baris.id, { onError: (galat) => tampilkan((galat as Error).message, 'danger') })}
                 className={`block w-full py-2 text-left text-ui text-brand-text ${baris.read_at === null ? 'font-semibold' : 'text-brand-text-muted'}`}
               >
                 <span className="block">{baris.message}</span>

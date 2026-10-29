@@ -32,7 +32,8 @@ describe('data contoh', () => {
     /* Katalog lintas pemilik dibaca sebagai penyewa: cakupan pemilik hanya
        unitnya sendiri, sedangkan katalog publik memuat seluruh unit. */
     writeSession(penyewa)
-    const { data } = await apiFetch<{ data: UnitDtoRow[] }>('/units')
+    /* `limit=100`: mock memaginasi seperti Laravel (10 per halaman). */
+    const { data } = await apiFetch<{ data: UnitDtoRow[] }>('/units?limit=100')
     expect(data).toHaveLength(24)
     /* Status dikirim sebagai enum backend; label `Tersedia` urusan adaptor. */
     expect(data[0]).toMatchObject({ name: 'Kos Kamar 01', type: 'Kamar Kos', status: 'available' })
@@ -96,11 +97,11 @@ describe('data contoh', () => {
 
   it('mengirim seluruh unit ke penyewa dan hanya unit sendiri ke pemilik', async () => {
     writeSession(penyewa)
-    const katalog = (await apiFetch<{ data: UnitDtoRow[] }>('/units')).data
+    const katalog = (await apiFetch<{ data: UnitDtoRow[] }>('/units?limit=100')).data
     expect(katalog).toHaveLength(24)
 
     writeSession(pemilik)
-    const milik = (await apiFetch<{ data: UnitDtoRow[] }>('/units')).data
+    const milik = (await apiFetch<{ data: UnitDtoRow[] }>('/units?limit=100')).data
     expect(milik).toHaveLength(6)
     expect(milik.every((unit) => unit.owner_id === 402)).toBe(true)
   })

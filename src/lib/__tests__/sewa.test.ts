@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { hitungBulanSewa, hitungSewa } from '@/lib/sewa'
+import { hitungBulanSewa, hitungSewa, tanggalBentrok } from '@/lib/sewa'
 
 describe('hitungSewa', () => {
   it('menambah bulan dan mengalikan harga', () => {
@@ -8,6 +8,22 @@ describe('hitungSewa', () => {
 
   it('menjepit akhir bulan bila tanggal tidak ada di bulan tujuan', () => {
     expect(hitungSewa('2026-01-31', 1, 1_000_000).akhir).toBe('2026-02-28')
+  })
+})
+
+/* Rentang sewa setengah terbuka `[mulai, akhir)`; dipakai halaman detail unit
+   untuk menolak pengajuan sebelum server menjawab 422. */
+describe('tanggalBentrok', () => {
+  it('mengembalikan tanggal terisi pertama di tengah rentang', () => {
+    expect(tanggalBentrok('2026-10-29', '2026-11-29', ['2026-11-05', '2026-11-08'])).toBe('2026-11-05')
+  })
+
+  it('tidak menghitung tanggal akhir sebagai bentrok', () => {
+    expect(tanggalBentrok('2026-11-01', '2026-11-08', ['2026-11-08'])).toBeUndefined()
+  })
+
+  it('menganggap rentang tanpa tanggal terisi sebagai bebas', () => {
+    expect(tanggalBentrok('2026-11-01', '2026-12-01', [])).toBeUndefined()
   })
 })
 

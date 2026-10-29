@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { apiFetch, buka, bukaEntitas } from '@/api/client'
+import { apiFetch, apiSemuaHalaman, buka, bukaEntitas } from '@/api/client'
 import { keBlok, keDaftarBlok } from '@/api/adapters/blocks'
 import { dariStatusUnit, keDaftarUnit, keUnit } from '@/api/adapters/units'
 import type { UnitBlockRow, UnitInput, UnitRow } from '@/api/types'
@@ -21,11 +21,12 @@ export const unitKeys = {
 export const blockKeys = { list: (unitId: number) => ['unit-blocks', unitId] as const }
 
 /* Katalog terbuka untuk pengunjung: rutenya tidak memeriksa token, dan cakupan
-   barisnya tidak bergantung pada sesi. */
+   barisnya tidak bergantung pada sesi. `limit=50` karena server memaginasi 10
+   baris dan katalog tidak punya kontrol halaman. */
 export function usePublicUnits() {
   return useQuery({
     queryKey: unitKeys.publik,
-    queryFn: async () => keDaftarUnit(await apiFetch('/list/units')),
+    queryFn: async () => keDaftarUnit(await apiFetch('/list/units?limit=50')),
   })
 }
 
@@ -37,7 +38,8 @@ export function useMyUnits() {
   return useQuery({
     queryKey: unitKeys.list(userId),
     enabled: Boolean(session),
-    queryFn: async () => keDaftarUnit(await apiFetch('/units?status=all')),
+    /* `apiSemuaHalaman`: server memaginasi 10 baris, dan pemilik boleh punya lebih. */
+    queryFn: async () => keDaftarUnit(await apiSemuaHalaman<unknown>('/units?status=all')),
   })
 }
 

@@ -202,7 +202,7 @@ export function OwnerContractsPage() {
       {kontrak.isPending && <Skeleton className="h-40" />}
       {kontrak.isError && <ErrorState message={(kontrak.error as Error).message} onRetry={() => kontrak.refetch()} />}
       {kontrak.isSuccess && (
-        <Tabel kolom={['Penyewa', 'Unit & Pemilik', 'Masa Sewa', 'Nilai Kontrak', 'KTP', 'Status Kontrak', 'Aksi']}>
+        <Tabel kolom={['Penyewa', 'Unit & Pemilik', 'Masa Sewa', 'Nilai Kontrak', 'KTP', 'Status Kontrak', 'Aksi']} kolomAkhirKanan>
           {daftar.map((baris) => (
             <tr key={baris.id}>
               <td className="p-4 font-bold text-brand-text">{baris.renter_name}</td>
@@ -222,19 +222,19 @@ export function OwnerContractsPage() {
               <td className="p-4 text-right">
                 {baris.status === 'Menunggu' ? (
                   <span className="inline-flex gap-1">
-                    <button type="button" disabled={ubah.isPending} onClick={() => setujui(baris.id, baris.renter_name)} className="rounded bg-brand-success px-3 py-1 text-micro font-semibold text-brand-success-fg">
+                    <button type="button" disabled={ubah.isPending} onClick={() => setujui(baris.id, baris.renter_name)} className="rounded-lg bg-brand-success px-3 py-2 text-micro font-bold text-brand-success-fg">
                       Setujui
                     </button>
-                    <button type="button" disabled={ubah.isPending} onClick={() => tandai(baris.id, 'Dibatalkan', baris.renter_name)} className="rounded bg-brand-danger px-3 py-1 text-micro font-semibold text-brand-danger-fg">
+                    <button type="button" disabled={ubah.isPending} onClick={() => tandai(baris.id, 'Dibatalkan', baris.renter_name)} className="rounded-lg border border-brand-danger-border bg-brand-surface px-3 py-2 text-micro font-bold text-brand-danger-soft-fg">
                       Tolak
                     </button>
                   </span>
                 ) : baris.status === 'Aktif' ? (
                   <span className="inline-flex gap-1">
-                    <button type="button" disabled={ubah.isPending} onClick={() => tandai(baris.id, 'Selesai', baris.renter_name)} className="rounded bg-brand-success px-3 py-1 text-micro font-semibold text-brand-success-fg">
+                    <button type="button" disabled={ubah.isPending} onClick={() => tandai(baris.id, 'Selesai', baris.renter_name)} className="rounded-lg bg-brand-success px-3 py-2 text-micro font-bold text-brand-success-fg">
                       Selesaikan
                     </button>
-                    <button type="button" disabled={ubah.isPending} onClick={() => tandai(baris.id, 'Dibatalkan', baris.renter_name)} className="rounded bg-brand-danger px-3 py-1 text-micro font-semibold text-brand-danger-fg">
+                    <button type="button" disabled={ubah.isPending} onClick={() => tandai(baris.id, 'Dibatalkan', baris.renter_name)} className="rounded-lg border border-brand-danger-border bg-brand-surface px-3 py-2 text-micro font-bold text-brand-danger-soft-fg">
                       Batalkan
                     </button>
                   </span>

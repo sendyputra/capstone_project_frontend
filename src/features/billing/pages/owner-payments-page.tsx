@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { useCatatPembayaran, usePayments, useUnduhLaporanTagihan, useVerifikasiPembayaran } from '@/features/billing/api'
 import { useContracts } from '@/features/contracts/api'
 import { formatBulan, formatRupiah, namaBerkas } from '@/lib/format'
-import { susunTagihan } from '@/lib/tagihan'
+import { susunTagihan, urutkanTagihan } from '@/lib/tagihan'
 import { tanggalHariIni } from '@/lib/tanggal'
 import { ErrorState } from '@/ui/error-state'
 import { Skeleton } from '@/ui/skeleton'
@@ -19,7 +19,9 @@ export function OwnerPaymentsPage() {
   const catat = useCatatPembayaran()
   const kontrak = useContracts()
   const { tampilkan } = useToast()
-  const daftar = tagihan.data ?? []
+  /* Backend mengirim pembayaran urut `created_at`; tabel menyusunnya per
+     kontrak dengan bulan terbaru dulu supaya bulan tidak melompat-lompat. */
+  const daftar = urutkanTagihan(tagihan.data ?? [])
   const menunggu = daftar.filter((baris) => baris.status === 'Menunggu Verifikasi').length
   const [bukaForm, setBukaForm] = useState(false)
   const [kontrakId, setKontrakId] = useState('')
@@ -133,10 +135,13 @@ export function OwnerPaymentsPage() {
           >
             {unduhLaporan.isPending ? 'Mengunduh…' : 'Unduh CSV'}
           </button>
+          {/* Tanpa daftar tagihan yang terbaca, bulan yang sudah lunas tampak
+              "Belum Bayar" dan formulir ini mencatat tagihan ganda. */}
           <button
             type="button"
+            disabled={!tagihan.isSuccess}
             onClick={() => (bukaForm ? tutupForm() : setBukaForm(true))}
-            className="rounded-lg bg-brand-accent px-3 py-2 text-micro font-bold text-brand-accent-fg"
+            className="rounded-lg bg-brand-accent px-3 py-2 text-micro font-bold text-brand-accent-fg disabled:opacity-60"
           >
             {bukaForm ? 'Tutup' : 'Catat Pembayaran'}
           </button>
@@ -205,7 +210,7 @@ export function OwnerPaymentsPage() {
       {tagihan.isPending && <Skeleton className="h-40" />}
       {tagihan.isError && <ErrorState message={(tagihan.error as Error).message} onRetry={() => tagihan.refetch()} />}
       {tagihan.isSuccess && (
-        <Tabel kolom={['Penyewa', 'Unit / Bulan', 'Jumlah', 'Bukti Bayar', 'Status', 'Aksi']}>
+        <Tabel kolom={['Penyewa', 'Unit / Bulan', 'Jumlah', 'Bukti Bayar', 'Status', 'Aksi']} kolomAkhirKanan>
           {daftar.map((baris) => (
             <tr key={baris.id}>
               <td className="p-4 font-bold text-brand-text">{baris.renter_name}</td>

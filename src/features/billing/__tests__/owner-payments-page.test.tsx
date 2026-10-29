@@ -154,3 +154,16 @@ describe('OwnerPaymentsPage', () => {
     await waitFor(() => expect(unduh.nama[0]).toMatch(/^laporan-tagihan-\d{8}\.csv$/))
   })
 })
+
+/* Tanpa daftar tagihan, form catat manual menghitung semua bulan sebagai
+   "Belum Bayar" dan mencatat tagihan ganda untuk bulan yang sudah lunas. */
+describe('OwnerPaymentsPage saat daftar tagihan gagal', () => {
+  it('menonaktifkan form catat pembayaran dan menampilkan galat', async () => {
+    server.use(http.get('/payments', () => HttpResponse.json({ message: 'Gagal memuat tagihan.' }, { status: 500 })))
+    masukSebagai(402, 'pemilik', 'Pak Wahyu')
+    renderWithProviders(<OwnerPaymentsPage />)
+
+    expect(await screen.findByText('Gagal memuat tagihan.')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Catat Pembayaran' })).toBeDisabled()
+  })
+})

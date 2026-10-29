@@ -32,6 +32,29 @@ describe('LoginPage', () => {
     expect(readSession()?.user.role).toBe('pemilik')
   })
 
+  it('menampilkan akun demo sesuai tab yang aktif', async () => {
+    renderHalaman()
+    expect(screen.getByRole('button', { name: 'Pemilik' })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByText('wahyu@umkm.id')).toBeInTheDocument()
+    expect(screen.queryByText('bima@umkm.id')).not.toBeInTheDocument()
+
+    await userEvent.click(screen.getByRole('button', { name: 'Penyewa' }))
+
+    expect(screen.getByRole('button', { name: 'Penyewa' })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByRole('button', { name: 'Pemilik' })).toHaveAttribute('aria-pressed', 'false')
+    expect(screen.getByText('bima@umkm.id')).toBeInTheDocument()
+    expect(screen.queryByText('wahyu@umkm.id')).not.toBeInTheDocument()
+    expect(screen.getByText('demo12345')).toBeInTheDocument()
+  })
+
+  it('mengisi email demo tanpa mengisi kata sandi', async () => {
+    renderHalaman()
+    await userEvent.click(screen.getByRole('button', { name: 'Isi email rina@umkm.id' }))
+
+    expect(screen.getByLabelText('Email / Nomor WhatsApp')).toHaveValue('rina@umkm.id')
+    expect(screen.getByLabelText('Kata sandi')).toHaveValue('')
+  })
+
   it('menampilkan pesan saat email tidak dikenal', async () => {
     renderHalaman()
     await userEvent.type(screen.getByLabelText('Email / Nomor WhatsApp'), 'tidak@ada.id')

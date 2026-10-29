@@ -62,7 +62,7 @@ describe('KatalogPage', () => {
     expect(screen.getByText('24 Unit Ditemukan')).toBeInTheDocument()
 
     const terisi = screen.getByText('Kontrakan Rumah Asri Type 36').closest('article')!
-    expect(within(terisi).getByText('Terisi')).toHaveClass('bg-brand-danger')
+    expect(within(terisi).getByText('Terisi')).toHaveClass('bg-brand-accent')
   })
 
   it('menyaring lewat kata kunci, reset, dan status', async () => {

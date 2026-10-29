@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { usePayments, useUnduhLaporanTagihan, useUnggahBukti } from '@/features/billing/api'
 import { useContracts } from '@/features/contracts/api'
 import { formatBulan, formatRupiah, namaBerkas } from '@/lib/format'
-import { susunTagihan, type Tagihan } from '@/lib/tagihan'
+import { susunTagihan, urutkanTagihan, type Tagihan } from '@/lib/tagihan'
 import { tanggalHariIni } from '@/lib/tanggal'
 import { ErrorState } from '@/ui/error-state'
 import { Skeleton } from '@/ui/skeleton'
@@ -25,7 +25,7 @@ export function TagihanPage() {
      pembayaran, jadi `usePayments()` saja tidak bisa menyusun daftar ini.
      `tanggalHariIni()` memakai tanggal kalender WIB — `toISOString()` (UTC)
      menyembunyikan tagihan bulan berjalan selama tujuh jam pertama tiap bulan. */
-  const daftar = susunTagihan(kontrak.data ?? [], tagihan.data ?? [], tanggalHariIni())
+  const daftar = urutkanTagihan(susunTagihan(kontrak.data ?? [], tagihan.data ?? [], tanggalHariIni()))
   const belumBayar = daftar.filter((baris) => baris.status === 'Belum Bayar').length
   const galatMuat = kontrak.error ?? tagihan.error
 
@@ -75,7 +75,7 @@ export function TagihanPage() {
 
       {kontrak.isSuccess && tagihan.isSuccess && (
         <div className="rounded-2xl border border-brand-border bg-brand-surface shadow-sm">
-          <Tabel kolom={['Unit / Bulan', 'Jumlah', 'Status', 'Bukti Bayar', 'Tindakan']}>
+          <Tabel kolom={['Unit / Bulan', 'Jumlah', 'Status', 'Bukti Bayar', 'Tindakan']} kolomAkhirKanan>
             {daftar.map((baris) => (
               <tr key={baris.kunci}>
                 <td className="p-4">

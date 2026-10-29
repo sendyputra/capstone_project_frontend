@@ -138,6 +138,9 @@ describe('UnitDetailPage', () => {
     aktifkanSimulasi()
     renderDetail()
     await screen.findByRole('heading', { name: 'Kos Kamar 01' })
+    /* Tanggal dijauhkan dari `booked_dates` contoh (bulan berjalan) supaya yang
+       diuji di sini kegagalan jaringan, bukan penolakan tanggal. */
+    fireEvent.change(screen.getByLabelText('Mulai sewa'), { target: { value: '2030-01-01' } })
 
     await userEvent.click(screen.getByRole('button', { name: 'Ajukan Sewa' }))
     expect(await screen.findByRole('alert')).toHaveTextContent(/koneksi terputus/i)
@@ -152,15 +155,60 @@ describe('UnitDetailPage', () => {
     await screen.findByRole('heading', { name: 'Kos Kamar 01' })
 
     const mulai = screen.getByLabelText('Mulai sewa')
-    expect(mulai).toHaveValue(new Date().toISOString().slice(0, 10))
+    expect(mulai).toHaveValue(tanggalHariIni())
     /* `userEvent.type` tidak bisa menulis sebagian tanggal ke input date; satu
-       perubahan nilai utuh lebih dekat dengan perilaku pemilih tanggal. */
-    fireEvent.change(mulai, { target: { value: '2026-11-01' } })
+       perubahan nilai utuh lebih dekat dengan perilaku pemilih tanggal. Tanggal
+       dijauhkan ke masa depan supaya tidak menabrak `booked_dates` contoh, yang
+       selalu berada di bulan berjalan. */
+    fireEvent.change(mulai, { target: { value: '2030-01-01' } })
     await userEvent.selectOptions(screen.getByLabelText('Durasi'), '6')
 
     await userEvent.click(screen.getByRole('button', { name: 'Ajukan Sewa' }))
     expect(await screen.findByText('Katalog unit')).toBeInTheDocument()
-    expect(terkirim).toEqual([{ unit_id: 1, start_date: '2026-11-01', end_date: '2027-05-01', total_price: 7_200_000 }])
+    expect(terkirim).toEqual([{ unit_id: 1, start_date: '2030-01-01', end_date: '2030-07-01', total_price: 7_200_000 }])
+  })
+
+  it('menolak tanggal mulai sebelum hari ini', async () => {
+    renderDetail()
+    await screen.findByRole('heading', { name: 'Kos Kamar 01' })
+
+    fireEvent.change(screen.getByLabelText('Mulai sewa'), { target: { value: '2020-01-01' } })
+
+    await userEvent.click(screen.getByRole('button', { name: 'Ajukan Sewa' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('tidak boleh sebelum hari ini')
+    expect(terkirim).toEqual([])
+  })
+
+  it('menolak rentang yang menabrak tanggal terisi dan menyebut tanggalnya', async () => {
+    server.use(
+      http.get('/detail/unit/1', () =>
+        HttpResponse.json({
+          data: {
+            id: 1,
+            owner_id: 402,
+            name: 'Kos Kamar 01',
+            address: 'Bandung Barat',
+            price: 1_200_000,
+            status: 'available',
+            type: 'Kamar Kos',
+            image: '/demo/kos.jpg',
+            facilities: ['KM Dalam'],
+            booked_dates: ['2030-03-10'],
+            blocked_dates: [],
+          },
+        }),
+      ),
+    )
+    renderDetail()
+    await screen.findByRole('heading', { name: 'Kos Kamar 01' })
+
+    fireEvent.change(screen.getByLabelText('Mulai sewa'), { target: { value: '2030-03-01' } })
+
+    await userEvent.click(screen.getByRole('button', { name: 'Ajukan Sewa' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Tanggal 10 Mar 2030 sudah terisi atau diblokir.')
+    expect(terkirim).toEqual([])
   })
 
   it('menolak tanggal mulai yang kosong dengan pesan, tanpa mengirim apa pun', async () => {

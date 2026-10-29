@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { dariStatusBayar, keDaftarPembayaran, kePembayaran } from '@/api/adapters/payments'
-import { apiDownload, apiFetch, bukaEntitas } from '@/api/client'
+import { apiDownload, apiFetch, apiSemuaHalaman, bukaEntitas } from '@/api/client'
 import type { PaymentRow } from '@/api/types'
 import { useSession } from '@/features/auth/api'
 import { tanggalHariIni } from '@/lib/tanggal'
@@ -21,7 +21,9 @@ export function usePayments() {
   return useQuery({
     queryKey: paymentKeys.list(userId),
     enabled: Boolean(session),
-    queryFn: async (): Promise<PaymentRow[]> => keDaftarPembayaran(await apiFetch<unknown>('/payments')),
+    /* `apiSemuaHalaman`: 10 baris per halaman secara bawaan. Tanpa mengikuti
+       seluruh halaman, dashboard melaporkan tagihan lama sebagai belum dibayar. */
+    queryFn: async (): Promise<PaymentRow[]> => keDaftarPembayaran(await apiSemuaHalaman<unknown>('/payments')),
   })
 }
 

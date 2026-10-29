@@ -3,8 +3,10 @@ import { renderHook, waitFor } from '@testing-library/react'
 import { HttpResponse, http } from 'msw'
 import type { ReactNode } from 'react'
 import { describe, expect, it } from 'vitest'
+import { halamanLaravel } from '@/api/mocks/halaman'
 import { server } from '@/api/mocks/server'
-import { useUnggahBukti } from '@/features/billing/api'
+import { writeSession } from '@/features/auth/session'
+import { usePayments, useUnggahBukti } from '@/features/billing/api'
 
 function pembungkus() {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })
@@ -60,5 +62,28 @@ describe('useUnggahBukti', () => {
         proof_tipe: 'image/jpeg',
       },
     ])
+  })
+})
+
+describe('usePayments', () => {
+  /* Backend sungguhan memaginasi 10 baris per halaman. Sebelum klien mengikuti
+     `last_page`, tagihan bulan lama tidak terbaca dan dashboard melaporkannya
+     sebagai belum dibayar. */
+  it('menggabungkan seluruh halaman /payments', async () => {
+    writeSession({ token: 'mock.abc.tanda', user: { id: 402, name: 'Pak Wahyu', email: 'wahyu@umkm.id', role: 'pemilik' } })
+    const semua = Array.from({ length: 25 }, (_, i) => ({
+      id: i + 1,
+      contract_id: 1,
+      month: '2026-01',
+      amount: 1_800_000,
+      status: 'paid',
+      proof_url: '',
+    }))
+    server.use(http.get('/payments', ({ request }) => halamanLaravel(request, semua)))
+
+    const { result } = renderHook(() => usePayments(), { wrapper: pembungkus() })
+    await waitFor(() => expect(result.current.isSuccess).toBe(true))
+
+    expect(result.current.data).toHaveLength(25)
   })
 })

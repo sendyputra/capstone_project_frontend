@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { ContractRow, PaymentRow } from '@/api/types'
-import { susunTagihan } from '@/lib/tagihan'
+import { susunTagihan, urutkanTagihan } from '@/lib/tagihan'
 
 const kontrak: ContractRow = {
   id: 1, unit_id: 2, tenant_id: 3, start_date: '2026-11-15', end_date: '2027-02-14',
@@ -67,5 +67,32 @@ describe('susunTagihan', () => {
     expect(susunTagihan([{ ...kontrak, start_date: '' }], [], '2027-01-10')).toEqual([])
     expect(susunTagihan([{ ...kontrak, start_date: 'bukan-tanggal' }], [], '2027-01-10')).toEqual([])
     expect(susunTagihan([{ ...kontrak, start_date: '2026-13-01' }], [], '2027-01-10')).toEqual([])
+  })
+})
+
+/* Backend membalas pembayaran urut `created_at`, jadi bulan lintas kontrak
+   datang acak. Tampilan harus kronologis menurun per kontrak. */
+describe('urutkanTagihan', () => {
+  it('mengurutkan bulan menurun dan memakai kontrak sebagai pemisah', () => {
+    const baris = [
+      { contract_id: 2, month: '2026-03' },
+      { contract_id: 1, month: '2026-02' },
+      { contract_id: 2, month: '2026-09' },
+      { contract_id: 1, month: '2026-07' },
+    ]
+    expect(urutkanTagihan(baris).map((b) => `${b.contract_id}-${b.month}`)).toEqual([
+      '2-2026-09',
+      '2-2026-03',
+      '1-2026-07',
+      '1-2026-02',
+    ])
+  })
+
+  it('tidak mengubah daftar kosong dan tetap menangani tanggal penuh', () => {
+    expect(urutkanTagihan([])).toEqual([])
+    expect(urutkanTagihan([{ contract_id: 1, month: '2026-02-01' }, { contract_id: 1, month: '2026-02-20' }]).map((b) => b.month)).toEqual([
+      '2026-02-20',
+      '2026-02-01',
+    ])
   })
 })

@@ -32,7 +32,11 @@ export type UnitStatus = 'Tersedia' | 'Terisi' | 'Perawatan'
    (`UnitStatusDto`) sengaja dua tipe: adaptor yang menerjemahkan, sehingga
    komponen tidak pernah melihat enum dan API tidak pernah menerima label. */
 export type UnitStatusDto = 'available' | 'rented' | 'maintenance'
-export type UnitType = 'Kamar Kos' | 'Kontrakan' | 'Ruang Usaha' | 'Apartemen'
+/* Satu daftar untuk tipe properti: formulir, filter katalog, dan adaptor harus
+   menyebut tipe yang sama, dan backend menyimpan labelnya apa adanya. */
+export const TIPE_UNIT = ['Kamar Kos', 'Kontrakan', 'Ruang Usaha', 'Apartemen'] as const
+
+export type UnitType = (typeof TIPE_UNIT)[number]
 
 export type Unit = {
   id: number
@@ -127,7 +131,7 @@ export type NotificationRow = {
   created_at: string
 }
 
-export type ApiErrorKind = 'unauthorized' | 'validation' | 'not_found' | 'conflict' | 'server' | 'network'
+export type ApiErrorKind = 'unauthorized' | 'forbidden' | 'validation' | 'not_found' | 'conflict' | 'server' | 'network'
 
 export class ApiError extends Error {
   kind: ApiErrorKind
