@@ -18,14 +18,17 @@ async function muatanUnitDto(request: Request): Promise<Partial<UnitDto>> {
   const badan = await request.formData()
   const berkas = badan.get('image')
   const teks = (nama: string) => String(badan.get(nama) ?? '')
+  /* Butir yang tidak ikut tertulis ke `undefined`, bukan 0/'' — PUT sebagian
+     bekerja lewat `Object.assign`, jadi bidang yang absen tidak boleh menimpa
+     nilai lama. POST memakai `??` di pematangan barisnya sendiri. */
   return {
-    name: teks('name'),
-    address: teks('address'),
-    price: Number(teks('price')),
-    status: (teks('status') || undefined) as UnitDto['status'] | undefined,
-    type: (teks('type') || undefined) as UnitDto['type'] | undefined,
-    facilities: badan.getAll('facilities[]').map(String),
-    image: berkas && typeof berkas !== 'string' ? `/demo/${berkas.name}` : teks('image') || undefined,
+    ...(badan.has('name') ? { name: teks('name') } : {}),
+    ...(badan.has('address') ? { address: teks('address') } : {}),
+    ...(badan.has('price') ? { price: Number(teks('price')) } : {}),
+    ...(badan.has('status') ? { status: teks('status') as UnitDto['status'] } : {}),
+    ...(badan.has('type') ? { type: teks('type') as UnitDto['type'] } : {}),
+    ...(badan.has('facilities[]') ? { facilities: badan.getAll('facilities[]').map(String) } : {}),
+    ...(berkas !== null && typeof berkas !== 'string' ? { image: `/demo/${berkas.name}` } : badan.has('image') ? { image: teks('image') } : {}),
   }
 }
 

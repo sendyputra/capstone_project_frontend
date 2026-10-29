@@ -7,7 +7,10 @@ import { useSession } from '@/features/auth/api'
 
 /* Formulir unit mengirim multipart karena berkas foto ikut terkirim; semua
    mutasi unit lewat jalur FormData yang sama supaya PUT pun benar. Fasilitas
-   satu bagian per butir di bawah nama `facilities[]`, seperti backend Laravel. */
+   satu bagian per butir di bawah nama `facilities[]`, seperti backend Laravel.
+   `image` hanya berkas: rule Laravel `file|mimes` menolak string URL, jadi
+   mempertahankan foto lama berarti mengosongkan bidang ini, bukan memasang
+   URL lamanya. Kosong berarti backend membiarkan `image` apa adanya. */
 function muatanUnit(nilai: Partial<UnitInput>): FormData {
   const muatan = new FormData()
   if (nilai.name !== undefined) muatan.append('name', nilai.name)
@@ -16,7 +19,7 @@ function muatanUnit(nilai: Partial<UnitInput>): FormData {
   if (nilai.status !== undefined) muatan.append('status', dariStatusUnit(nilai.status))
   if (nilai.type !== undefined) muatan.append('type', nilai.type)
   for (const fasilitas of nilai.facilities ?? []) muatan.append('facilities[]', fasilitas)
-  if (nilai.image !== undefined) muatan.append('image', nilai.image)
+  if (nilai.image instanceof File) muatan.append('image', nilai.image)
   return muatan
 }
 

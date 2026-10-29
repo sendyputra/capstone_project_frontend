@@ -123,6 +123,17 @@ describe('useCreateUnit', () => {
     expect(berkas instanceof File ? berkas.name : 'BUKAN BERKAS').toBe('foto.jpg')
     expect(isi.get('price')).toBe('1000000')
   })
+
+  /* Backend ('image' => 'nullable|file|…') hanya menerima berkas: gambar string
+     URL tidak boleh ikut FormData, kalau tidak API asli menjawab 422. */
+  it('tidak mengirim image bila berupa string URL (bukan berkas)', async () => {
+    writeSession({ token: 'mock.abc.tanda', user: { id: 402, name: 'Pak Wahyu', email: 'wahyu@umkm.id', role: 'pemilik' } })
+    const badan = pantauBadanForm()
+    const { result } = renderHook(() => useCreateUnit(), { wrapper: pembungkus() })
+    result.current.mutate({ name: 'Kos Tanpa Berkas', address: 'Bandung', price: 1000000, status: 'Tersedia', image: 'https://contoh.id/f.jpg' })
+    await waitFor(() => expect(result.current.isSuccess).toBe(true))
+    expect(badan[0]?.get('image')).toBeNull()
+  })
 })
 
 describe('useUbahStatusUnit', () => {

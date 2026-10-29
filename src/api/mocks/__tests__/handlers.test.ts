@@ -140,6 +140,19 @@ describe('data contoh', () => {
     expect(jawaban.data).toMatchObject({ name: 'Kos Multipart Ubah', image: '/demo/ubah.jpg' })
   })
 
+  /* Pembaruan sebagian: bidang yang tidak ikut dalam FormData tidak boleh
+     menimpa nilai lama — `Number('')` jadi 0 dan string kosong merusak baris. */
+  it('mengubah unit lewat PUT multipart tanpa harga: harga lama bertahan', async () => {
+    writeSession(pemilik)
+    const sebelum = (await apiFetch<{ data: UnitDtoRow }>('/units/1')).data.price
+    expect(sebelum).toBeGreaterThan(0)
+    const badan = multipart({ name: 'Kos Multipart Harga'})
+    const res = await kirim('/units/1', badan, 'PUT')
+    expect(res.status).toBe(200)
+    const jawaban = (await res.json()) as { data: { price: number } }
+    expect(jawaban.data.price).toBe(sebelum)
+  })
+
   it('mengubah status kontrak lewat PUT', async () => {
     writeSession(pemilik)
     await apiFetch('/contracts/205', { method: 'PUT', body: { status: 'active' } })
