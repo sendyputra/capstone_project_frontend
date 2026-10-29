@@ -21,7 +21,7 @@ export function UnitTable({
 
   return (
     <div className="rounded-2xl border border-brand-border bg-brand-surface shadow-sm">
-      <Tabel kolom={kolom}>
+      <Tabel kolom={kolom} kolomAkhirKanan>
         {units.map((unit) => (
           <tr key={unit.id} className="hover:bg-brand-bg">
             <td className="p-4">
@@ -37,7 +37,9 @@ export function UnitTable({
             </td>
             <td className="p-4 font-extrabold text-brand-accent">{formatRupiah(unit.price)}</td>
             <td className="p-4">
-              <button type="button" disabled={sibuk} onClick={() => onUbahStatus(unit)} aria-label={`Ubah status ${unit.name}`} className="flex items-center gap-1 rounded-full px-3 py-1 text-micro font-bold shadow-sm disabled:opacity-60">
+              {/* Tombol pembungkus tanpa gaya; bentuk pilnya milik StatusChip,
+                  supaya status tidak tampil sebagai dua lapis badge. */}
+              <button type="button" disabled={sibuk} onClick={() => onUbahStatus(unit)} aria-label={`Ubah status ${unit.name}`} className="disabled:opacity-60">
                 <StatusChip nilai={unit.status} />
               </button>
             </td>

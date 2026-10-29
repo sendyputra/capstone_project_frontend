@@ -35,4 +35,11 @@ describe('StatusChip', () => {
     render(<StatusChip nilai="entah" />)
     expect(screen.getByText('entah')).toBeInTheDocument()
   })
+
+  /* Unit terisi adalah keadaan normal, bukan galat; nada bahaya hanya untuk
+     penolakan dan pembatalan. */
+  it('memberi nada informasi, bukan bahaya, untuk Terisi', () => {
+    render(<StatusChip nilai="Terisi" />)
+    expect(screen.getByText('Terisi')).toHaveClass('bg-brand-accent-track')
+  })
 })

@@ -1,8 +1,8 @@
 import { RotateCcw, Search } from 'lucide-react'
+import { TIPE_UNIT } from '@/api/types'
 import type { FilterUnit } from '@/features/units/use-filter-unit'
 import { cn } from '@/lib/utils'
 
-const TIPE = ['Kontrakan', 'Kamar Kos', 'Ruang Usaha', 'Apartemen']
 
 /* Kendali mengikuti ukuran purwarupa apa adanya — isian `px-4 py-3`, pilihan
    `p-3`, tombol reset `p-3` — supaya tinggi ketiganya sejajar dalam satu baris.
@@ -36,7 +36,7 @@ export function FormCariUnit({ filter, className }: { filter: FilterUnit; classN
           </label>
           <select id="tipe-properti" className={cn(gayaKendali, 'p-3')} value={filter.tipe} onChange={(e) => filter.setTipe(e.target.value)}>
             <option value="Semua">Semua Tipe</option>
-            {TIPE.map((nilai) => (
+            {TIPE_UNIT.map((nilai) => (
               <option key={nilai} value={nilai}>
                 {nilai}
               </option>
@@ -59,7 +59,7 @@ export function FormCariUnit({ filter, className }: { filter: FilterUnit; classN
           <button
             type="button"
             onClick={filter.reset}
-            className="flex w-full items-center justify-center gap-2 rounded-lg border border-brand-border bg-brand-surface-sunken p-3 text-ui font-medium text-brand-text transition hover:bg-brand-surface-sunken-hover"
+            className="flex items-center justify-center gap-2 rounded-lg border border-brand-border bg-brand-surface-sunken p-3 text-ui font-medium text-brand-text transition hover:bg-brand-surface-sunken-hover"
           >
             <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />
             <span>Reset Filter</span>

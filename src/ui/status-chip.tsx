@@ -5,7 +5,9 @@ import { cn } from '@/lib/utils'
    "Lunas" selalu hijau, di layar mana pun. */
 const tone: Record<string, string> = {
   Tersedia: 'bg-brand-success-soft text-brand-success-soft-fg',
-  Terisi: 'bg-brand-danger-soft text-brand-danger-soft-fg',
+  /* `Terisi` bukan kesalahan: unit terisi justru keadaan normal, jadi memakai
+     nada informasi yang sama dengan status lain yang butuh perhatian. */
+  Terisi: 'bg-brand-accent-track text-brand-accent-soft-fg',
   Perawatan: 'bg-brand-warning-soft text-brand-warning-soft-fg',
   'Belum Bayar': 'bg-brand-warning-soft text-brand-warning-soft-fg',
   'Menunggu Verifikasi': 'bg-brand-accent-track text-brand-accent-soft-fg',

@@ -6,6 +6,7 @@ import { useMyUnits } from '@/features/units/api'
 import { OwnerStats } from '@/features/dashboard/components/owner-stats'
 import { formatBulan, formatRupiah, formatTanggal } from '@/lib/format'
 import { susunTagihan } from '@/lib/tagihan'
+import { cn } from '@/lib/utils'
 import { EmptyState } from '@/ui/empty-state'
 import { ErrorState } from '@/ui/error-state'
 import { Skeleton } from '@/ui/skeleton'
@@ -91,7 +92,14 @@ export function OwnerDashboardPage() {
           <section className="space-y-3 rounded-2xl border border-brand-border bg-brand-surface p-5 shadow-sm">
             <div className="flex items-center justify-between gap-2">
               <h2 className="text-heading-s font-bold text-brand-text">Tunggakan</h2>
-              <span className="rounded-full bg-brand-danger-soft px-3 py-1 text-micro font-bold text-brand-danger-soft-fg">{tunggakan.length} tagihan</span>
+              <span
+                className={cn(
+                  'rounded-full px-3 py-1 text-micro font-bold',
+                  tunggakan.length === 0 ? 'bg-brand-surface-sunken text-brand-text-muted' : 'bg-brand-danger-soft text-brand-danger-soft-fg',
+                )}
+              >
+                {tunggakan.length} tagihan
+              </span>
             </div>
             <p className="text-ui text-brand-text-muted">
               {tunggakan.length === 0 ? 'Tidak ada tagihan yang belum dibayar.' : `Total ${formatRupiah(tunggakan.reduce((jumlah, baris) => jumlah + baris.amount, 0))}`}
