@@ -1,5 +1,6 @@
 import { Link } from 'react-router'
 import type { UnitRow } from '@/api/types'
+import { GambarUnit } from '@/features/units/components/gambar-unit'
 import { formatRupiah } from '@/lib/format'
 import { StatusChip } from '@/ui/status-chip'
 import { Tabel } from '@/ui/tabel'
@@ -26,7 +27,7 @@ export function UnitTable({
           <tr key={unit.id} className="hover:bg-brand-bg">
             <td className="p-4">
               <div className="flex items-center gap-3">
-                <img src={unit.image} alt="" className="h-12 w-12 rounded-lg border border-brand-border object-cover" />
+                <GambarUnit src={unit.image} alt="" className="h-12 w-12 shrink-0 rounded-lg border border-brand-border object-cover" />
                 <span className="text-ui font-bold text-brand-text">{unit.name}</span>
               </div>
             </td>
