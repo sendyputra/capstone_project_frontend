@@ -1,11 +1,17 @@
-import { screen } from '@testing-library/react'
+import { screen, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { hitungStatistik } from '@/features/dashboard/components/owner-stats'
 import { OwnerDashboardPage } from '@/features/dashboard/pages/owner-dashboard-page'
 import { masukSebagai } from '@/test/sesi'
 import { renderWithProviders } from '@/test/render'
 import type { Unit } from '@/api/types'
+
+vi.mock('react-apexcharts', () => ({
+  default: (props: { series: unknown; options: { chart?: { id?: string }; xaxis?: { categories?: string[] } } }) => (
+    <div data-testid="apex" data-id={props.options.chart?.id} data-series={JSON.stringify(props.series)} data-categories={JSON.stringify(props.options.xaxis?.categories)} />
+  ),
+}))
 
 function unit(over: Partial<Unit>): Unit {
   return { id: 1, owner_id: 402, name: 'A', address: 'X', price: 100, status: 'Tersedia', type: 'Kamar Kos', facilities: [], image: '', booked_dates: [], blocked_dates: [], ...over }
@@ -61,5 +67,16 @@ describe('OwnerDashboardPage', () => {
     expect(screen.getByText('Kontrak Akan Habis')).toBeInTheDocument()
     expect(screen.getByText('1 kontrak')).toBeInTheDocument()
     expect(screen.getByText('Kos Kamar 03')).toBeInTheDocument()
+
+    const okupansi = await screen.findByTestId('grafik-okupansi')
+    expect(okupansi).toBeInTheDocument()
+    await waitFor(() => expect(screen.getAllByTestId('apex')).toHaveLength(2))
+    const grafik = screen.getAllByTestId('apex')
+
+    const donut = grafik.find((el) => el.dataset.id === 'okupansi')
+    expect(JSON.parse(donut?.dataset.series ?? '[]')).toEqual([2, 3, 1])
+
+    const batang = grafik.find((el) => el.dataset.id === 'pendapatan')
+    expect(JSON.parse(batang?.dataset.categories ?? '[]')).toHaveLength(6)
   })
 })
