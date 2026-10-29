@@ -1,15 +1,37 @@
 import { zodResolver } from '@hookform/resolvers/zod'
+import { Check } from 'lucide-react'
 import { useRef, useState } from 'react'
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 import { Link, useNavigate } from 'react-router'
+import logo from '@/assets/logo-nusantara.png'
 import { useRegister } from '@/features/auth/api'
 import { bacaKtp as bacaBerkasKtp } from '@/features/auth/ocr/bacaKtp'
+import { labelPeran, toDataRole } from '@/features/auth/roles'
 import { registerSchema, type RegisterValues } from '@/features/auth/schema'
 import { Button } from '@/ui/button'
 import { Input } from '@/ui/input'
 import { Label } from '@/ui/label'
 
 type Ktp = { status: 'idle' | 'loading' | 'error' | 'sukses'; pesan: string }
+type Peran = RegisterValues['role']
+
+/* Tab peran hanya mengubah aksen kartu, baris bantuan, dan nilai `role` yang
+   ikut terkirim; susunan isian dan perilaku kirim tidak bergantung padanya. */
+const TAB_PERAN: readonly Peran[] = ['penyewa', 'pemilik']
+
+/* Kedua baris dibuat sepanjang mungkin sama supaya menukar tab tidak menggeser
+   isian di bawahnya. */
+const BANTUAN_PERAN: Record<Peran, string> = {
+  penyewa: 'Cari unit, ajukan sewa, lalu pantau tagihan.',
+  pemilik: 'Kelola unit, kontrak, dan tagihan penyewa.',
+}
+
+/* Fakta saja, tanpa angka atau janji yang tidak bisa dibuktikan. */
+const FAKTA = [
+  'Kos, kontrakan, ruang usaha, dan apartemen dalam satu katalog.',
+  'Penyewa mencari unit lalu mengajukan sewa; pemilik meninjaunya.',
+  'Pendaftaran memverifikasi KTP: NIK dan nama terbaca dari foto.',
+]
 
 /* KTP dibaca di peramban dengan Tesseract.js; tidak ada endpoint OCR. Bila
    hasilnya tidak meyakinkan, NIK dan nama diisi manual. Berkasnya sendiri tetap
@@ -28,6 +50,7 @@ export function RegisterPage() {
     resolver: zodResolver(registerSchema),
     defaultValues: { name: '', nik: '', email: '', password: '', password_confirmation: '', role: 'penyewa' },
   })
+  const peran = useWatch({ control: form.control, name: 'role' })
 
   async function bacaBerkas(berkas: File) {
     setBerkasKtp(berkas)
@@ -82,101 +105,155 @@ export function RegisterPage() {
   })
 
   return (
-    <section className="mx-auto max-w-md space-y-4 px-4 py-10">
-      <Link to="/" className="inline-flex items-center gap-2 text-ui font-semibold text-brand-text-muted">
+    <section className="mx-auto max-w-container px-4 py-8 sm:py-10">
+      <Link to="/" className="inline-flex min-h-11 items-center gap-2 text-ui font-semibold text-brand-text-muted">
         ← Kembali
       </Link>
 
-      <form onSubmit={onSubmit} noValidate className="space-y-4 rounded-2xl border border-brand-border bg-brand-surface p-6 shadow-sm">
-        <h1 className="border-b border-brand-border pb-3 text-heading-s font-bold text-brand-text">Pendaftaran Akun Baru</h1>
-
-        <div className="space-y-2 rounded-xl border border-brand-border bg-brand-bg p-3">
-          <Label htmlFor="ktp">Verifikasi KTP (Fitur OCR)</Label>
-          <input
-            id="ktp"
-            type="file"
-            accept="image/*"
-            aria-label="Berkas KTP"
-            onChange={(e) => {
-              const berkas = e.target.files?.[0]
-              /* Kosongkan nilai input supaya berkas yang sama bisa dipilih
-                 lagi setelah percobaan gagal — tanpa ini peramban tidak
-                 memicu `change` untuk berkas yang sama. */
-              e.target.value = ''
-              if (berkas) void bacaBerkas(berkas)
-            }}
-            className="w-full text-micro text-brand-text-muted"
+      {/* Aksen ikut tab yang sedang dipilih: biru penyewa, teal pemilik. Atribut
+          dipasang di sini, bukan di <html>, supaya tidak berebut dengan AppShell
+          yang memegang data-role sesuai sesi. */}
+      <div
+        data-role={toDataRole(peran)}
+        className="mx-auto mt-4 grid w-full max-w-xl min-w-0 gap-6 lg:mx-0 lg:max-w-none lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1fr)] lg:items-start lg:gap-8">
+        <aside className="hidden min-w-0 flex-col gap-6 rounded-2xl border border-brand-border bg-brand-surface p-8 lg:sticky lg:top-24 lg:flex">
+          {/* Aset logo sudah memuat wordmark, jadi tidak ada teks merek kedua di sini. */}
+          {/* Logo penuh memuat wordmark navy yang hilang di tema gelap, jadi ia
+              diberi alas terang; di tema terang alasnya sama dengan permukaan. */}
+          <img
+            src={logo}
+            alt="Nusantara Booking"
+            width={500}
+            height={500}
+            className="h-24 w-auto self-start rounded-xl bg-brand-neutral-50 p-2 object-contain"
           />
-          {ktp.status === 'idle' && <p className="text-micro text-brand-text-subtle">Unggah foto KTP Anda untuk verifikasi identitas penyewa otomatis.</p>}
-          {ktp.status === 'loading' && <p className="text-ui text-brand-text-muted">Membaca berkas KTP…</p>}
-          {ktp.status === 'error' && (
-            <p role="alert" className="text-ui text-brand-danger-soft-fg">
-              {ktp.pesan}
+
+          <p className="text-body text-brand-text-muted">Sistem pengelolaan dan sewa properti untuk UMKM.</p>
+
+          <ul className="space-y-3">
+            {FAKTA.map((fakta) => (
+              <li key={fakta} className="flex gap-3">
+                <Check className="mt-1 h-4 w-4 shrink-0 text-brand-accent" aria-hidden="true" />
+                <span className="min-w-0 text-body text-brand-text-muted">{fakta}</span>
+              </li>
+            ))}
+          </ul>
+        </aside>
+
+        <form
+          onSubmit={onSubmit}
+          noValidate
+          className="min-w-0 space-y-5 rounded-2xl border border-brand-border bg-brand-surface p-5 shadow-sm sm:p-6"
+        >
+          <div className="space-y-1">
+            <h1 className="text-heading-s font-bold text-brand-text">Pendaftaran Akun Baru</h1>
+            <p className="text-ui text-brand-text-muted">Pilih peran, lalu isi data sesuai KTP Anda.</p>
+          </div>
+
+          <div className="space-y-2">
+            <span id="label-peran" className="block text-label font-bold tracking-label text-brand-text-muted uppercase">
+              Daftar sebagai
+            </span>
+            <div role="group" aria-labelledby="label-peran" className="flex gap-2">
+              {TAB_PERAN.map((pilihan) => (
+                <Button
+                  key={pilihan}
+                  type="button"
+                  variant="ghost"
+                  aria-pressed={peran === pilihan}
+                  onClick={() => form.setValue('role', pilihan)}
+                  className="h-11 min-w-0 flex-1 rounded-md border border-brand-border text-ui font-semibold text-brand-text-muted hover:bg-brand-surface hover:text-brand-text aria-pressed:border-brand-accent aria-pressed:bg-brand-accent-soft aria-pressed:text-brand-accent-soft-fg aria-pressed:hover:bg-brand-accent-soft"
+                >
+                  {labelPeran(pilihan)}
+                </Button>
+              ))}
+            </div>
+            <p aria-live="polite" className="min-h-11 text-ui text-brand-text-muted">
+              {BANTUAN_PERAN[peran]}
+            </p>
+          </div>
+
+          <div className="min-w-0 space-y-2 rounded-xl border border-brand-border bg-brand-bg p-4">
+            <Label htmlFor="ktp">Verifikasi KTP (Fitur OCR)</Label>
+            <input
+              id="ktp"
+              type="file"
+              accept="image/*"
+              aria-label="Berkas KTP"
+              onChange={(e) => {
+                const berkas = e.target.files?.[0]
+                /* Kosongkan nilai input supaya berkas yang sama bisa dipilih
+                   lagi setelah percobaan gagal — tanpa ini peramban tidak
+                   memicu `change` untuk berkas yang sama. */
+                e.target.value = ''
+                if (berkas) void bacaBerkas(berkas)
+              }}
+              className="block w-full min-w-0 text-ui text-brand-text-muted file:mr-3 file:h-11 file:rounded-md file:border file:border-brand-border file:bg-brand-surface-sunken file:px-3 file:text-ui file:font-semibold file:text-brand-text"
+            />
+            {ktp.status === 'idle' && (
+              <p className="text-ui break-words text-brand-text-subtle">Unggah foto KTP Anda untuk verifikasi identitas otomatis.</p>
+            )}
+            {ktp.status === 'loading' && <p className="text-ui text-brand-text-muted">Membaca berkas KTP…</p>}
+            {ktp.status === 'error' && (
+              <p role="alert" className="text-ui break-words text-brand-danger-soft-fg">
+                {ktp.pesan}
+              </p>
+            )}
+            {ktp.status === 'sukses' && <p className="text-ui break-words text-brand-success-soft-fg">{ktp.pesan}</p>}
+            {galatBerkas && (
+              <p role="alert" className="text-ui break-words text-brand-danger">
+                {galatBerkas}
+              </p>
+            )}
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="min-w-0 space-y-2">
+              <Label htmlFor="name">Nama lengkap</Label>
+              <Input id="name" {...form.register('name')} placeholder="Nama sesuai KTP" />
+              {form.formState.errors.name && <p className="text-ui break-words text-brand-danger">{form.formState.errors.name.message}</p>}
+            </div>
+
+            <div className="min-w-0 space-y-2">
+              <Label htmlFor="nik">NIK</Label>
+              <Input id="nik" inputMode="numeric" {...form.register('nik')} placeholder="16 digit sesuai KTP" />
+              {form.formState.errors.nik && <p className="text-ui break-words text-brand-danger">{form.formState.errors.nik.message}</p>}
+            </div>
+          </div>
+
+          <div className="min-w-0 space-y-2">
+            <Label htmlFor="email">Email / Nomor WhatsApp</Label>
+            <Input id="email" {...form.register('email')} placeholder="user@example.com" />
+            {form.formState.errors.email && <p className="text-ui break-words text-brand-danger">{form.formState.errors.email.message}</p>}
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="min-w-0 space-y-2">
+              <Label htmlFor="password">Kata sandi</Label>
+              <Input id="password" type="password" {...form.register('password')} />
+              {form.formState.errors.password && <p className="text-ui break-words text-brand-danger">{form.formState.errors.password.message}</p>}
+            </div>
+
+            <div className="min-w-0 space-y-2">
+              <Label htmlFor="password_confirmation">Ulangi kata sandi</Label>
+              <Input id="password_confirmation" type="password" {...form.register('password_confirmation')} />
+              {form.formState.errors.password_confirmation && (
+                <p className="text-ui break-words text-brand-danger">{form.formState.errors.password_confirmation.message}</p>
+              )}
+            </div>
+          </div>
+
+          {daftar.isError && (
+            <p role="alert" className="rounded-md border border-brand-danger-border bg-brand-danger-soft p-3 text-ui break-words text-brand-danger-soft-fg">
+              {(daftar.error as Error).message}
             </p>
           )}
-          {ktp.status === 'sukses' && <p className="text-ui text-brand-success-soft-fg">{ktp.pesan}</p>}
-          {galatBerkas && (
-            <p role="alert" className="text-ui text-brand-danger">
-              {galatBerkas}
-            </p>
-          )}
-        </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="name">Nama lengkap</Label>
-          <Input id="name" {...form.register('name')} placeholder="Nama sesuai KTP" />
-          {form.formState.errors.name && <p className="text-ui text-brand-danger">{form.formState.errors.name.message}</p>}
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="nik">NIK</Label>
-          <Input id="nik" inputMode="numeric" {...form.register('nik')} placeholder="16 digit sesuai KTP" />
-          {form.formState.errors.nik && <p className="text-ui text-brand-danger">{form.formState.errors.nik.message}</p>}
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="email">Email / Nomor WhatsApp</Label>
-          <Input id="email" {...form.register('email')} placeholder="user@example.com" />
-          {form.formState.errors.email && <p className="text-ui text-brand-danger">{form.formState.errors.email.message}</p>}
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="password">Kata sandi</Label>
-          <Input id="password" type="password" {...form.register('password')} />
-          {form.formState.errors.password && <p className="text-ui text-brand-danger">{form.formState.errors.password.message}</p>}
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="password_confirmation">Ulangi kata sandi</Label>
-          <Input id="password_confirmation" type="password" {...form.register('password_confirmation')} />
-          {form.formState.errors.password_confirmation && (
-            <p className="text-ui text-brand-danger">{form.formState.errors.password_confirmation.message}</p>
-          )}
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="role">Peran</Label>
-          <select
-            id="role"
-            {...form.register('role')}
-            className="h-8 w-full rounded-lg border border-brand-border bg-brand-surface px-2.5 py-1 text-sm text-brand-text"
-          >
-            <option value="penyewa">Penyewa</option>
-            <option value="pemilik">Pemilik</option>
-          </select>
-          {form.formState.errors.role && <p className="text-ui text-brand-danger">{form.formState.errors.role.message}</p>}
-        </div>
-
-        {daftar.isError && (
-          <p role="alert" className="rounded-md border border-brand-danger-border bg-brand-danger-soft p-3 text-ui text-brand-danger-soft-fg">
-            {(daftar.error as Error).message}
-          </p>
-        )}
-
-        <Button type="submit" className="w-full" disabled={daftar.isPending}>
-          {daftar.isPending ? 'Mendaftarkan…' : 'Daftar Sekarang'}
-        </Button>
-      </form>
+          <Button type="submit" className="h-11 w-full" disabled={daftar.isPending}>
+            {daftar.isPending ? 'Mendaftarkan…' : 'Daftar Sekarang'}
+          </Button>
+        </form>
+      </div>
     </section>
   )
 }

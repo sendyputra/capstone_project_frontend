@@ -253,7 +253,12 @@
   --ring:          #6fa1f2;
 }
 
-[data-theme='dark'][data-role='owner'] {
+/* Two forms: the role is usually set on the root, but a page may scope it to a
+   subtree (a form that switches accent with a role tab), so the descendant
+   form is required — a nested owner region in dark mode must not fall back to
+   the light-mode teal. */
+[data-theme='dark'][data-role='owner'],
+[data-theme='dark'] [data-role='owner'] {
   --accent:        #3fd0da;   /* 10.1:1 on the dark ground */
   --accent-hover:  #63dde5;
   --accent-active: #8ce8ee;
