@@ -1,5 +1,5 @@
 import { buka } from '@/api/client'
-import type { UnitRow, UnitStatus, UnitStatusDto, UnitType } from '@/api/types'
+import { TIPE_UNIT, type UnitRow, type UnitStatus, type UnitStatusDto, type UnitType } from '@/api/types'
 
 /* Satu tabel per arah: `STATUS` menerjemahkan enum backend ke label tampilan,
    `DARI_STATUS` sebaliknya. Keduanya dijaga tipe, jadi menambah status tampilan
@@ -16,7 +16,7 @@ const DARI_STATUS: Record<UnitStatus, UnitStatusDto> = {
   Perawatan: 'maintenance',
 }
 
-const TIPE: UnitType[] = ['Kamar Kos', 'Kontrakan', 'Ruang Usaha', 'Apartemen']
+const TIPE: readonly UnitType[] = TIPE_UNIT
 
 /* Nilai di luar enum backend jatuh ke `Tersedia`, bukan diteruskan mentah —
    status asing tak boleh menyamar jadi status sah. */

@@ -2,6 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { useRef } from 'react'
 import { Link, useNavigate } from 'react-router'
+import { TIPE_UNIT } from '@/api/types'
 import { useCreateUnit } from '@/features/units/api'
 import { unitFormSchema, type UnitFormInput, type UnitFormValues } from '@/features/units/schema'
 import { useToast } from '@/ui/toast'
@@ -22,7 +23,7 @@ export function UnitFormPage() {
   const mengirim = useRef(false)
   const form = useForm<UnitFormInput, unknown, UnitFormValues>({
     resolver: zodResolver(unitFormSchema),
-    defaultValues: { name: '', address: '', price: 0, status: 'Tersedia' },
+    defaultValues: { name: '', address: '', status: 'Tersedia' },
   })
 
   const onSubmit = form.handleSubmit((nilai) => {
@@ -67,6 +68,24 @@ export function UnitFormPage() {
         </div>
 
         <div className="space-y-2">
+          <Label htmlFor="type">Tipe Properti</Label>
+          <select
+            id="type"
+            aria-invalid={Boolean(form.formState.errors.type)}
+            className="w-full rounded-lg border border-brand-border bg-brand-surface px-3 py-2 text-brand-text"
+            {...form.register('type')}
+          >
+            <option value="">Pilih tipe properti</option>
+            {TIPE_UNIT.map((tipe) => (
+              <option key={tipe} value={tipe}>
+                {tipe}
+              </option>
+            ))}
+          </select>
+          {form.formState.errors.type && <p className="text-ui text-brand-danger">{form.formState.errors.type.message}</p>}
+        </div>
+
+        <div className="space-y-2">
           <Label htmlFor="address">Lokasi Singkat</Label>
           <Input id="address" aria-invalid={Boolean(form.formState.errors.address)} {...form.register('address')} />
           {form.formState.errors.address && <p className="text-ui text-brand-danger">{form.formState.errors.address.message}</p>}
@@ -74,7 +93,7 @@ export function UnitFormPage() {
 
         <div className="space-y-2">
           <Label htmlFor="price">Harga per Bulan (Rp)</Label>
-          <Input id="price" type="number" aria-invalid={Boolean(form.formState.errors.price)} {...form.register('price', { valueAsNumber: true })} />
+          <Input id="price" type="number" placeholder="0" aria-invalid={Boolean(form.formState.errors.price)} {...form.register('price', { valueAsNumber: true })} />
           {form.formState.errors.price && <p className="text-ui text-brand-danger">{form.formState.errors.price.message}</p>}
         </div>
 
