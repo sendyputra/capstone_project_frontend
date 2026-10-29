@@ -3,6 +3,14 @@
 Semua perubahan penting dicatat di sini. Format mengikuti [Conventional Commits](https://www.conventionalcommits.org/).
 
 
+## [0.4.0](https://github.com/sendyputra/capstone_project_frontend/compare/v0.3.0...v0.4.0) (2026-10-29)
+
+### Fitur
+
+* **dashboard:** grafik okupansi unit dengan ApexCharts ([492d7d1](https://github.com/sendyputra/capstone_project_frontend/commit/492d7d1d7fe186965d4b102badcae3fa7db6101b))
+* **dashboard:** grafik pendapatan enam bulan terakhir ([c80ae50](https://github.com/sendyputra/capstone_project_frontend/commit/c80ae5057a6c1e3ae53c60fe51ddfc2abcc11633))
+* **dashboard:** hitung pendapatan bulanan dari pembayaran lunas ([8840877](https://github.com/sendyputra/capstone_project_frontend/commit/88408772a1a6c613587045bcea200944b82172f2))
+
 ## [0.3.0](https://github.com/sendyputra/capstone_project_frontend/compare/v0.2.0...v0.3.0) (2026-10-29)
 
 ### Fitur
