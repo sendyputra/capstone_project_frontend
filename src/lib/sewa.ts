@@ -7,6 +7,15 @@ export function hitungSewa(mulai: string, bulan: number, harga: number): { akhir
   return { akhir, total: harga * bulan }
 }
 
+/* Tanggal terisi pertama di dalam rentang `[mulai, akhir)`, atau `undefined`
+   bila rentangnya bebas. Batas `akhir` sengaja tidak ikut dibandingkan: sewa
+   beruntun berakhir tepat saat sewa berikutnya mulai, jadi tanggal `akhir`
+   boleh sama dengan tanggal terisi milik sewa lain. Dibandingkan sebagai teks
+   `YYYY-MM-DD`, bukan lewat `new Date`, supaya zona waktu tidak menggeser hari. */
+export function tanggalBentrok(mulai: string, akhir: string, tanggalTerisi: readonly string[]): string | undefined {
+  return tanggalTerisi.find((tanggal) => tanggal >= mulai && tanggal < akhir)
+}
+
 /* Tahun, bulan, dan tanggal dari `YYYY-MM-DD` (boleh diikuti sisa waktu).
    Dibaca sebagai potongan teks, bukan lewat `new Date`, supaya zona waktu
    tidak pernah menggeser tanggalnya. Bentuk lain — termasuk string kosong

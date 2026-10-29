@@ -14,6 +14,17 @@ export function formatTanggal(value: string | Date): string {
   return new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }).format(tanggal)
 }
 
+/* Tanggal ditulis singkat ("10 Nov 2026") karena barisnya ringkas dan dibaca
+   berdampingan dengan tanggal lain. Dibangun dalam UTC supaya zona waktu
+   peramban tidak menggeser harinya; nilai tak terbaca menjadi "—". */
+export function formatTanggalPendek(iso: string): string {
+  const [tahun, bulan, hari] = iso.split('-').map(Number)
+  if (!tahun || !bulan || !hari) return '—'
+  return new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' }).format(
+    new Date(Date.UTC(tahun, bulan - 1, hari)),
+  )
+}
+
 /* Label bulan untuk kolom tagihan: ERD menyimpan `month` sebagai `YYYY-MM`,
    sedangkan layar menulis "Oktober 2026". Tanggalnya dibangun dalam UTC supaya
    zona waktu peramban tidak menggeser bulan. Nilai yang tidak berbentuk

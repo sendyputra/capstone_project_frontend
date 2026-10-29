@@ -1,17 +1,8 @@
 import { useState } from 'react'
 import { useHapusBlok, useTambahBlok, useUnitBlocks } from '@/features/units/api'
+import { formatTanggalPendek } from '@/lib/format'
 import { useKonfirmasi } from '@/ui/confirm-dialog'
 import { Skeleton } from '@/ui/skeleton'
-
-/* Tanggal blok ditulis singkat ("10 Nov 2026") karena barisnya ringkas dan
-   dibaca berdampingan dengan tanggal lain. */
-function formatTanggalPendek(iso: string): string {
-  const [tahun, bulan, hari] = iso.split('-').map(Number)
-  if (!tahun || !bulan || !hari) return '—'
-  return new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' }).format(
-    new Date(Date.UTC(tahun, bulan - 1, hari)),
-  )
-}
 
 export function BlokirTanggal({ unitId }: { unitId: number }) {
   const blok = useUnitBlocks(unitId)
