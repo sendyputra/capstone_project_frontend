@@ -64,9 +64,9 @@ export type UnitBlockRow = {
   note: string
 }
 
-/* Masukan formulir unit: bidang yang diisi pengguna. Purwarupa memilih tipe dan
-   menulis fasilitas sebagai satu baris koma; gambar dan tanggal terisi menyusul. */
-export type UnitInput = Pick<Unit, 'name' | 'address' | 'price' | 'status'> & Partial<Pick<Unit, 'type' | 'facilities' | 'image'>>
+/* Mutasi unit lewat multipart: `image` bisa URL string (PUT) atau berkas
+   terpilih dari formulir (POST). */
+export type UnitInput = Pick<Unit, 'name' | 'address' | 'price' | 'status'> & Partial<Pick<Unit, 'type' | 'facilities'>> & { image?: string | File }
 
 export type ContractStatus = 'Menunggu' | 'Aktif' | 'Selesai' | 'Dibatalkan'
 export type ContractStatusDto = 'pending' | 'active' | 'completed' | 'cancelled'

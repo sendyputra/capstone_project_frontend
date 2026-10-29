@@ -5,11 +5,19 @@ import { dariStatusUnit, keDaftarUnit, keUnit } from '@/api/adapters/units'
 import type { UnitBlockRow, UnitInput, UnitRow } from '@/api/types'
 import { useSession } from '@/features/auth/api'
 
-/* Formulir memakai label tampilan; API memakai enum backend. Penerjemahan arah
-   keluar dikumpulkan di sini supaya tidak ada mutasi yang mengirim label. */
-function muatanUnit(nilai: Partial<UnitInput>): Record<string, unknown> {
-  const { status, ...sisa } = nilai
-  return status === undefined ? sisa : { ...sisa, status: dariStatusUnit(status) }
+/* Formulir unit mengirim multipart karena berkas foto ikut terkirim; semua
+   mutasi unit lewat jalur FormData yang sama supaya PUT pun benar. Fasilitas
+   satu bagian per butir di bawah nama `facilities[]`, seperti backend Laravel. */
+function muatanUnit(nilai: Partial<UnitInput>): FormData {
+  const muatan = new FormData()
+  if (nilai.name !== undefined) muatan.append('name', nilai.name)
+  if (nilai.address !== undefined) muatan.append('address', nilai.address)
+  if (nilai.price !== undefined) muatan.append('price', String(nilai.price))
+  if (nilai.status !== undefined) muatan.append('status', dariStatusUnit(nilai.status))
+  if (nilai.type !== undefined) muatan.append('type', nilai.type)
+  for (const fasilitas of nilai.facilities ?? []) muatan.append('facilities[]', fasilitas)
+  if (nilai.image !== undefined) muatan.append('image', nilai.image)
+  return muatan
 }
 
 export const unitKeys = {
