@@ -21,11 +21,12 @@ export const unitKeys = {
 export const blockKeys = { list: (unitId: number) => ['unit-blocks', unitId] as const }
 
 /* Katalog terbuka untuk pengunjung: rutenya tidak memeriksa token, dan cakupan
-   barisnya tidak bergantung pada sesi. */
+   barisnya tidak bergantung pada sesi. `limit=50` karena server memaginasi 10
+   baris dan katalog tidak punya kontrol halaman. */
 export function usePublicUnits() {
   return useQuery({
     queryKey: unitKeys.publik,
-    queryFn: async () => keDaftarUnit(await apiFetch('/list/units')),
+    queryFn: async () => keDaftarUnit(await apiFetch('/list/units?limit=50')),
   })
 }
 

@@ -23,7 +23,7 @@ describe('jalur publik unit', () => {
     const rekaman = pantauMetode()
     const { result } = renderHook(() => usePublicUnits(), { wrapper: pembungkus() })
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
-    expect(rekaman).toContain('GET /list/units')
+    expect(rekaman).toContain('GET /list/units?limit=50')
   })
 
   it('useUnit memanggil GET /detail/unit/:id', async () => {
