@@ -3,6 +3,12 @@
 Semua perubahan penting dicatat di sini. Format mengikuti [Conventional Commits](https://www.conventionalcommits.org/).
 
 
+## [0.4.1](https://github.com/sendyputra/capstone_project_frontend/compare/v0.4.0...v0.4.1) (2026-10-30)
+
+### Perbaikan
+
+* **dashboard:** teks sumbu ikut token dan grafik gagal tidak menjatuhkan halaman ([186bd60](https://github.com/sendyputra/capstone_project_frontend/commit/186bd60b699ed5f62cdcb261dcd7489b1cbf1b5c))
+
 ## [0.4.0](https://github.com/sendyputra/capstone_project_frontend/compare/v0.3.0...v0.4.0) (2026-10-29)
 
 ### Fitur
