@@ -50,6 +50,17 @@ describe('hitungPendapatanBulanan', () => {
     expect(hasil.at(-1)?.jumlah).toBe(150)
   })
 
+  it('baris lunas lama tidak hidup lagi setelah unggahan baru ditolak', () => {
+    const hasil = hitungPendapatanBulanan(
+      [
+        bayar({ id: 2, contract_id: 5, month: '2026-10', amount: 400 }),
+        bayar({ id: 9, contract_id: 5, month: '2026-10', amount: 400, status: 'Ditolak' }),
+      ],
+      '2026-10',
+    )
+    expect(hasil.at(-1)?.jumlah).toBe(0)
+  })
+
   it('mengabaikan bulan cacat dan pembayaran di luar jendela', () => {
     const hasil = hitungPendapatanBulanan(
       [bayar({ month: '', amount: 900 }), bayar({ month: '2026-13', amount: 900 }), bayar({ month: '2025-10', amount: 900 }), bayar({ month: '2026-10', amount: 100 })],

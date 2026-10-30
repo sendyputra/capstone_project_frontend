@@ -1,8 +1,10 @@
 import { screen, waitFor } from '@testing-library/react'
+import { http, HttpResponse } from 'msw'
 import { MemoryRouter } from 'react-router'
 import { describe, expect, it, vi } from 'vitest'
 import { hitungStatistik } from '@/features/dashboard/components/owner-stats'
 import { OwnerDashboardPage } from '@/features/dashboard/pages/owner-dashboard-page'
+import { server } from '@/api/mocks/server'
 import { masukSebagai } from '@/test/sesi'
 import { renderWithProviders } from '@/test/render'
 import type { Unit } from '@/api/types'
@@ -78,5 +80,21 @@ describe('OwnerDashboardPage', () => {
 
     const batang = grafik.find((el) => el.dataset.id === 'pendapatan')
     expect(JSON.parse(batang?.dataset.categories ?? '[]')).toHaveLength(6)
+  })
+
+  it('tidak menampilkan grafik saat pemilik belum punya unit', async () => {
+    masukSebagai(402, 'pemilik', 'Pak Wahyu')
+    server.use(
+      http.get('/units', () => HttpResponse.json({ current_page: 1, last_page: 1, per_page: 10, total: 0, data: [] })),
+    )
+    renderWithProviders(
+      <MemoryRouter>
+        <OwnerDashboardPage />
+      </MemoryRouter>,
+    )
+
+    expect(await screen.findByText('Belum ada unit')).toBeInTheDocument()
+    expect(screen.queryByTestId('grafik-okupansi')).toBeNull()
+    expect(screen.queryByTestId('grafik-pendapatan')).toBeNull()
   })
 })
