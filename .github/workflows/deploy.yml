@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       # Live dan preview memakai API asli; mock hanya untuk tes lokal.
-      VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL || 'https://nb.ifast.id/api' }}
+      VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL || 'https://103.157.26.40.sslip.io:8555/api' }}
     steps:
       - uses: actions/checkout@v7
 
