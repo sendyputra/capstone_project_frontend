@@ -261,7 +261,7 @@ describe('data contoh', () => {
        badan disusun tangan dengan alasan yang sama seperti dua tes di atas. */
     const badan = multipart(
       { name: 'Warga Baru', email: 'baru@mail.com', password: 'rahasia123', role: 'penyewa' },
-      { nama: 'ktp.png', isi: 'x', bidang: 'ktp' },
+      { nama: 'ktp.png', isi: 'x', bidang: 'id_card' },
     )
     const res = await kirim('/register', badan)
     expect(res.status).toBe(201)
@@ -275,7 +275,7 @@ describe('data contoh', () => {
     const res = await kirim('/register', badan)
     expect(res.status).toBe(422)
     const jawaban = (await res.json()) as { errors: Record<string, string> }
-    expect(jawaban.errors.ktp).toBe('Berkas KTP wajib diunggah.')
+    expect(jawaban.errors.id_card).toBe('Berkas KTP wajib diunggah.')
   })
 
   /* Akun baru harus langsung punya baris penyewa. Tanpa itu kontraknya jatuh ke
@@ -284,7 +284,7 @@ describe('data contoh', () => {
   it('membuat baris penyewa bersama akun baru, sehingga kontraknya bernama', async () => {
     const badan = multipart(
       { name: 'Warga Baru', email: 'baru2@mail.com', password: 'rahasia123', role: 'penyewa' },
-      { nama: 'ktp.png', isi: 'x', bidang: 'ktp' },
+      { nama: 'ktp.png', isi: 'x', bidang: 'id_card' },
     )
     const res = await kirim('/register', badan)
     expect(res.status).toBe(201)

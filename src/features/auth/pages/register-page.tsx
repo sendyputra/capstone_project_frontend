@@ -35,7 +35,7 @@ const FAKTA = [
 
 /* KTP dibaca di peramban dengan Tesseract.js; tidak ada endpoint OCR. Bila
    hasilnya tidak meyakinkan, NIK dan nama diisi manual. Berkasnya sendiri tetap
-   disimpan sebagai `File` dan ikut terkirim sebagai bagian `ktp` pada
+   disimpan sebagai `File` dan ikut terkirim sebagai bagian `id_card` pada
    `multipart/form-data` saat mendaftar — backend yang memverifikasinya. */
 export function RegisterPage() {
   const daftar = useRegister()
@@ -88,9 +88,9 @@ export function RegisterPage() {
       return
     }
     setGalatBerkas('')
-    /* Urutan bagian tidak penting bagi server; yang penting `ktp` berupa berkas,
-       bukan teks, supaya `request.formData()` di backend melihatnya sebagai
-       unggahan. */
+    /* Urutan bagian tidak penting bagi server; yang penting `id_card` berupa
+       berkas, bukan teks, supaya `request.formData()` di backend melihatnya
+       sebagai unggahan. Nama bagian mengikuti kontrak API, bukan label layar. */
     const badan = new FormData()
     badan.set('name', nilai.name)
     badan.set('nik', nilai.nik)
@@ -100,7 +100,7 @@ export function RegisterPage() {
     /* Kontrak API memakai enum Inggris (`owner`/`tenant`); mock menerjemahkan
        balik ke peran domain. */
     badan.set('role', nilai.role === 'pemilik' ? 'owner' : 'tenant')
-    badan.set('ktp', berkasKtp)
+    badan.set('id_card', berkasKtp)
     daftar.mutate(badan, { onSuccess: () => navigate('/katalog', { replace: true }) })
   })
 
