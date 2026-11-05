@@ -75,6 +75,7 @@ export function keKontrak(dto: unknown): ContractRow {
     renter_name: String(k.renter_name ?? tenant.name ?? ''),
     unit_title: String(k.unit_title ?? unit.name ?? ''),
     owner_name: String(k.owner_name ?? owner.name ?? ''),
+    created_at: String(k.created_at ?? ''),
     term: `${bulan} bulan`,
     /* Biaya bulanan dihitung dari nilai kontrak dan masa sewa, bukan dibaca dari
        `monthly` kiriman server: dua sumber untuk satu angka bisa berselisih. */

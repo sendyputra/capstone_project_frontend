@@ -8,7 +8,7 @@ import { hitungSewa } from '@/lib/sewa'
 import { ErrorState } from '@/ui/error-state'
 import { Skeleton } from '@/ui/skeleton'
 import { StatusChip } from '@/ui/status-chip'
-import { Tabel } from '@/ui/tabel'
+import { TabelSaring } from '@/ui/tabel-saring'
 import { useToast } from '@/ui/toast'
 
 /* Spec §5: kontrak `Menunggu` tampil lebih dulu supaya pemilik melihat
@@ -202,8 +202,21 @@ export function OwnerContractsPage() {
       {kontrak.isPending && <Skeleton className="h-40" />}
       {kontrak.isError && <ErrorState message={(kontrak.error as Error).message} onRetry={() => kontrak.refetch()} />}
       {kontrak.isSuccess && (
-        <Tabel kolom={['Penyewa', 'Unit & Pemilik', 'Masa Sewa', 'Nilai Kontrak', 'KTP', 'Status Kontrak', 'Aksi']} kolomAkhirKanan>
-          {daftar.map((baris) => (
+        <TabelSaring
+          kolom={['Penyewa', 'Unit & Pemilik', 'Masa Sewa', 'Dibuat', 'Nilai Kontrak', 'KTP', 'Status Kontrak', 'Aksi']}
+          baris={daftar}
+          saringan={[
+            { nilai: (baris) => baris.renter_name },
+            { nilai: (baris) => `${baris.unit_title} ${baris.owner_name}` },
+            { nilai: (baris) => `${formatTanggal(baris.start_date)} ${formatTanggal(baris.end_date)}` },
+            { nilai: (baris) => formatTanggal(baris.created_at ?? '') },
+            { nilai: (baris) => formatRupiah(baris.monthly) },
+            { jenis: 'pilihan', nilai: (baris) => baris.ktp ?? 'Belum', pilihan: ['Terverifikasi', 'Menunggu', 'Belum'] },
+            { jenis: 'pilihan', nilai: (baris) => baris.status, pilihan: ['Menunggu', 'Aktif', 'Selesai', 'Dibatalkan'] },
+          ]}
+          kolomAkhirKanan
+        >
+          {(tampil) => tampil.map((baris) => (
             <tr key={baris.id}>
               <td className="p-4 font-bold text-brand-text">{baris.renter_name}</td>
               <td className="p-4">
@@ -214,6 +227,7 @@ export function OwnerContractsPage() {
                 <span className="block">{formatTanggal(baris.start_date)} – {formatTanggal(baris.end_date)}</span>
                 <span className="text-micro text-brand-text-subtle">{baris.term}</span>
               </td>
+              <td className="p-4 text-brand-text-muted">{formatTanggal(baris.created_at ?? '')}</td>
               <td className="p-4 font-extrabold text-brand-accent">{formatRupiah(baris.monthly)} / bln</td>
               {/* Verifikasi KTP dulu tugas panel admin; sekarang pemilik yang
                   melihatnya di sini. Baris lama tanpa status dianggap "Belum". */}
@@ -244,7 +258,7 @@ export function OwnerContractsPage() {
               </td>
             </tr>
           ))}
-        </Tabel>
+        </TabelSaring>
       )}
     </section>
   )

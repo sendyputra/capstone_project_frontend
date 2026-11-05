@@ -33,7 +33,7 @@ describe('TagihanPage', () => {
   it('menampilkan tagihan milik penyewa yang masuk saja', async () => {
     renderTagihan()
 
-    const baris = (await screen.findByText('Tagihan Oktober 2026')).closest('tr')!
+    const baris = (await screen.findByText('Oktober 2026')).closest('tr')!
     expect(within(baris).getByText('Kontrakan Rumah Asri Type 36')).toBeInTheDocument()
     expect(within(baris).getByText('Rp 2.500.000')).toBeInTheDocument()
     expect(within(baris).getByText('Belum Bayar')).toBeInTheDocument()
@@ -44,21 +44,39 @@ describe('TagihanPage', () => {
   it('unggah bukti: gagal sekali, lalu menunggu verifikasi', async () => {
     aktifkanSimulasi()
     renderTagihan()
-    await screen.findByText('Tagihan Oktober 2026')
+    await screen.findByText('Oktober 2026')
 
     await userEvent.upload(screen.getByLabelText('Unggah Bukti'), new File(['x'], 'bukti-okt.jpg', { type: 'image/jpeg' }))
     expect(await screen.findByText(/gagal diunggah karena koneksi terputus/i)).toBeInTheDocument()
 
     await userEvent.click(screen.getByRole('button', { name: 'Coba Lagi' }))
-    await waitFor(() => expect(screen.getByText('Menunggu Verifikasi')).toBeInTheDocument())
-    expect(screen.getByText('bukti-okt.jpg')).toBeInTheDocument()
+    /* Tunggu berkasnya, bukan label statusnya: "Menunggu Verifikasi" juga
+       muncul sebagai pilihan pada saringan status, jadi teks itu lolos
+       sebelum unggahan benar-benar selesai. */
+    const barisBukti = (await screen.findByText('bukti-okt.jpg')).closest('tr')!
+    expect(within(barisBukti).getByText('Menunggu Verifikasi')).toBeInTheDocument()
+  })
+
+  /* Saringan per kolom harus benar-benar terpasang di halaman, bukan hanya di
+     komponen tabel: pilihan status menyaring barisnya. */
+  it('menyaring tagihan lewat kolom status', async () => {
+    renderTagihan()
+
+    await screen.findByText('Oktober 2026')
+    await userEvent.selectOptions(screen.getByLabelText('Saring Status'), 'Belum Bayar')
+
+    /* Label status juga hidup sebagai pilihan saringan, jadi yang diperiksa
+       hanya isi baris data. */
+    const isiBaris = [...screen.getByRole('table').querySelectorAll('tbody tr')].map((tr) => tr.textContent).join(' ')
+    expect(isiBaris).toContain('Oktober 2026')
+    expect(isiBaris).not.toContain('Lunas')
   })
 
   it('mengunduh laporan tagihan dari server', async () => {
     renderTagihan()
     const rekaman = pantauMetode()
     const unduh = stubUnduhan()
-    await screen.findByText('Tagihan Oktober 2026')
+    await screen.findByText('Oktober 2026')
 
     await userEvent.click(screen.getByRole('button', { name: 'Unduh CSV' }))
 
@@ -73,7 +91,7 @@ describe('TagihanPage', () => {
     )
     renderTagihan()
     const unduh = stubUnduhan()
-    await screen.findByText('Tagihan Oktober 2026')
+    await screen.findByText('Oktober 2026')
 
     await userEvent.click(screen.getByRole('button', { name: 'Unduh CSV' }))
 

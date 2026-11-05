@@ -12,6 +12,8 @@ export type Tagihan = {
   amount: number
   status: PaymentRow['status'] | 'Belum Bayar'
   proof_url: string
+  /* Tanggal berkas bukti diunggah; kosong selama bulan itu belum dibayar. */
+  dibuat: string
   unit_title: string
 }
 
@@ -89,6 +91,7 @@ export function susunTagihan(kontrak: ContractRow[], pembayaran: PaymentRow[], h
         amount: cocok?.amount ?? k.monthly,
         status: cocok?.status ?? 'Belum Bayar',
         proof_url: cocok?.proof_url ?? '',
+        dibuat: cocok?.created_at ?? '',
         unit_title: k.unit_title,
       })
     }

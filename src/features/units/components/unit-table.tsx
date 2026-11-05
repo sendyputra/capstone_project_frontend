@@ -1,9 +1,9 @@
 import { Link } from 'react-router'
 import type { UnitRow } from '@/api/types'
 import { GambarUnit } from '@/features/units/components/gambar-unit'
-import { formatRupiah } from '@/lib/format'
+import { formatRupiah, formatTanggal } from '@/lib/format'
 import { StatusChip } from '@/ui/status-chip'
-import { Tabel } from '@/ui/tabel'
+import { TabelSaring } from '@/ui/tabel-saring'
 
 export function UnitTable({
   units,
@@ -18,12 +18,25 @@ export function UnitTable({
   onHapus: (unit: UnitRow) => void
   tampilkanPemilik?: boolean
 }) {
-  const kolom = ['Info Unit', ...(tampilkanPemilik ? ['Pemilik'] : []), 'Tipe & Lokasi', 'Harga / Bulan', 'Status Unit', 'Kelola Kalender', 'Aksi']
+  const kolom = ['Info Unit', ...(tampilkanPemilik ? ['Pemilik'] : []), 'Tipe & Lokasi', 'Harga / Bulan', 'Dibuat', 'Status Unit', 'Kelola Kalender', 'Aksi']
 
   return (
     <div className="rounded-2xl border border-brand-border bg-brand-surface shadow-sm">
-      <Tabel kolom={kolom} kolomAkhirKanan>
-        {units.map((unit) => (
+      <TabelSaring
+        kolom={kolom}
+        baris={units}
+        saringan={[
+          { nilai: (unit) => unit.name },
+          ...(tampilkanPemilik ? [{ nilai: (unit: UnitRow) => unit.owner_name }] : []),
+          { nilai: (unit) => `${unit.type} ${unit.address}` },
+          { nilai: (unit) => formatRupiah(unit.price) },
+          { nilai: (unit) => formatTanggal(unit.created_at ?? '') },
+          { jenis: 'pilihan', nilai: (unit) => unit.status, pilihan: ['Tersedia', 'Terisi', 'Perawatan'] },
+        ]}
+        kolomAkhirKanan
+      >
+        {(tampil) =>
+          tampil.map((unit) => (
           <tr key={unit.id} className="hover:bg-brand-bg">
             <td className="p-4">
               <div className="flex items-center gap-3">
@@ -37,6 +50,7 @@ export function UnitTable({
               <span className="text-micro text-brand-text-subtle">{unit.address}</span>
             </td>
             <td className="p-4 font-extrabold text-brand-accent">{formatRupiah(unit.price)}</td>
+            <td className="p-4 text-brand-text-muted">{formatTanggal(unit.created_at ?? '')}</td>
             <td className="p-4">
               {/* Tombol pembungkus tanpa gaya; bentuk pilnya milik StatusChip,
                   supaya status tidak tampil sebagai dua lapis badge. */}
@@ -55,8 +69,9 @@ export function UnitTable({
               </button>
             </td>
           </tr>
-        ))}
-      </Tabel>
+          ))
+        }
+      </TabelSaring>
     </div>
   )
 }

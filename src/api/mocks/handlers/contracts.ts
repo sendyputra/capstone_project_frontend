@@ -15,6 +15,7 @@ export type ContractDtoRow = ContractDto & {
   term: string
   monthly: number
   ktp: KtpStatus
+  created_at: string
 }
 
 export function barisKontrak(kontrak: ContractDto): ContractDtoRow {
@@ -28,6 +29,7 @@ export function barisKontrak(kontrak: ContractDto): ContractDtoRow {
     term: termBulan(kontrak.start_date, kontrak.end_date),
     monthly: unit?.price ?? 0,
     ktp: tenant?.ktp ?? 'Belum',
+    created_at: '2026-10-04T08:30:00',
   }
 }
 

@@ -65,6 +65,7 @@ export function keUnit(dto: unknown): UnitRow {
     booked_dates: keDaftarTanggal(baris.booked_dates),
     blocked_dates: keDaftarTanggal(baris.blocked_dates),
     owner_name: String(baris.owner_name ?? (baris.owner as { name?: unknown } | undefined)?.name ?? ''),
+    created_at: String(baris.created_at ?? ''),
   }
 }
 

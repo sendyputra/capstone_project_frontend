@@ -1,13 +1,13 @@
 import { useState } from 'react'
 import { usePayments, useUnduhLaporanTagihan, useUnggahBukti } from '@/features/billing/api'
 import { useContracts } from '@/features/contracts/api'
-import { formatBulan, formatRupiah } from '@/lib/format'
+import { formatBulan, formatRupiah, formatTanggal, namaBerkas } from '@/lib/format'
 import { susunTagihan, urutkanTagihan, type Tagihan } from '@/lib/tagihan'
 import { tanggalHariIni } from '@/lib/tanggal'
 import { ErrorState } from '@/ui/error-state'
 import { Skeleton } from '@/ui/skeleton'
 import { StatusChip } from '@/ui/status-chip'
-import { Tabel } from '@/ui/tabel'
+import { TabelSaring } from '@/ui/tabel-saring'
 import { TautanBukti } from '@/features/billing/tautan-bukti'
 import { useToast } from '@/ui/toast'
 
@@ -76,16 +76,28 @@ export function TagihanPage() {
 
       {kontrak.isSuccess && tagihan.isSuccess && (
         <div className="rounded-2xl border border-brand-border bg-brand-surface shadow-sm">
-          <Tabel kolom={['Unit / Bulan', 'Jumlah', 'Status', 'Bukti Bayar', 'Tindakan']} kolomAkhirKanan>
-            {daftar.map((baris) => (
+          <TabelSaring
+            kolom={['Unit', 'Bulan Tagihan', 'Jumlah', 'Status', 'Bukti Bayar', 'Diunggah', 'Tindakan']}
+            baris={daftar}
+            saringan={[
+              { nilai: (baris) => baris.unit_title },
+              { nilai: (baris) => formatBulan(baris.month) },
+              { nilai: (baris) => formatRupiah(baris.amount) },
+              { jenis: 'pilihan', nilai: (baris) => baris.status, pilihan: ['Belum Bayar', 'Menunggu Verifikasi', 'Lunas', 'Ditolak'] },
+              { nilai: (baris) => namaBerkas(baris.proof_url) },
+              { nilai: (baris) => formatTanggal(baris.dibuat) },
+            ]}
+            kolomAkhirKanan
+            kosong="Belum ada tagihan bulan ini."
+          >
+            {(tampil) => tampil.map((baris) => (
               <tr key={baris.kunci}>
-                <td className="p-4">
-                  <span className="block font-bold text-brand-text">{baris.unit_title}</span>
-                  <span className="text-micro text-brand-text-subtle">Tagihan {formatBulan(baris.month)}</span>
-                </td>
+                <td className="p-4 font-bold text-brand-text">{baris.unit_title}</td>
+                <td className="p-4 text-brand-text-muted">{formatBulan(baris.month)}</td>
                 <td className="p-4 font-extrabold text-brand-accent">{formatRupiah(baris.amount)}</td>
                 <td className="p-4"><StatusChip nilai={baris.status} /></td>
                 <td className="p-4 text-brand-text-muted"><TautanBukti url={baris.proof_url} /></td>
+                <td className="p-4 text-brand-text-muted">{formatTanggal(baris.dibuat ?? '')}</td>
                 <td className="p-4 text-right">
                   {(baris.status === 'Belum Bayar' || baris.status === 'Ditolak') && (
                     <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-brand-accent-border bg-brand-accent-soft px-3 py-2 text-ui font-semibold text-brand-accent">
@@ -106,12 +118,7 @@ export function TagihanPage() {
                 </td>
               </tr>
             ))}
-            {daftar.length === 0 && (
-              <tr>
-                <td colSpan={5} className="p-6 text-center text-ui text-brand-text-muted">Belum ada tagihan bulan ini.</td>
-              </tr>
-            )}
-          </Tabel>
+          </TabelSaring>
         </div>
       )}
 

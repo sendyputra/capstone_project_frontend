@@ -65,8 +65,11 @@ describe('OwnerContractsPage', () => {
     renderWithProviders(<OwnerContractsPage />)
 
     const tabel = await screen.findByRole('table')
-    /* Baris 0 adalah kepala tabel; baris 1 baris data pertama. */
-    const barisPertama = within(tabel).getAllByRole('row')[1]
+    /* Baris pertama dicari lewat tombol aksinya: kepala tabel sekarang dua
+       baris (judul dan saringan), jadi indeks tetap tidak lagi aman. */
+    const barisPertama = within(tabel)
+      .getAllByRole('row')
+      .find((baris) => within(baris).queryByRole('button', { name: 'Setujui' }))!
     expect(within(barisPertama).getByText('Menunggu')).toBeInTheDocument()
     expect(within(barisPertama).getByRole('button', { name: 'Setujui' })).toBeInTheDocument()
   })

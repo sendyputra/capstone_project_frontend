@@ -5,7 +5,15 @@ import { useKonfirmasi } from '@/ui/confirm-dialog'
 import { EmptyState } from '@/ui/empty-state'
 import { ErrorState } from '@/ui/error-state'
 import { Skeleton } from '@/ui/skeleton'
-import { Tabel } from '@/ui/tabel'
+import { formatTanggalPendek } from '@/lib/format'
+
+/* `joined` datang ISO dari API dan sudah berformat pada data contoh; keduanya
+   diterima supaya kolom tanggal tidak kosong hanya karena bentuknya lain. */
+function tanggalBergabung(nilai: string): string {
+  if (!nilai) return '—'
+  return /^\d{4}-\d{2}-\d{2}/.test(nilai) ? formatTanggalPendek(nilai.slice(0, 10)) : nilai
+}
+import { TabelSaring } from '@/ui/tabel-saring'
 import { useToast } from '@/ui/toast'
 
 const PILIHAN_KTP: KtpStatus[] = ['Belum', 'Menunggu', 'Terverifikasi']
@@ -122,12 +130,23 @@ export function OwnerTenantsPage() {
       )}
       {daftar.isSuccess && daftar.data.length > 0 && (
         <div className="overflow-hidden rounded-xl border border-brand-border">
-          <Tabel kolom={['Nama', 'Telepon', 'KTP', 'Jumlah Kontrak', 'Aksi']}>
-            {daftar.data.map((penyewa) => (
+          <TabelSaring
+            kolom={['Nama', 'Telepon', 'KTP', 'Bergabung', 'Jumlah Kontrak', 'Aksi']}
+            baris={daftar.data}
+            saringan={[
+              { nilai: (penyewa) => penyewa.name },
+              { nilai: (penyewa) => penyewa.phone },
+              { jenis: 'pilihan', nilai: (penyewa) => penyewa.ktp, pilihan: ['Terverifikasi', 'Menunggu', 'Belum'] },
+              { nilai: (penyewa) => tanggalBergabung(penyewa.joined) },
+              { nilai: (penyewa) => String(penyewa.contracts_count) },
+            ]}
+          >
+            {(tampil) => tampil.map((penyewa) => (
               <tr key={penyewa.id}>
                 <td className="p-4 font-semibold">{penyewa.name}</td>
                 <td className="p-4">{penyewa.phone || '—'}</td>
                 <td className="p-4">{penyewa.ktp}</td>
+                <td className="p-4 text-brand-text-muted">{tanggalBergabung(penyewa.joined)}</td>
                 <td className="p-4">{penyewa.contracts_count}</td>
                 <td className="flex gap-2 p-4">
                   <button type="button" onClick={() => mulaiUbah(penyewa)} className="font-semibold text-brand-accent">
@@ -143,7 +162,7 @@ export function OwnerTenantsPage() {
                 </td>
               </tr>
             ))}
-          </Tabel>
+          </TabelSaring>
         </div>
       )}
     </section>

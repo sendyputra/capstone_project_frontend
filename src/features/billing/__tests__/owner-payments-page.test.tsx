@@ -52,7 +52,7 @@ describe('OwnerPaymentsPage', () => {
     masukSebagai(402, 'pemilik', 'Pak Wahyu')
     renderWithProviders(<OwnerPaymentsPage />)
 
-    const baris = (await screen.findAllByText('Tagihan September 2026'))
+    const baris = (await screen.findAllByText('September 2026'))
       .map((el) => el.closest('tr')!)
       .find((tr) => within(tr).queryByText('bukti-transfer-201-sep.jpg'))!
     expect(within(baris).getByText('bukti-transfer-201-sep.jpg')).toBeInTheDocument()
@@ -135,7 +135,7 @@ describe('OwnerPaymentsPage', () => {
     await userEvent.selectOptions(screen.getByLabelText('Kontrak'), '201')
     await userEvent.click(screen.getByRole('button', { name: 'Simpan Pembayaran' }))
 
-    const baris = (await screen.findAllByText('Tagihan Oktober 2026'))
+    const baris = (await screen.findAllByText('Oktober 2026'))
       .map((el) => el.closest('tr'))
       .find((tr) => Boolean(tr && within(tr).queryByText('Siti Sarah')))!
     expect(within(baris).getByText('Lunas')).toBeInTheDocument()

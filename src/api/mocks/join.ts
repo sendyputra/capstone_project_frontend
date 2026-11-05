@@ -49,10 +49,10 @@ export function subPemanggil(request: Request): number {
 /* Baris unit hasil join: bentuknya DTO tabel ditambah nama pemilik, seperti
    relasi `with('owner')` pada API sungguhan. Status tetap enum backend; adaptor
    di frontend yang menerjemahkannya ke label. */
-export type UnitDtoRow = UnitDto & { owner_name: string }
+export type UnitDtoRow = UnitDto & { owner_name: string; created_at: string }
 
 export function barisUnit(unit: UnitDto): UnitDtoRow {
-  return { ...unit, owner_name: namaPengguna(unit.owner_id) }
+  return { ...unit, owner_name: namaPengguna(unit.owner_id), created_at: '2026-01-05T09:00:00' }
 }
 
 /* Masa sewa dalam bulan, dari tanggal ISO ERD. Purwarupa menuliskan "6 bulan";

@@ -98,13 +98,13 @@ export type Payment = {
 /* Bentuk yang dipakai komponen: baris hasil join dengan label tampilan, seperti
    peran `with()` pada API sungguhan, supaya komponen tidak perlu menyambung
    sendiri. Adaptor (bukan handler) yang menghasilkan bentuk ini dari DTO. */
-export type UnitRow = Unit & { owner_name: string }
+export type UnitRow = Unit & { owner_name: string; created_at?: string }
 /* `ktp` hanya ada bila server mengirimnya (baris kontrak menyertakan status
    verifikasi penyewanya); tanpanya kolom "KTP" tampil sebagai "Belum". */
-export type ContractRow = Contract & { renter_name: string; unit_title: string; owner_name: string; term: string; monthly: number } & {
+export type ContractRow = Contract & { renter_name: string; unit_title: string; owner_name: string; term: string; monthly: number; created_at?: string } & {
   ktp?: KtpStatus
 }
-export type PaymentRow = Payment & { renter_name: string; unit_title: string }
+export type PaymentRow = Payment & { renter_name: string; unit_title: string; created_at?: string }
 
 /* Penyewa yang dikelola pemilik: `user_id` null berarti belum punya akun.
    `contracts_count` dihitung server dan menentukan boleh-tidaknya menghapus. */
