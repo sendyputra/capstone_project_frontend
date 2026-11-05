@@ -13,6 +13,7 @@ export function TabelSaring<T>({
   kolom,
   baris,
   saringan,
+  urut,
   kolomAkhirKanan = false,
   kosong = 'Tidak ada baris yang cocok.',
   children,
@@ -20,23 +21,31 @@ export function TabelSaring<T>({
   kolom: string[]
   baris: T[]
   saringan: Saringan<T>[]
+  /* Satu kolom boleh diurutkan. Judulnya menjadi tombol yang membalik arah;
+     `banding` selalu ditulis menaik, arah yang membalik. */
+  urut?: { judul: string; banding: (a: T, b: T) => number; awal?: 'naik' | 'turun' }
   kolomAkhirKanan?: boolean
   kosong?: string
   children: (tampil: T[]) => ReactNode
 }) {
   const [kata, setKata] = useState<string[]>(() => saringan.map(() => ''))
+  const [arah, setArah] = useState<'naik' | 'turun'>(urut?.awal ?? 'turun')
 
   function ubah(indeks: number, nilai: string) {
     setKata((lama) => lama.map((isi, i) => (i === indeks ? nilai : isi)))
   }
 
-  const tampil = baris.filter((item) =>
+  const tersaring = baris.filter((item) =>
     saringan.every((aturan, indeks) => {
       const kunci = (kata[indeks] ?? '').trim().toLowerCase()
       if (!kunci) return true
       return aturan.nilai(item).toLowerCase().includes(kunci)
     }),
   )
+
+  const tampil = urut
+    ? [...tersaring].sort((a, b) => (arah === 'naik' ? urut.banding(a, b) : urut.banding(b, a)))
+    : tersaring
 
   if (!tampil.length) {
     return (
@@ -49,11 +58,30 @@ export function TabelSaring<T>({
       <table className="w-full text-left text-xs text-brand-text">
         <thead className="border-y border-brand-border bg-brand-bg text-micro font-bold uppercase text-brand-text-muted">
           <tr>
-            {kolom.map((judul, indeks) => (
-              <th key={judul} className={cn('p-4', kolomAkhirKanan && indeks === kolom.length - 1 && 'text-right')}>
-                {judul}
-              </th>
-            ))}
+            {kolom.map((judul, indeks) => {
+              const bisaUrut = urut?.judul === judul
+              return (
+                <th
+                  key={judul}
+                  aria-sort={bisaUrut ? (arah === 'naik' ? 'ascending' : 'descending') : undefined}
+                  className={cn('p-4', kolomAkhirKanan && indeks === kolom.length - 1 && 'text-right')}
+                >
+                  {bisaUrut ? (
+                    <button
+                      type="button"
+                      onClick={() => setArah((lama) => (lama === 'naik' ? 'turun' : 'naik'))}
+                      aria-label={`Urutkan ${judul} ${arah === 'naik' ? 'menurun' : 'menaik'}`}
+                      className="inline-flex items-center gap-1 font-bold uppercase text-brand-text-muted hover:text-brand-text"
+                    >
+                      {judul}
+                      <span aria-hidden="true">{arah === 'naik' ? '▲' : '▼'}</span>
+                    </button>
+                  ) : (
+                    judul
+                  )}
+                </th>
+              )
+            })}
           </tr>
           <tr className="border-b border-brand-border">
             {kolom.map((judul, indeks) => {

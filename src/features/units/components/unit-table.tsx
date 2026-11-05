@@ -18,16 +18,15 @@ export function UnitTable({
   onHapus: (unit: UnitRow) => void
   tampilkanPemilik?: boolean
 }) {
-  /* Unit terbaru lebih dulu: pemilik melihat yang baru ditambahkan tanpa
-     menggulir, dan tanggal kosong jatuh ke bawah. */
-  const urut = [...units].sort((a, b) => (b.created_at ?? '').localeCompare(a.created_at ?? ''))
   const kolom = ['Info Unit', ...(tampilkanPemilik ? ['Pemilik'] : []), 'Tipe', 'Lokasi', 'Harga / Bulan', 'Dibuat', 'Status Unit', 'Kelola Kalender', 'Aksi']
 
   return (
     <div className="rounded-2xl border border-brand-border bg-brand-surface shadow-sm">
       <TabelSaring
         kolom={kolom}
-        baris={urut}
+        baris={units}
+        /* Terbaru lebih dulu; judul kolomnya menjadi tombol pembalik arah. */
+        urut={{ judul: 'Dibuat', awal: 'turun', banding: (a, b) => (a.created_at ?? '').localeCompare(b.created_at ?? '') }}
         saringan={[
           { nilai: (unit) => unit.name },
           ...(tampilkanPemilik ? [{ nilai: (unit: UnitRow) => unit.owner_name }] : []),
