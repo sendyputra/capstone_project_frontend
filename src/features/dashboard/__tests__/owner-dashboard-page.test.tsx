@@ -15,6 +15,14 @@ vi.mock('react-apexcharts', () => ({
   ),
 }))
 
+/* Skenario data contoh dibekukan pada Oktober 2026: tunggakan dihitung sampai
+   bulan berjalan dan kontrak contoh berakhir 31 Oktober 2026. Tanpa patokan
+   ini jumlah tunggakan dan "kontrak akan habis" berubah setiap bulan. */
+vi.mock('@/lib/tanggal', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/lib/tanggal')>()),
+  tanggalHariIni: () => '2026-10-15',
+}))
+
 function unit(over: Partial<Unit>): Unit {
   return { id: 1, owner_id: 402, name: 'A', address: 'X', price: 100, status: 'Tersedia', type: 'Kamar Kos', facilities: [], image: '', booked_dates: [], blocked_dates: [], ...over }
 }

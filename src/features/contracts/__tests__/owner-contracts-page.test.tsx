@@ -151,7 +151,10 @@ describe('OwnerContractsPage', () => {
 
     await userEvent.selectOptions(screen.getByLabelText('Penyewa'), '1')
     await userEvent.selectOptions(screen.getByLabelText('Unit'), '1')
-    fireEvent.change(screen.getByLabelText('Mulai sewa'), { target: { value: '2026-11-01' } })
+    /* Tanggal jauh di masa depan: `booked_dates` data contoh dihitung dari bulan
+       berjalan, jadi tanggal tetap di bulan ini akan menabrak blok begitu bulan
+       kalender berganti dan kontrak ditolak 422. */
+    fireEvent.change(screen.getByLabelText('Mulai sewa'), { target: { value: '2099-01-01' } })
     await userEvent.click(screen.getByRole('button', { name: 'Simpan Kontrak' }))
 
     const baris = (await screen.findAllByText('Rian Pratama'))

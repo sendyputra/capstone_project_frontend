@@ -2,7 +2,7 @@ import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { MemoryRouter } from 'react-router'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { aktifkanSimulasi } from '@/api/mocks/handlers/simulasi'
 import { server } from '@/api/mocks/server'
 import { TagihanPage } from '@/features/billing/pages/tagihan-page'
@@ -10,6 +10,15 @@ import { pantauMetode } from '@/test/metode'
 import { masukSebagai } from '@/test/sesi'
 import { stubUnduhan } from '@/test/unduh'
 import { renderWithProviders } from '@/test/render'
+
+/* Skenario data contoh dibekukan pada Oktober 2026: tagihan diturunkan sampai
+   bulan berjalan, dan `booked_dates` unit memakai bulan berjalan. Tanpa patokan
+   ini asersi "Tagihan Oktober 2026" dan jumlah tunggakan berubah setiap bulan
+   kalender berganti. */
+vi.mock('@/lib/tanggal', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/lib/tanggal')>()),
+  tanggalHariIni: () => '2026-10-15',
+}))
 
 function renderTagihan() {
   masukSebagai(405, 'penyewa', 'Siti Sarah')
