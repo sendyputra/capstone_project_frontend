@@ -69,7 +69,9 @@ describe('UnitFormPage', () => {
     await userEvent.upload(screen.getByLabelText('Foto unit'), new File(['x'], 'foto.jpg', { type: 'image/jpeg' }))
     await userEvent.click(screen.getByRole('button', { name: 'Simpan Unit' }))
     await waitFor(() => expect(screen.getByText('Daftar unit')).toBeInTheDocument())
-    expect(units.find((unit) => unit.name === 'Kos Foto Uji')?.image).toBe('/demo/foto.jpg')
+    /* Foto unggahan hidup di memori peramban, jadi mock menyimpannya sebagai
+       data URL: `/demo/<nama berkas>` tidak ada dan gambarnya akan putus. */
+    expect(units.find((unit) => unit.name === 'Kos Foto Uji')?.image).toBe(`data:image/jpeg;base64,${btoa('x')}`)
   })
 
   it('mengirim multipart tanpa bagian image saat foto tidak dipilih', async () => {

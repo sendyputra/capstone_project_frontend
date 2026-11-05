@@ -125,7 +125,9 @@ describe('data contoh', () => {
     expect(res.status).toBe(201)
     const jawaban = (await res.json()) as { data: { facilities: string[]; image: string } }
     expect(jawaban.data.facilities).toEqual(['WiFi', 'AC'])
-    expect(jawaban.data.image).toBe('/demo/foto-unit.jpg')
+    /* Foto unggahan tidak punya berkas di `public/demo/`, jadi mock menyimpannya
+       sebagai data URL; `<img>` yang menunjuk `/demo/<nama berkas>` akan putus. */
+    expect(jawaban.data.image).toBe(`data:image/jpeg;base64,${btoa('x')}`)
   })
 
   it('mengubah unit lewat PUT multipart tanpa baris JSON', async () => {
@@ -137,7 +139,8 @@ describe('data contoh', () => {
     const res = await kirim('/units/1', badan, 'PUT')
     expect(res.status).toBe(200)
     const jawaban = (await res.json()) as { data: { name: string; image: string } }
-    expect(jawaban.data).toMatchObject({ name: 'Kos Multipart Ubah', image: '/demo/ubah.jpg' })
+    expect(jawaban.data.name).toBe('Kos Multipart Ubah')
+    expect(jawaban.data.image).toBe(`data:image/jpeg;base64,${btoa('x')}`)
   })
 
   /* Pembaruan sebagian: bidang yang tidak ikut dalam FormData tidak boleh

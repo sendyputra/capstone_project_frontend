@@ -6,9 +6,20 @@ import { barisUnit, pemanggil, subPemanggil } from '@/api/mocks/join'
 
 let urutan = units.length
 
+/* Foto unggahan tidak pernah menjadi berkas di `public/demo/`, jadi menunjuk
+   `/demo/<nama berkas>` menghasilkan gambar putus. Data URL menyimpan isi
+   berkas di memori peramban, cukup untuk kanal demo yang memang tidak punya
+   penyimpanan. */
+async function fotoDataUrl(berkas: Blob): Promise<string> {
+  const bita = new Uint8Array(await berkas.arrayBuffer())
+  let biner = ''
+  for (const nilai of bita) biner += String.fromCharCode(nilai)
+  return `data:${berkas.type || 'application/octet-stream'};base64,${btoa(biner)}`
+}
+
 /* POST dan PUT /units menerima JSON maupun multipart: formulir tambah unit
    memakai FormData karena berkas foto ikut terkirim. Bagian berkas diperiksa
-   dari bentuknya, bukan lewat `instanceof File` — kelas `File` di jsdom berbeda
+   dari bentuknya, bukan `instanceof File` — kelas `File` di jsdom berbeda
    realm dari kelas yang dipakai parser multipart, pembatasan yang sama dengan
    handler pembayaran. */
 async function muatanUnitDto(request: Request): Promise<Partial<UnitDto>> {
@@ -18,6 +29,7 @@ async function muatanUnitDto(request: Request): Promise<Partial<UnitDto>> {
   const badan = await request.formData()
   const berkas = badan.get('image')
   const teks = (nama: string) => String(badan.get(nama) ?? '')
+  const foto = berkas !== null && typeof berkas !== 'string' ? await fotoDataUrl(berkas) : undefined
   /* Butir yang tidak ikut tertulis ke `undefined`, bukan 0/'' — PUT sebagian
      bekerja lewat `Object.assign`, jadi bidang yang absen tidak boleh menimpa
      nilai lama. POST memakai `??` di pematangan barisnya sendiri. */
@@ -28,7 +40,7 @@ async function muatanUnitDto(request: Request): Promise<Partial<UnitDto>> {
     ...(badan.has('status') ? { status: teks('status') as UnitDto['status'] } : {}),
     ...(badan.has('type') ? { type: teks('type') as UnitDto['type'] } : {}),
     ...(badan.has('facilities[]') ? { facilities: badan.getAll('facilities[]').map(String) } : {}),
-    ...(berkas !== null && typeof berkas !== 'string' ? { image: `/demo/${berkas.name}` } : badan.has('image') ? { image: teks('image') } : {}),
+    ...(foto !== undefined ? { image: foto } : badan.has('image') ? { image: teks('image') } : {}),
   }
 }
 
