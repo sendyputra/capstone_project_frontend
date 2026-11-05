@@ -1,5 +1,5 @@
 import { Link } from 'react-router'
-import type { UnitRow } from '@/api/types'
+import { TIPE_UNIT, type UnitRow } from '@/api/types'
 import { GambarUnit } from '@/features/units/components/gambar-unit'
 import { formatRupiah, formatTanggal } from '@/lib/format'
 import { StatusChip } from '@/ui/status-chip'
@@ -18,17 +18,21 @@ export function UnitTable({
   onHapus: (unit: UnitRow) => void
   tampilkanPemilik?: boolean
 }) {
-  const kolom = ['Info Unit', ...(tampilkanPemilik ? ['Pemilik'] : []), 'Tipe & Lokasi', 'Harga / Bulan', 'Dibuat', 'Status Unit', 'Kelola Kalender', 'Aksi']
+  /* Unit terbaru lebih dulu: pemilik melihat yang baru ditambahkan tanpa
+     menggulir, dan tanggal kosong jatuh ke bawah. */
+  const urut = [...units].sort((a, b) => (b.created_at ?? '').localeCompare(a.created_at ?? ''))
+  const kolom = ['Info Unit', ...(tampilkanPemilik ? ['Pemilik'] : []), 'Tipe', 'Lokasi', 'Harga / Bulan', 'Dibuat', 'Status Unit', 'Kelola Kalender', 'Aksi']
 
   return (
     <div className="rounded-2xl border border-brand-border bg-brand-surface shadow-sm">
       <TabelSaring
         kolom={kolom}
-        baris={units}
+        baris={urut}
         saringan={[
           { nilai: (unit) => unit.name },
           ...(tampilkanPemilik ? [{ nilai: (unit: UnitRow) => unit.owner_name }] : []),
-          { nilai: (unit) => `${unit.type} ${unit.address}` },
+          { jenis: 'pilihan', nilai: (unit) => unit.type, pilihan: TIPE_UNIT },
+          { nilai: (unit) => unit.address },
           { nilai: (unit) => formatRupiah(unit.price) },
           { nilai: (unit) => formatTanggal(unit.created_at ?? '') },
           { jenis: 'pilihan', nilai: (unit) => unit.status, pilihan: ['Tersedia', 'Terisi', 'Perawatan'] },
@@ -45,10 +49,8 @@ export function UnitTable({
               </div>
             </td>
             {tampilkanPemilik && <td className="p-4 font-medium text-brand-text-muted">{unit.owner_name}</td>}
-            <td className="p-4">
-              <span className="block font-semibold text-brand-text">{unit.type}</span>
-              <span className="text-micro text-brand-text-subtle">{unit.address}</span>
-            </td>
+            <td className="p-4 font-semibold text-brand-text">{unit.type}</td>
+            <td className="p-4 text-brand-text-muted">{unit.address}</td>
             <td className="p-4 font-extrabold text-brand-accent">{formatRupiah(unit.price)}</td>
             <td className="p-4 text-brand-text-muted">{formatTanggal(unit.created_at ?? '')}</td>
             <td className="p-4">
