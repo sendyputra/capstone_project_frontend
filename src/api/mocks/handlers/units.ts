@@ -117,8 +117,10 @@ export const unitHandlers = [
     return HttpResponse.json({ data: barisUnit(unit) })
   }),
 
-  /* `useUpdateUnit` mengirim PUT; mock hanya melayani PUT supaya adaptor yang
-     kembali ke PATCH gagal di sini, bukan diam-diam lolos. */
+  /* `useUpdateUnit` mengirim unggahan sebagai POST + `_method=PUT`, sama seperti
+     klien ke API asli (PHP tidak mem-parse multipart pada PUT). PUT tetap
+     dilayani untuk pemanggil JSON. */
+  http.post('/units/:id', ubahUnit),
   http.put('/units/:id', ubahUnit),
 
   http.delete('/units/:id', ({ params }) => {
