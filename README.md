@@ -55,7 +55,7 @@ Disalin dari `.env.example` ke `.env.local` bila perlu.
 
 | Variabel | Isi |
 |---|---|
-| `VITE_API_BASE_URL` | Alamat API Laravel, mis. `https://nb.ifast.id/api`. |
+| `VITE_API_BASE_URL` | Alamat API Laravel, mis. `https://103.157.26.40.sslip.io:8555/api`. |
 
 Live dan preview selalu memakai API asli. Handler dan data contoh dipertahankan
 hanya untuk tes otomatis.
