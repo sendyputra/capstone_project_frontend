@@ -133,6 +133,15 @@ export function OwnerTenantsPage() {
           <TabelSaring
             kolom={['Nama', 'Telepon', 'KTP', 'Bergabung', 'Jumlah Kontrak', 'Aksi']}
             baris={daftar.data}
+            urut={{
+              banding: {
+                Nama: (a, b) => a.name.localeCompare(b.name),
+                Telepon: (a, b) => a.phone.localeCompare(b.phone),
+                KTP: (a, b) => a.ktp.localeCompare(b.ktp),
+                Bergabung: (a, b) => tanggalBergabung(a.joined).localeCompare(tanggalBergabung(b.joined)),
+                'Jumlah Kontrak': (a, b) => a.contracts_count - b.contracts_count,
+              },
+            }}
             saringan={[
               { nilai: (penyewa) => penyewa.name },
               { nilai: (penyewa) => penyewa.phone },

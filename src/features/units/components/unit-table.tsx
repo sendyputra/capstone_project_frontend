@@ -25,8 +25,19 @@ export function UnitTable({
       <TabelSaring
         kolom={kolom}
         baris={units}
-        /* Terbaru lebih dulu; judul kolomnya menjadi tombol pembalik arah. */
-        urut={{ judul: 'Dibuat', awal: 'turun', banding: (a, b) => (a.created_at ?? '').localeCompare(b.created_at ?? '') }}
+        /* Terbaru lebih dulu; tiap judul kolom menjadi tombol pembalik arah. */
+        urut={{
+          awal: { judul: 'Dibuat', arah: 'turun' },
+          banding: {
+            'Info Unit': (a, b) => a.name.localeCompare(b.name),
+            ...(tampilkanPemilik ? { Pemilik: (a: UnitRow, b: UnitRow) => a.owner_name.localeCompare(b.owner_name) } : {}),
+            Tipe: (a, b) => a.type.localeCompare(b.type),
+            Lokasi: (a, b) => a.address.localeCompare(b.address),
+            'Harga / Bulan': (a, b) => a.price - b.price,
+            Dibuat: (a, b) => (a.created_at ?? '').localeCompare(b.created_at ?? ''),
+            'Status Unit': (a, b) => a.status.localeCompare(b.status),
+          },
+        }}
         saringan={[
           { nilai: (unit) => unit.name },
           ...(tampilkanPemilik ? [{ nilai: (unit: UnitRow) => unit.owner_name }] : []),

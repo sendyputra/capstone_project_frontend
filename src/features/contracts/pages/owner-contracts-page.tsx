@@ -205,6 +205,17 @@ export function OwnerContractsPage() {
         <TabelSaring
           kolom={['Penyewa', 'Unit & Pemilik', 'Masa Sewa', 'Dibuat', 'Nilai Kontrak', 'KTP', 'Status Kontrak', 'Aksi']}
           baris={daftar}
+          urut={{
+            banding: {
+              Penyewa: (a, b) => a.renter_name.localeCompare(b.renter_name),
+              'Unit & Pemilik': (a, b) => `${a.unit_title} ${a.owner_name}`.localeCompare(`${b.unit_title} ${b.owner_name}`),
+              'Masa Sewa': (a, b) => a.start_date.localeCompare(b.start_date),
+              Dibuat: (a, b) => (a.created_at ?? '').localeCompare(b.created_at ?? ''),
+              'Nilai Kontrak': (a, b) => a.monthly - b.monthly,
+              KTP: (a, b) => (a.ktp ?? 'Belum').localeCompare(b.ktp ?? 'Belum'),
+              'Status Kontrak': (a, b) => a.status.localeCompare(b.status),
+            },
+          }}
           saringan={[
             { nilai: (baris) => baris.renter_name },
             { nilai: (baris) => `${baris.unit_title} ${baris.owner_name}` },

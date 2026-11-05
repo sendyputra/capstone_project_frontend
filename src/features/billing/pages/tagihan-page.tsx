@@ -79,6 +79,16 @@ export function TagihanPage() {
           <TabelSaring
             kolom={['Unit', 'Bulan Tagihan', 'Jumlah', 'Status', 'Bukti Bayar', 'Diunggah', 'Tindakan']}
             baris={daftar}
+            urut={{
+              banding: {
+                Unit: (a, b) => a.unit_title.localeCompare(b.unit_title),
+                'Bulan Tagihan': (a, b) => a.month.localeCompare(b.month),
+                Jumlah: (a, b) => a.amount - b.amount,
+                Status: (a, b) => a.status.localeCompare(b.status),
+                'Bukti Bayar': (a, b) => namaBerkas(a.proof_url).localeCompare(namaBerkas(b.proof_url)),
+                Diunggah: (a, b) => a.dibuat.localeCompare(b.dibuat),
+              },
+            }}
             saringan={[
               { nilai: (baris) => baris.unit_title },
               { nilai: (baris) => formatBulan(baris.month) },

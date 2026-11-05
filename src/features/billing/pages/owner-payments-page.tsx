@@ -214,6 +214,17 @@ export function OwnerPaymentsPage() {
         <TabelSaring
           kolom={['Penyewa', 'Unit', 'Bulan Tagihan', 'Jumlah', 'Bukti Bayar', 'Diunggah', 'Status', 'Aksi']}
           baris={daftar}
+          urut={{
+            banding: {
+              Penyewa: (a, b) => a.renter_name.localeCompare(b.renter_name),
+              Unit: (a, b) => a.unit_title.localeCompare(b.unit_title),
+              'Bulan Tagihan': (a, b) => a.month.localeCompare(b.month),
+              Jumlah: (a, b) => a.amount - b.amount,
+              'Bukti Bayar': (a, b) => namaBerkas(a.proof_url).localeCompare(namaBerkas(b.proof_url)),
+              Diunggah: (a, b) => (a.created_at ?? '').localeCompare(b.created_at ?? ''),
+              Status: (a, b) => a.status.localeCompare(b.status),
+            },
+          }}
           saringan={[
             { nilai: (baris) => baris.renter_name },
             { nilai: (baris) => baris.unit_title },

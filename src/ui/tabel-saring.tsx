@@ -21,15 +21,18 @@ export function TabelSaring<T>({
   kolom: string[]
   baris: T[]
   saringan: Saringan<T>[]
-  /* Satu kolom boleh diurutkan. Judulnya menjadi tombol yang membalik arah;
-     `banding` selalu ditulis menaik, arah yang membalik. */
-  urut?: { judul: string; banding: (a: T, b: T) => number; awal?: 'naik' | 'turun' }
+  /* Tiap judul di `banding` menjadi tombol urut; klik pertama menaik, klik
+     berikutnya membalik. `banding` selalu ditulis menaik. */
+  urut?: {
+    banding: Record<string, (a: T, b: T) => number>
+    awal?: { judul: string; arah: 'naik' | 'turun' }
+  }
   kolomAkhirKanan?: boolean
   kosong?: string
   children: (tampil: T[]) => ReactNode
 }) {
   const [kata, setKata] = useState<string[]>(() => saringan.map(() => ''))
-  const [arah, setArah] = useState<'naik' | 'turun'>(urut?.awal ?? 'turun')
+  const [sortir, setSortir] = useState<{ judul: string; arah: 'naik' | 'turun' } | null>(urut?.awal ?? null)
 
   function ubah(indeks: number, nilai: string) {
     setKata((lama) => lama.map((isi, i) => (i === indeks ? nilai : isi)))
@@ -43,8 +46,15 @@ export function TabelSaring<T>({
     }),
   )
 
-  const tampil = urut
-    ? [...tersaring].sort((a, b) => (arah === 'naik' ? urut.banding(a, b) : urut.banding(b, a)))
+  function balikArah(judul: string) {
+    setSortir((lama) =>
+      lama?.judul === judul ? { judul, arah: lama.arah === 'naik' ? 'turun' : 'naik' } : { judul, arah: 'naik' },
+    )
+  }
+
+  const pembanding = urut && sortir ? urut.banding[sortir.judul] : undefined
+  const tampil = pembanding && sortir
+    ? [...tersaring].sort((a, b) => (sortir.arah === 'naik' ? pembanding(a, b) : pembanding(b, a)))
     : tersaring
 
   if (!tampil.length) {
@@ -59,22 +69,23 @@ export function TabelSaring<T>({
         <thead className="border-y border-brand-border bg-brand-bg text-micro font-bold uppercase text-brand-text-muted">
           <tr>
             {kolom.map((judul, indeks) => {
-              const bisaUrut = urut?.judul === judul
+              const bisaUrut = Boolean(urut?.banding[judul])
+              const arah = sortir?.judul === judul ? sortir.arah : null
               return (
                 <th
                   key={judul}
-                  aria-sort={bisaUrut ? (arah === 'naik' ? 'ascending' : 'descending') : undefined}
+                  aria-sort={arah ? (arah === 'naik' ? 'ascending' : 'descending') : undefined}
                   className={cn('p-4', kolomAkhirKanan && indeks === kolom.length - 1 && 'text-right')}
                 >
                   {bisaUrut ? (
                     <button
                       type="button"
-                      onClick={() => setArah((lama) => (lama === 'naik' ? 'turun' : 'naik'))}
+                      onClick={() => balikArah(judul)}
                       aria-label={`Urutkan ${judul} ${arah === 'naik' ? 'menurun' : 'menaik'}`}
                       className="inline-flex items-center gap-1 font-bold uppercase text-brand-text-muted hover:text-brand-text"
                     >
                       {judul}
-                      <span aria-hidden="true">{arah === 'naik' ? '▲' : '▼'}</span>
+                      <span aria-hidden="true">{arah === 'naik' ? '▲' : arah === 'turun' ? '▼' : '↕'}</span>
                     </button>
                   ) : (
                     judul
