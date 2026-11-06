@@ -24,14 +24,14 @@ describe('adaptor pembayaran', () => {
     expect(keStatusBayar('Ditolak')).toBe('Menunggu Verifikasi')
   })
 
-  /* `Belum Bayar` tidak punya padanan di backend: bulan yang belum dibayar tidak
+  /* `Tagihan Belum Dibayar` tidak punya padanan di backend: bulan yang belum dibayar tidak
      punya baris pembayaran sama sekali. Kalau label itu sampai terkirim, satu-
      satunya status "menunggu" yang sah adalah `pending`. */
   it('mengirim enum backend untuk tiap status tampilan', () => {
     expect(dariStatusBayar('Menunggu Verifikasi')).toBe('pending')
     expect(dariStatusBayar('Lunas')).toBe('paid')
     expect(dariStatusBayar('Ditolak')).toBe('rejected')
-    expect(dariStatusBayar('Belum Bayar')).toBe('pending')
+    expect(dariStatusBayar('Tagihan Belum Dibayar')).toBe('pending')
   })
 
   it('membaca bulan YYYY-MM apa adanya', () => {

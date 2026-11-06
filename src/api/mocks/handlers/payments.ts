@@ -13,7 +13,7 @@ import { namaBerkas } from '@/lib/format'
 import { susunTagihan } from '@/lib/tagihan'
 import { tanggalHariIni } from '@/lib/tanggal'
 
-export type PaymentDtoRow = PaymentDto & { renter_name: string; unit_title: string }
+export type PaymentDtoRow = PaymentDto & { renter_name: string; unit_title: string; created_at: string }
 
 function kontrakDari(pembayaran: PaymentDto): ContractDto | undefined {
   return contracts.find((kontrak) => kontrak.id === pembayaran.contract_id)
@@ -25,7 +25,12 @@ export function barisTagihan(pembayaran: PaymentDto): PaymentDtoRow {
   const kontrak = kontrakDari(pembayaran)
   const tenant = kontrak ? tenants.find((kandidat) => kandidat.id === kontrak.tenant_id) : undefined
   const unit = kontrak ? unitById(kontrak.unit_id) : undefined
-  return { ...pembayaran, renter_name: tenant?.name ?? '', unit_title: unit?.name ?? '' }
+  return {
+    ...pembayaran,
+    renter_name: tenant?.name ?? '',
+    unit_title: unit?.name ?? '',
+    created_at: `${pembayaran.month}-05T10:00:00`,
+  }
 }
 
 const ubahPembayaran: HttpResponseResolver<{ id: string }> = async ({ params, request }) => {
@@ -117,8 +122,14 @@ export const paymentHandlers = [
           ? contracts.filter((kontrak) => unitById(kontrak.unit_id)?.owner_id === sub)
           : []
 
-    const kontrak = terpilih.map((baris) => keKontrak(barisKontrak(baris)))
-    const tagihan = susunTagihan(kontrak, payments.map((baris) => kePembayaran(barisTagihan(baris))), tanggalHariIni())
+    const kontrak = terpilih
+      .filter((baris) => baris.status !== 'pending')
+      .map((baris) => keKontrak(barisKontrak(baris)))
+    /* `semuaKontrak`: laporan memuat bulan kontrak yang sudah selesai, sama
+       seperti backend; pengajuan tetap tidak punya tagihan. */
+    const tagihan = susunTagihan(kontrak, payments.map((baris) => kePembayaran(barisTagihan(baris))), tanggalHariIni(), {
+      semuaKontrak: true,
+    })
     const petaKontrak = new Map(kontrak.map((baris) => [baris.id, baris]))
 
     const kolom =

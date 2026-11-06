@@ -42,7 +42,9 @@ async function masuk({ request }: { request: Request }) {
 }
 
 /* Pendaftaran menerima `multipart/form-data` karena berkas KTP ikut terkirim.
-   Bagian berkas diperiksa dari bentuknya (`typeof ... === 'string'`), bukan lewat
+   Nama bagian berkasnya `id_card`, sama seperti `AuthController::register`
+   (`ktp` ditolak 422 "The ID Card is required for tenant role."). Bagian berkas
+   diperiksa dari bentuknya (`typeof ... === 'string'`), bukan lewat
    `instanceof File`: kelas `File` di jsdom berbeda realm dari kelas yang dipakai
    parser multipart, sehingga `instanceof` menolak unggahan yang sah. */
 async function daftar({ request }: { request: Request }) {
@@ -55,7 +57,7 @@ async function daftar({ request }: { request: Request }) {
   const email = teks('email')
   const password = teks('password')
   const role = ['pemilik', 'owner'].includes(teks('role')) ? 'pemilik' : 'penyewa'
-  const berkasKtp = badan.get('ktp')
+  const berkasKtp = badan.get('id_card')
   if (!email || !email.includes('@')) {
     return HttpResponse.json({ message: 'Periksa isian.', errors: { email: 'Email belum sah.' } }, { status: 422 })
   }
@@ -67,7 +69,7 @@ async function daftar({ request }: { request: Request }) {
   }
   if (!berkasKtp || typeof berkasKtp === 'string') {
     return HttpResponse.json(
-      { message: 'Periksa isian.', errors: { ktp: 'Berkas KTP wajib diunggah.' } },
+      { message: 'Periksa isian.', errors: { id_card: 'Berkas KTP wajib diunggah.' } },
       { status: 422 },
     )
   }

@@ -94,6 +94,14 @@ describe('UnitDetailPage', () => {
     expect(screen.getByTestId(`tanggal-${bulan}-01`)).toHaveClass('bg-brand-success-soft')
   })
 
+  /* Katalog publik harus menyebut siapa pemiliknya; API mengirim `owner_name`
+     hasil join, dan adaptor sudah memetakannya ke `UnitRow`. */
+  it('menampilkan nama pemilik di katalog', async () => {
+    renderDetail()
+
+    expect(await screen.findByText('Pemilik: Pak Wahyu')).toBeInTheDocument()
+  })
+
   it('pemilik melihat panel blokir', async () => {
     renderDetail('1', 'pemilik')
 
@@ -107,15 +115,22 @@ describe('UnitDetailPage', () => {
     expect(screen.queryByLabelText('Mulai blokir')).not.toBeInTheDocument()
   })
 
+  /* Tanggal dipakai dari bulan depan: data contoh memblokir beberapa hari di
+     bulan berjalan, dan rentang tetap seperti "10–12" bisa jatuh di hari yang
+     sudah terisi — tes merah bukan karena kode berubah, melainkan karena
+     kalender bergerak. */
   it('pemilik memblokir rentang dan baris muncul', async () => {
     renderDetail('1', 'pemilik')
     await screen.findByRole('heading', { name: 'Kos Kamar 01' })
 
-    fireEvent.change(screen.getByLabelText('Mulai blokir'), { target: { value: '2026-11-10' } })
-    fireEvent.change(screen.getByLabelText('Selesai blokir'), { target: { value: '2026-11-12' } })
+    /* Tanggal jauh di masa depan: `booked_dates` data contoh dihitung dari bulan
+       berjalan, jadi tanggal tetap di bulan ini akan bertabrakan begitu bulan
+       kalender berganti dan blok ditolak 422. */
+    fireEvent.change(screen.getByLabelText('Mulai blokir'), { target: { value: '2099-01-10' } })
+    fireEvent.change(screen.getByLabelText('Selesai blokir'), { target: { value: '2099-01-12' } })
     await userEvent.click(screen.getByRole('button', { name: 'Blokir Tanggal' }))
 
-    expect(await screen.findByText('10 Nov 2026 – 12 Nov 2026')).toBeInTheDocument()
+    expect(await screen.findByText('10 Jan 2099 – 12 Jan 2099')).toBeInTheDocument()
   })
 
   it('galat overlap ditampilkan', async () => {

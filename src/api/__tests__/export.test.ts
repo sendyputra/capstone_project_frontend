@@ -31,7 +31,7 @@ describe('handler export', () => {
     expect(isi).toContain(
       '2026-09;Kontrakan Rumah Asri Type 36;Pak Wahyu;2500000;Lunas;bukti-transfer-201-sep.jpg;2026-09-01 00:00',
     )
-    expect(isi).toContain(';Belum Bayar;;')
+    expect(isi).toContain(';Tagihan Belum Dibayar;;')
   })
 
   it('waktu unggah diambil dari pembayaran ber-id terbesar', async () => {
@@ -65,7 +65,7 @@ describe('handler export', () => {
     const isi = await bacaCsv(respons)
 
     expect(isi.split('\r\n')[0]).toBe(
-      '\uFEFFID;Penyewa;Unit;Pemilik;Mulai;Selesai;Durasi;Harga per Bulan;Nilai Kontrak;Status',
+      '\uFEFFID;Penyewa;Unit;Pemilik;Mulai;Selesai;Durasi;Harga per Bulan;Nilai Kontrak;Status;Berakhir Pada;Alasan',
     )
     expect(isi).toContain(';Menunggu')
     expect(isi).toContain(';Aktif')

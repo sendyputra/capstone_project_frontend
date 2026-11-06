@@ -15,6 +15,14 @@ vi.mock('react-apexcharts', () => ({
   ),
 }))
 
+/* Skenario data contoh dibekukan pada Oktober 2026: tunggakan dihitung sampai
+   bulan berjalan dan kontrak contoh berakhir 31 Oktober 2026. Tanpa patokan
+   ini jumlah tunggakan dan "kontrak akan habis" berubah setiap bulan. */
+vi.mock('@/lib/tanggal', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/lib/tanggal')>()),
+  tanggalHariIni: () => '2026-10-15',
+}))
+
 function unit(over: Partial<Unit>): Unit {
   return { id: 1, owner_id: 402, name: 'A', address: 'X', price: 100, status: 'Tersedia', type: 'Kamar Kos', facilities: [], image: '', booked_dates: [], blocked_dates: [], ...over }
 }
@@ -62,10 +70,12 @@ describe('OwnerDashboardPage', () => {
     expect(screen.getByText('1 unit sedang dalam perawatan dan tidak dihitung sebagai terisi.')).toBeInTheDocument()
 
     /* Fitur wajib dashboard: tunggakan dan kontrak yang akan habis. Kontrak
-       201 belum membayar Oktober; kontrak 206 berakhir 31 Okt 2026. */
+       201 belum membayar Oktober; kontrak 206 berakhir 31 Okt 2026.
+       `semuaKontrak` ikut menghitung utang kontrak yang sudah ditutup: 203
+       (Feb–Jul 2026) baru membayar Maret, jadi lima bulannya masih tertunggak. */
     expect(await screen.findByText('Tunggakan')).toBeInTheDocument()
-    expect(screen.getByText('1 tagihan')).toBeInTheDocument()
-    expect(screen.getByText('Total Rp 2.500.000')).toBeInTheDocument()
+    expect(screen.getByText('6 tagihan')).toBeInTheDocument()
+    expect(screen.getByText('Total Rp 25.000.000')).toBeInTheDocument()
     expect(screen.getByText('Kontrak Akan Habis')).toBeInTheDocument()
     expect(screen.getByText('1 kontrak')).toBeInTheDocument()
     expect(screen.getByText('Kos Kamar 03')).toBeInTheDocument()

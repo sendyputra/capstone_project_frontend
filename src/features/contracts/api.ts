@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { dariStatusKontrak, keDaftarKontrak, keKontrak } from '@/api/adapters/contracts'
 import { apiDownload, apiFetch, apiSemuaHalaman, bukaEntitas } from '@/api/client'
-import type { ContractRow } from '@/api/types'
+import type { ContractRow, EndReason } from '@/api/types'
 import { useSession } from '@/features/auth/api'
 import { tanggalHariIni } from '@/lib/tanggal'
 
@@ -62,9 +62,31 @@ export function useUbahStatusKontrak() {
   return useMutation({
     /* Halaman mengirim status tampilan (`Aktif`); API menuntut enum backend
        (`active`). `Menunggu` diterjemahkan ke `pending` walau klien tidak
-       pernah mengirimnya sendiri. */
-    mutationFn: async ({ id, status }: { id: number; status: ContractRow['status'] }) =>
-      keKontrak(bukaEntitas(await apiFetch<unknown>(`/contracts/${id}`, { method: 'PUT', body: { status: dariStatusKontrak(status) } }), 'contract')),
+       pernah mengirimnya sendiri. Bidang penghentian hanya ikut bila diisi,
+       jadi pengaktifan kontrak tidak mengirim kunci kosong. */
+    mutationFn: async ({ id, status, ended_at, end_reason, end_note }: PerubahanKontrak) =>
+      keKontrak(
+        bukaEntitas(
+          await apiFetch<unknown>(`/contracts/${id}`, {
+            method: 'PUT',
+            body: {
+              status: dariStatusKontrak(status),
+              ...(ended_at ? { ended_at } : {}),
+              ...(end_reason ? { end_reason } : {}),
+              ...(end_note ? { end_note } : {}),
+            },
+          }),
+          'contract',
+        ),
+      ),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: contractKeys.list(userId) }),
   })
+}
+
+export type PerubahanKontrak = {
+  id: number
+  status: ContractRow['status']
+  ended_at?: string
+  end_reason?: EndReason
+  end_note?: string
 }

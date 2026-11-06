@@ -1,5 +1,5 @@
 import { buka } from '@/api/client'
-import type { ContractRow, ContractStatusDto, KtpStatus } from '@/api/types'
+import type { ContractRow, ContractStatusDto, EndReason, KtpStatus } from '@/api/types'
 import { hitungBulanSewa } from '@/lib/sewa'
 import { tanggalKalender } from '@/lib/tanggal'
 
@@ -44,6 +44,15 @@ function keKtp(nilai: unknown): KtpStatus | undefined {
   return STATUS_KTP[String(nilai ?? '')]
 }
 
+/* Alasan penghentian adalah enum tertutup: nilai asing tidak diteruskan, sama
+   seperti status, supaya layar tidak menampilkan alasan karangan. */
+const ALASAN: readonly EndReason[] = ['selesai_normal', 'berhenti_penyewa', 'pelanggaran', 'lainnya']
+
+function keAlasan(nilai: unknown): EndReason | undefined {
+  const teks = String(nilai ?? '')
+  return (ALASAN as readonly string[]).includes(teks) ? (teks as EndReason) : undefined
+}
+
 /* Dua ejaan bidang diterima (`ktp` dari DTO lama, `ktp_status` dari backend),
    dan baris bersarang didahulukan atas baris datar. */
 function bacaKtp(...baris: Record<string, unknown>[]): KtpStatus | undefined {
@@ -64,6 +73,9 @@ export function keKontrak(dto: unknown): ContractRow {
   const akhir = tanggalKalender(String(k.end_date ?? ''))
   const bulan = hitungBulan(mulai, akhir)
   const ktp = bacaKtp(tenant, k)
+  const berakhir = k.ended_at ? tanggalKalender(String(k.ended_at)) : ''
+  const alasan = keAlasan(k.end_reason)
+  const catatan = typeof k.end_note === 'string' && k.end_note ? k.end_note : undefined
   return {
     id: Number(k.id),
     unit_id: Number(k.unit_id),
@@ -75,6 +87,7 @@ export function keKontrak(dto: unknown): ContractRow {
     renter_name: String(k.renter_name ?? tenant.name ?? ''),
     unit_title: String(k.unit_title ?? unit.name ?? ''),
     owner_name: String(k.owner_name ?? owner.name ?? ''),
+    created_at: String(k.created_at ?? ''),
     term: `${bulan} bulan`,
     /* Biaya bulanan dihitung dari nilai kontrak dan masa sewa, bukan dibaca dari
        `monthly` kiriman server: dua sumber untuk satu angka bisa berselisih. */
@@ -82,6 +95,8 @@ export function keKontrak(dto: unknown): ContractRow {
     /* Hanya diteruskan bila server mengirimnya; tanpanya kolom "KTP" di layar
        pemilik tampil "Belum". */
     ...(ktp ? { ktp } : {}),
+    ...(berakhir ? { ended_at: berakhir } : {}),
+    ...(alasan ? { end_reason: alasan, ...(catatan ? { end_note: catatan } : {}) } : {}),
   }
 }
 

@@ -8,6 +8,7 @@ import { OccupancyChart } from '@/features/dashboard/components/occupancy-chart'
 import { RevenueChart } from '@/features/dashboard/components/revenue-chart'
 import { formatBulan, formatRupiah, formatTanggal } from '@/lib/format'
 import { susunTagihan } from '@/lib/tagihan'
+import { tanggalHariIni } from '@/lib/tanggal'
 import { cn } from '@/lib/utils'
 import { EmptyState } from '@/ui/empty-state'
 import { ErrorState } from '@/ui/error-state'
@@ -15,9 +16,12 @@ import { Skeleton } from '@/ui/skeleton'
 
 const HARI_INGAT = 60
 
-function tanggalMendatang(hari: number): string {
-  const tanggal = new Date()
-  tanggal.setDate(tanggal.getDate() + hari)
+/* Dihitung dari tanggal yang sama dengan `susunTagihan`, yaitu kalender WIB:
+   `new Date().toISOString()` memakai UTC dan menggeser hari selama tujuh jam
+   pertama tiap hari. */
+function tanggalMendatang(dari: string, hari: number): string {
+  const tanggal = new Date(`${dari}T00:00:00Z`)
+  tanggal.setUTCDate(tanggal.getUTCDate() + hari)
   return tanggal.toISOString().slice(0, 10)
 }
 
@@ -27,10 +31,12 @@ export function OwnerDashboardPage() {
   const pembayaran = usePayments()
   const { session } = useSession()
 
-  const hariIni = new Date().toISOString().slice(0, 10)
-  const tagihan = susunTagihan(kontrak.data ?? [], pembayaran.data ?? [], hariIni)
-  const tunggakan = tagihan.filter((baris) => baris.status === 'Belum Bayar')
-  const batasHabis = tanggalMendatang(HARI_INGAT)
+  const hariIni = tanggalHariIni()
+  /* `semuaKontrak`: tunggakan bulan sebelum penghentian tetap terhitung setelah
+     kontrak ditutup, bukan lenyap bersama statusnya. */
+  const tagihan = susunTagihan(kontrak.data ?? [], pembayaran.data ?? [], hariIni, { semuaKontrak: true })
+  const tunggakan = tagihan.filter((baris) => baris.status === 'Tagihan Belum Dibayar')
+  const batasHabis = tanggalMendatang(hariIni, HARI_INGAT)
   const akanHabis = (kontrak.data ?? []).filter(
     (baris) => baris.status === 'Aktif' && baris.end_date !== '' && baris.end_date <= batasHabis,
   )

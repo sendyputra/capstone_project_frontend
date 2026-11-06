@@ -8,13 +8,13 @@ describe('StatusChip', () => {
       <div>
         <StatusChip nilai="Tersedia" />
         <StatusChip nilai="Ditolak" />
-        <StatusChip nilai="Belum Bayar" />
+        <StatusChip nilai="Tagihan Belum Dibayar" />
         <StatusChip nilai="Aktif" />
       </div>,
     )
     expect(screen.getByText('Tersedia')).toHaveClass('bg-brand-success-soft')
     expect(screen.getByText('Ditolak')).toHaveClass('bg-brand-danger-soft')
-    expect(screen.getByText('Belum Bayar')).toHaveClass('bg-brand-warning-soft')
+    expect(screen.getByText('Tagihan Belum Dibayar')).toHaveClass('bg-brand-warning-soft')
     expect(screen.getByText('Aktif')).toHaveClass('bg-brand-success-soft')
   })
 

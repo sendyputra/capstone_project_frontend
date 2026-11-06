@@ -14,6 +14,24 @@ export function formatTanggal(value: string | Date): string {
   return new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }).format(tanggal)
 }
 
+/* Tanggal yang membawa waktu kejadian (diunggah, dibuat, notifikasi) ditulis
+   beserta jam:menit:detik. Zonanya WIB, mengikuti konvensi zona waktu aplikasi,
+   supaya tulisannya sama di peramban mana pun. Nilai tak terbaca menjadi "—". */
+export function formatWaktu(value: string | Date): string {
+  const tanggal = typeof value === 'string' ? new Date(value) : value
+  if (Number.isNaN(tanggal.getTime())) return '—'
+  return new Intl.DateTimeFormat('id-ID', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false,
+    timeZone: 'Asia/Jakarta',
+  }).format(tanggal)
+}
+
 /* Tanggal ditulis singkat ("10 Nov 2026") karena barisnya ringkas dan dibaca
    berdampingan dengan tanggal lain. Dibangun dalam UTC supaya zona waktu
    peramban tidak menggeser harinya; nilai tak terbaca menjadi "—". */

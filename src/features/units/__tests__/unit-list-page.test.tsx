@@ -38,6 +38,12 @@ describe('UnitListPage', () => {
     expect(within(baris).getByRole('link', { name: /Set Kalender/i })).toHaveAttribute('href', '/pemilik/unit/1')
   })
 
+  it('membuka detail unit dari nama unit di tabel', async () => {
+    renderHalaman()
+    const baris = (await screen.findByText('Kos Kamar 01')).closest('tr')!
+    expect(within(baris).getByRole('link', { name: 'Kos Kamar 01' })).toHaveAttribute('href', '/pemilik/unit/1')
+  })
+
   it('menghapus unit hanya setelah disetujui, dan batal tidak mengubah apa pun', async () => {
     renderHalaman()
     const baris = (await screen.findByText('Kontrakan Rumah Asri Type 36')).closest('tr')!

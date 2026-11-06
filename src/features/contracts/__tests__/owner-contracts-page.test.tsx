@@ -9,6 +9,12 @@ import { masukSebagai } from '@/test/sesi'
 import { stubUnduhan } from '@/test/unduh'
 import { renderWithProviders } from '@/test/render'
 
+/* Waktu dipaku supaya hitungan tunggakan tidak bergeser saat kalender berjalan. */
+vi.mock('@/lib/tanggal', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/lib/tanggal')>()),
+  tanggalHariIni: () => '2026-11-06',
+}))
+
 /* Badan permintaan ikut direkam supaya tes bisa memastikan `tenant_id` dan
    total hasil hitungan benar-benar terkirim, bukan hanya metodenya. */
 function pantauBadan(): { metode: string; badan: unknown }[] {
@@ -30,6 +36,42 @@ async function bukaFormKontrak() {
 }
 
 describe('OwnerContractsPage', () => {
+  /* Status kontrak dan status tagihan dua sumbu berbeda: kontrak tetap "Aktif"
+     meski ada bulannya yang belum dibayar. Bedanya ditandai badge jumlah
+     tunggakan supaya "Aktif" tidak dibaca sebagai lunas. */
+  it('menandai kontrak aktif yang punya bulan belum dibayar', async () => {
+    server.use(
+      http.get('/contracts', () =>
+        HttpResponse.json({
+          data: [
+            { id: 777, unit_id: 1, tenant_id: 2, start_date: '2026-08-01', end_date: '2026-11-30', total_price: 10_000_000, status: 'active', tenant: { name: 'Siti Sarah' }, unit: { name: 'Kos Lunas', owner: { name: 'Pak Wahyu' } } },
+            { id: 778, unit_id: 2, tenant_id: 3, start_date: '2026-08-01', end_date: '2026-11-30', total_price: 10_000_000, status: 'active', tenant: { name: 'Andi Pratama' }, unit: { name: 'Kos Tunggakan', owner: { name: 'Pak Wahyu' } } },
+          ],
+        }),
+      ),
+      http.get('/payments', () =>
+        HttpResponse.json({
+          data: [
+            { id: 401, contract_id: 777, month: '2026-08', amount: 2500000, status: 'paid', proof_url: 'a.jpg' },
+            { id: 402, contract_id: 777, month: '2026-09', amount: 2500000, status: 'paid', proof_url: 'b.jpg' },
+            { id: 403, contract_id: 777, month: '2026-10', amount: 2500000, status: 'paid', proof_url: 'c.jpg' },
+            { id: 404, contract_id: 777, month: '2026-11', amount: 2500000, status: 'paid', proof_url: 'd.jpg' },
+            { id: 405, contract_id: 778, month: '2026-08', amount: 2500000, status: 'paid', proof_url: 'e.jpg' },
+          ],
+        }),
+      ),
+    )
+    masukSebagai(402, 'pemilik', 'Pak Wahyu')
+    renderWithProviders(<OwnerContractsPage />)
+
+    const barisLunas = (await screen.findAllByText('Kos Lunas'))[0].closest('tr')!
+    expect(within(barisLunas).getByText('Aktif')).toBeInTheDocument()
+    expect(within(barisLunas).queryByText(/belum dibayar/)).not.toBeInTheDocument()
+
+    const barisTunggakan = (await screen.findAllByText('Kos Tunggakan'))[0].closest('tr')!
+    expect(within(barisTunggakan).getByText('3 bulan belum dibayar')).toBeInTheDocument()
+  })
+
   it('menampilkan kontrak dan menyetujui yang masih menunggu', async () => {
     masukSebagai(402, 'pemilik', 'Pak Wahyu')
     renderWithProviders(<OwnerContractsPage />)
@@ -65,8 +107,11 @@ describe('OwnerContractsPage', () => {
     renderWithProviders(<OwnerContractsPage />)
 
     const tabel = await screen.findByRole('table')
-    /* Baris 0 adalah kepala tabel; baris 1 baris data pertama. */
-    const barisPertama = within(tabel).getAllByRole('row')[1]
+    /* Baris pertama dicari lewat tombol aksinya: kepala tabel sekarang dua
+       baris (judul dan saringan), jadi indeks tetap tidak lagi aman. */
+    const barisPertama = within(tabel)
+      .getAllByRole('row')
+      .find((baris) => within(baris).queryByRole('button', { name: 'Setujui' }))!
     expect(within(barisPertama).getByText('Menunggu')).toBeInTheDocument()
     expect(within(barisPertama).getByRole('button', { name: 'Setujui' })).toBeInTheDocument()
   })
@@ -151,7 +196,10 @@ describe('OwnerContractsPage', () => {
 
     await userEvent.selectOptions(screen.getByLabelText('Penyewa'), '1')
     await userEvent.selectOptions(screen.getByLabelText('Unit'), '1')
-    fireEvent.change(screen.getByLabelText('Mulai sewa'), { target: { value: '2026-11-01' } })
+    /* Tanggal jauh di masa depan: `booked_dates` data contoh dihitung dari bulan
+       berjalan, jadi tanggal tetap di bulan ini akan menabrak blok begitu bulan
+       kalender berganti dan kontrak ditolak 422. */
+    fireEvent.change(screen.getByLabelText('Mulai sewa'), { target: { value: '2099-01-01' } })
     await userEvent.click(screen.getByRole('button', { name: 'Simpan Kontrak' }))
 
     const baris = (await screen.findAllByText('Rian Pratama'))
@@ -190,5 +238,69 @@ describe('OwnerContractsPage', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Unduh CSV' }))
 
     expect(await screen.findByText('Laporan gagal dibuat.')).toBeInTheDocument()
+  })
+
+  /* Satu klik "Selesaikan" dulu langsung mengakhiri sewa tanpa sebab. Sekarang
+     alasan wajib dipilih dulu, dan catatan wajib saat alasannya "Lainnya". */
+  it('meminta alasan sebelum mengakhiri sewa berjalan', async () => {
+    masukSebagai(402, 'pemilik', 'Pak Wahyu')
+    renderWithProviders(<OwnerContractsPage />)
+    const baris = (await screen.findAllByText('Siti Sarah'))
+      .map((el) => el.closest('tr')!)
+      .find((tr) => within(tr).queryByRole('button', { name: 'Selesaikan' }))!
+
+    await userEvent.click(within(baris).getByRole('button', { name: 'Selesaikan' }))
+    const panel = screen.getByRole('form', { name: 'Akhiri kontrak' })
+
+    await userEvent.click(within(panel).getByRole('button', { name: 'Simpan penghentian' }))
+    expect(within(panel).getByRole('alert')).toHaveTextContent('Alasan penghentian wajib dipilih.')
+
+    await userEvent.selectOptions(within(panel).getByLabelText('Alasan'), 'lainnya')
+    await userEvent.click(within(panel).getByRole('button', { name: 'Simpan penghentian' }))
+    expect(within(panel).getByRole('alert')).toHaveTextContent('Catatan wajib diisi')
+
+    const rekaman = pantauBadan()
+    await userEvent.selectOptions(within(panel).getByLabelText('Alasan'), 'berhenti_penyewa')
+    fireEvent.change(within(panel).getByLabelText('Tanggal berhenti'), { target: { value: '2026-12-15' } })
+    await userEvent.click(within(panel).getByRole('button', { name: 'Simpan penghentian' }))
+
+    await waitFor(() =>
+      expect(rekaman).toContainEqual({
+        metode: 'PUT',
+        badan: expect.objectContaining({ status: 'completed', ended_at: '2026-12-15', end_reason: 'berhenti_penyewa' }),
+      }),
+    )
+    await waitFor(() => expect(screen.queryByRole('form', { name: 'Akhiri kontrak' })).not.toBeInTheDocument())
+  })
+
+  /* Kontrak lama yang sudah punya jejak penghentian menampilkan tanggal dan
+     alasannya di bawah status, tanpa menambah kolom baru. */
+  it('menampilkan tanggal berhenti dan alasannya di baris kontrak', async () => {
+    masukSebagai(402, 'pemilik', 'Pak Wahyu')
+    renderWithProviders(<OwnerContractsPage />)
+
+    const baris = (await screen.findAllByText('Bagas Nugroho'))
+      .map((el) => el.closest('tr')!)
+      .find((tr): tr is HTMLTableRowElement => Boolean(tr))!
+
+    expect(within(baris).getByText(/31 Jul 2026/)).toBeInTheDocument()
+    expect(within(baris).getByText(/Selesai normal/)).toBeInTheDocument()
+  })
+
+  /* Glosarium melarang "pembatalan" untuk penghentian dini: tombol pada kontrak
+     Aktif harus berbunyi "Hentikan sewa", dan statusnya tetap satu enum yang
+     sama di API (`cancelled`). */
+  it('menamai aksi kontrak aktif Hentikan sewa, bukan Batalkan', async () => {
+    masukSebagai(402, 'pemilik', 'Pak Wahyu')
+    renderWithProviders(<OwnerContractsPage />)
+    const baris = (await screen.findAllByText('Siti Sarah'))
+      .map((el) => el.closest('tr')!)
+      .find((tr) => within(tr).queryByRole('button', { name: 'Hentikan sewa' }))!
+
+    await userEvent.click(within(baris).getByRole('button', { name: 'Hentikan sewa' }))
+
+    const panel = screen.getByRole('form', { name: 'Akhiri kontrak' })
+    expect(within(panel).getByText(/Hentikan sewa Siti Sarah/)).toBeInTheDocument()
+    expect(within(panel).queryByText(/Batalkan sewa/)).not.toBeInTheDocument()
   })
 })

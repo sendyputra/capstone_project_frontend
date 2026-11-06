@@ -30,3 +30,6 @@ service-account*.json
 .env.*
 !.env.example
 .firebase
+# Playwright
+playwright-report/
+test-results/

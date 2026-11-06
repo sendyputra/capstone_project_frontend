@@ -11,6 +11,8 @@ export default defineConfig({
     setupFiles: ['./src/test/setup.ts'],
     css: false,
     env: { NODE_ENV: 'test', VITE_API_BASE_URL: '' },
+    /* Direktori e2e milik Playwright, bukan jsdom. */
+    exclude: ['**/node_modules/**', 'e2e/**'],
     /* Layar katalog, kalender, dan tabel membuat jsdom berat; worker yang
        terlalu banyak membuat tes yang cepat di luar menjadi kehabisan waktu. */
     maxWorkers: 2,

@@ -53,10 +53,12 @@ describe('pendaftaran multipart', () => {
        realm lain), jadi bagian berkas yang sah pun bukan turunan `File` jsdom.
        Merek di bawah ini sama kuatnya dan tidak bergantung realm: bagian teks
        bernilai string, sedangkan bagian berkas ber-merek `[object File]`. */
-    const ktp = badan!.get('ktp')
-    expect(typeof ktp).not.toBe('string')
-    expect(Object.prototype.toString.call(ktp)).toBe('[object File]')
-    expect({ name: (ktp as File).name, type: (ktp as File).type }).toEqual({ name: 'ktp.png', type: 'image/png' })
+    /* Nama bagian mengikuti kontrak backend (`id_card`), bukan label layar: API
+       menolak `ktp` dengan 422 "The ID Card is required for tenant role." */
+    const idCard = badan!.get('id_card')
+    expect(typeof idCard).not.toBe('string')
+    expect(Object.prototype.toString.call(idCard)).toBe('[object File]')
+    expect({ name: (idCard as File).name, type: (idCard as File).type }).toEqual({ name: 'ktp.png', type: 'image/png' })
     /* Isian lain ikut terkirim, bukan hanya berkasnya. Nama yang terkirim adalah
        hasil OCR (`BUDI SANTOSO`), yang menimpa ketikan — perilaku Task 11.
        `email` dan `password` ikut diuji: tanpa keduanya, badan multipart yang

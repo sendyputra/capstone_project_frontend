@@ -9,7 +9,7 @@ const tone: Record<string, string> = {
      nada informasi yang sama dengan status lain yang butuh perhatian. */
   Terisi: 'bg-brand-accent-track text-brand-accent-soft-fg',
   Perawatan: 'bg-brand-warning-soft text-brand-warning-soft-fg',
-  'Belum Bayar': 'bg-brand-warning-soft text-brand-warning-soft-fg',
+  'Tagihan Belum Dibayar': 'bg-brand-warning-soft text-brand-warning-soft-fg',
   'Menunggu Verifikasi': 'bg-brand-accent-track text-brand-accent-soft-fg',
   'Menunggu Persetujuan': 'bg-brand-warning-soft text-brand-warning-soft-fg',
   Disetujui: 'bg-brand-success-soft text-brand-success-soft-fg',
