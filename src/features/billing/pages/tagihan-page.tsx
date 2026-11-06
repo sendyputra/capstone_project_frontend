@@ -1,16 +1,40 @@
 import { useState } from 'react'
+import type { ContractRow } from '@/api/types'
 import { usePayments, useUnduhLaporanTagihan, useUnggahBukti } from '@/features/billing/api'
 import { useContracts } from '@/features/contracts/api'
-import { formatBulan, formatRupiah, namaBerkas } from '@/lib/format'
-import { susunTagihan, urutkanTagihan, type Tagihan } from '@/lib/tagihan'
+import { formatBulan, formatRupiah, formatTanggal, formatTanggalPendek, namaBerkas } from '@/lib/format'
+import { LABEL_ALASAN, labelStatusKontrak } from '@/lib/sewa'
+import { kelompokkanSewa, susunTagihan, urutkanTagihan, type Tagihan } from '@/lib/tagihan'
 import { tanggalHariIni } from '@/lib/tanggal'
 import { ErrorState } from '@/ui/error-state'
 import { Skeleton } from '@/ui/skeleton'
 import { StatusChip } from '@/ui/status-chip'
-import { Tabel } from '@/ui/tabel'
+import { TabelSaring } from '@/ui/tabel-saring'
+import { TautanBukti } from '@/features/billing/tautan-bukti'
 import { useToast } from '@/ui/toast'
 
 type MasukanUnggah = { contract_id: number; month: string; amount: number; proof: File }
+
+/* Masa sewa ditulis pendek supaya muat satu baris kartu, dan tanggal tak
+   terbaca menjadi "—" alih-alih "Invalid Date". */
+function masaSewa(kontrak: ContractRow) {
+  return `${formatTanggalPendek(kontrak.start_date)} – ${formatTanggalPendek(kontrak.end_date)}`
+}
+
+function KartuSewa({ kontrak, keterangan }: { kontrak: ContractRow; keterangan?: string }) {
+  return (
+    <li className="rounded-xl border border-brand-border bg-brand-bg px-4 py-3">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <span className="font-semibold text-brand-text">{kontrak.unit_title}</span>
+        <StatusChip nilai={labelStatusKontrak(kontrak)} />
+      </div>
+      <p className="mt-1 text-micro text-brand-text-muted">
+        {masaSewa(kontrak)} · {formatRupiah(kontrak.monthly)} / bln
+      </p>
+      {keterangan && <p className="mt-1 text-micro text-brand-text-subtle">{keterangan}</p>}
+    </li>
+  )
+}
 
 export function TagihanPage() {
   const kontrak = useContracts()
@@ -19,13 +43,25 @@ export function TagihanPage() {
   const unduhLaporan = useUnduhLaporanTagihan()
   const { tampilkan } = useToast()
   const [galat, setGalat] = useState('')
+  const [riwayatTerbuka, setRiwayatTerbuka] = useState(true)
   const [berkas, setBerkas] = useState('')
 
   /* Tagihan diturunkan dari kontrak: bulan yang belum dibayar tidak punya baris
      pembayaran, jadi `usePayments()` saja tidak bisa menyusun daftar ini.
      `tanggalHariIni()` memakai tanggal kalender WIB — `toISOString()` (UTC)
      menyembunyikan tagihan bulan berjalan selama tujuh jam pertama tiap bulan. */
-  const daftar = urutkanTagihan(susunTagihan(kontrak.data ?? [], tagihan.data ?? [], tanggalHariIni()))
+  const hariIni = tanggalHariIni()
+  const kelompok = kelompokkanSewa(kontrak.data ?? [], hariIni)
+  /* Tabel berjalan hanya memuat sewa yang benar-benar masih berjalan. Kontrak
+     `Aktif` yang tanggal selesainya sudah lewat masuk riwayat; tanpa pembagian
+     ini bulan yang sama muncul di kedua tabel, satu salinan dengan tombol
+     unggah bukti. */
+  const daftar = urutkanTagihan(susunTagihan(kelompok.berjalan, tagihan.data ?? [], hariIni))
+  /* Riwayat memakai penyusun yang sama dengan `semuaKontrak`, jadi aturan
+     bulan dan biaya bulanan tidak punya salinan kedua. */
+  const riwayat = urutkanTagihan(
+    susunTagihan(kelompok.riwayat, tagihan.data ?? [], hariIni, { semuaKontrak: true }),
+  )
   const belumBayar = daftar.filter((baris) => baris.status === 'Belum Bayar').length
   const galatMuat = kontrak.error ?? tagihan.error
 
@@ -74,44 +110,136 @@ export function TagihanPage() {
       {galatMuat && <ErrorState message={(galatMuat as Error).message} onRetry={() => { kontrak.refetch(); tagihan.refetch() }} />}
 
       {kontrak.isSuccess && tagihan.isSuccess && (
-        <div className="rounded-2xl border border-brand-border bg-brand-surface shadow-sm">
-          <Tabel kolom={['Unit / Bulan', 'Jumlah', 'Status', 'Bukti Bayar', 'Tindakan']} kolomAkhirKanan>
-            {daftar.map((baris) => (
-              <tr key={baris.kunci}>
-                <td className="p-4">
-                  <span className="block font-bold text-brand-text">{baris.unit_title}</span>
-                  <span className="text-micro text-brand-text-subtle">Tagihan {formatBulan(baris.month)}</span>
-                </td>
-                <td className="p-4 font-extrabold text-brand-accent">{formatRupiah(baris.amount)}</td>
-                <td className="p-4"><StatusChip nilai={baris.status} /></td>
-                <td className="p-4 text-brand-text-muted">{namaBerkas(baris.proof_url) || 'Belum ada berkas'}</td>
-                <td className="p-4 text-right">
-                  {(baris.status === 'Belum Bayar' || baris.status === 'Ditolak') && (
-                    <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-brand-accent-border bg-brand-accent-soft px-3 py-2 text-ui font-semibold text-brand-accent">
-                      {baris.status === 'Ditolak' ? 'Unggah Ulang' : 'Unggah Bukti'}
-                      <input
-                        type="file"
-                        accept="image/*"
-                        className="sr-only"
-                        onChange={(e) => {
-                          const berkasTerpilih = e.target.files?.[0]
-                          if (berkasTerpilih) unggahBukti(baris, berkasTerpilih)
-                        }}
-                      />
-                    </label>
-                  )}
-                  {baris.status === 'Menunggu Verifikasi' && <span className="text-micro text-brand-text-subtle">Menunggu pemilik</span>}
-                  {baris.status === 'Lunas' && <span className="text-micro font-semibold text-brand-success-soft-fg">Selesai</span>}
-                </td>
-              </tr>
-            ))}
-            {daftar.length === 0 && (
-              <tr>
-                <td colSpan={5} className="p-6 text-center text-ui text-brand-text-muted">Belum ada tagihan bulan ini.</td>
-              </tr>
+        <>
+          {kelompok.pengajuan.length > 0 && (
+            <section aria-label="Pengajuan sewa" className="mb-6 space-y-3">
+              <h2 className="text-heading-s font-bold text-brand-text">Pengajuan</h2>
+              <ul className="space-y-2">
+                {kelompok.pengajuan.map((baris) => (
+                  <KartuSewa key={baris.id} kontrak={baris} keterangan="Menunggu persetujuan pemilik." />
+                ))}
+              </ul>
+            </section>
+          )}
+
+          <section aria-label="Sewa berjalan" className="space-y-3">
+            <h2 className="text-heading-s font-bold text-brand-text">Sewa Berjalan</h2>
+            {kelompok.berjalan.length > 0 ? (
+              <ul className="space-y-2">
+                {kelompok.berjalan.map((baris) => (
+                  <KartuSewa key={baris.id} kontrak={baris} />
+                ))}
+              </ul>
+            ) : (
+              <p className="text-ui text-brand-text-muted">Tidak ada sewa yang sedang berjalan.</p>
             )}
-          </Tabel>
-        </div>
+
+            <div className="rounded-2xl border border-brand-border bg-brand-surface shadow-sm">
+              <TabelSaring
+                kolom={['Unit', 'Bulan Tagihan', 'Jumlah', 'Status', 'Bukti Bayar', 'Diunggah', 'Tindakan']}
+                baris={daftar}
+                urut={{
+                  banding: {
+                    Unit: (a, b) => a.unit_title.localeCompare(b.unit_title),
+                    'Bulan Tagihan': (a, b) => a.month.localeCompare(b.month),
+                    Jumlah: (a, b) => a.amount - b.amount,
+                    Status: (a, b) => a.status.localeCompare(b.status),
+                    'Bukti Bayar': (a, b) => namaBerkas(a.proof_url).localeCompare(namaBerkas(b.proof_url)),
+                    Diunggah: (a, b) => a.dibuat.localeCompare(b.dibuat),
+                  },
+                }}
+                saringan={[
+                  { nilai: (baris) => baris.unit_title },
+                  { nilai: (baris) => formatBulan(baris.month) },
+                  { nilai: (baris) => formatRupiah(baris.amount) },
+                  { jenis: 'pilihan', nilai: (baris) => baris.status, pilihan: ['Belum Bayar', 'Menunggu Verifikasi', 'Lunas', 'Ditolak'] },
+                  { nilai: (baris) => namaBerkas(baris.proof_url) },
+                  { nilai: (baris) => formatTanggal(baris.dibuat) },
+                ]}
+                kolomAkhirKanan
+                kosong="Belum ada tagihan bulan ini."
+              >
+                {(tampil) => tampil.map((baris) => (
+                  <tr key={baris.kunci}>
+                    <td className="p-4 font-bold text-brand-text">{baris.unit_title}</td>
+                    <td className="p-4 text-brand-text-muted">{formatBulan(baris.month)}</td>
+                    <td className="p-4 font-extrabold text-brand-accent">{formatRupiah(baris.amount)}</td>
+                    <td className="p-4"><StatusChip nilai={baris.status} /></td>
+                    <td className="p-4 text-brand-text-muted"><TautanBukti url={baris.proof_url} /></td>
+                    <td className="p-4 text-brand-text-muted">{formatTanggal(baris.dibuat ?? '')}</td>
+                    <td className="p-4 text-right">
+                      {(baris.status === 'Belum Bayar' || baris.status === 'Ditolak') && (
+                        <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-brand-accent-border bg-brand-accent-soft px-3 py-2 text-ui font-semibold text-brand-accent">
+                          {baris.status === 'Ditolak' ? 'Unggah Ulang' : 'Unggah Bukti'}
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="sr-only"
+                            onChange={(e) => {
+                              const berkasTerpilih = e.target.files?.[0]
+                              if (berkasTerpilih) unggahBukti(baris, berkasTerpilih)
+                            }}
+                          />
+                        </label>
+                      )}
+                      {baris.status === 'Menunggu Verifikasi' && <span className="text-micro text-brand-text-subtle">Menunggu pemilik</span>}
+                      {baris.status === 'Lunas' && <span className="text-micro font-semibold text-brand-success-soft-fg">Selesai</span>}
+                    </td>
+                  </tr>
+                ))}
+              </TabelSaring>
+            </div>
+          </section>
+
+          {/* Riwayat sengaja tanpa tombol unggah: bulannya sudah lewat. Yang
+              disimpan adalah keadaannya, bukan kesempatan membayarnya lagi. */}
+          {kelompok.riwayat.length > 0 && (
+            <section aria-label="Riwayat sewa" className="mt-6 space-y-3">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <h2 className="text-heading-s font-bold text-brand-text">Riwayat Sewa</h2>
+                <button
+                  type="button"
+                  aria-expanded={riwayatTerbuka}
+                  onClick={() => setRiwayatTerbuka((lama) => !lama)}
+                  className="rounded-lg border border-brand-border bg-brand-surface px-3 py-1.5 text-micro font-semibold text-brand-text"
+                >
+                  {riwayatTerbuka ? 'Lipat riwayat' : 'Buka riwayat'}
+                </button>
+              </div>
+              {riwayatTerbuka && kelompok.riwayat.map((baris) => (
+                <article key={baris.id} className="rounded-2xl border border-brand-border bg-brand-surface p-4 shadow-sm">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <span className="font-semibold text-brand-text">{baris.unit_title}</span>
+                    <StatusChip nilai={labelStatusKontrak(baris)} />
+                  </div>
+                  <p className="mt-1 text-micro text-brand-text-muted">
+                    {masaSewa(baris)} · {formatRupiah(baris.monthly)} / bln
+                  </p>
+                  {baris.status === 'Aktif' && (
+                    <p className="mt-1 text-micro text-brand-text-subtle">Masa sewa berakhir, menunggu penutupan pemilik.</p>
+                  )}
+                  {baris.ended_at && (
+                    <p className="mt-1 text-micro text-brand-text-subtle">
+                      Berakhir {formatTanggalPendek(baris.ended_at)}
+                      {baris.end_reason ? ` · ${LABEL_ALASAN[baris.end_reason]}` : ''}
+                    </p>
+                  )}
+                  <ul className="mt-3 divide-y divide-brand-border">
+                    {riwayat
+                      .filter((tagihanBulan) => tagihanBulan.contract_id === baris.id)
+                      .map((tagihanBulan) => (
+                        <li key={tagihanBulan.kunci} className="flex flex-wrap items-center justify-between gap-2 py-2 text-ui">
+                          <span className="text-brand-text-muted">{formatBulan(tagihanBulan.month)}</span>
+                          <span className="font-semibold text-brand-accent">{formatRupiah(tagihanBulan.amount)}</span>
+                          <StatusChip nilai={tagihanBulan.status} />
+                        </li>
+                      ))}
+                  </ul>
+                </article>
+              ))}
+            </section>
+          )}
+        </>
       )}
 
       {(galat || unggah.isPending || berkas) && (

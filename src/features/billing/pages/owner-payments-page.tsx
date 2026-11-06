@@ -1,14 +1,15 @@
 import { useState, type FormEvent } from 'react'
 import { useCatatPembayaran, usePayments, useUnduhLaporanTagihan, useVerifikasiPembayaran } from '@/features/billing/api'
 import { useContracts } from '@/features/contracts/api'
-import { formatBulan, formatRupiah, namaBerkas } from '@/lib/format'
+import { formatBulan, formatRupiah, formatTanggal, namaBerkas } from '@/lib/format'
 import { susunTagihan, urutkanTagihan } from '@/lib/tagihan'
 import { tanggalHariIni } from '@/lib/tanggal'
 import { ErrorState } from '@/ui/error-state'
 import { Skeleton } from '@/ui/skeleton'
 import { StatusChip } from '@/ui/status-chip'
-import { Tabel } from '@/ui/tabel'
+import { TabelSaring } from '@/ui/tabel-saring'
 import { useKonfirmasi } from '@/ui/confirm-dialog'
+import { TautanBukti } from '@/features/billing/tautan-bukti'
 import { useToast } from '@/ui/toast'
 
 export function OwnerPaymentsPage() {
@@ -210,18 +211,39 @@ export function OwnerPaymentsPage() {
       {tagihan.isPending && <Skeleton className="h-40" />}
       {tagihan.isError && <ErrorState message={(tagihan.error as Error).message} onRetry={() => tagihan.refetch()} />}
       {tagihan.isSuccess && (
-        <Tabel kolom={['Penyewa', 'Unit / Bulan', 'Jumlah', 'Bukti Bayar', 'Status', 'Aksi']} kolomAkhirKanan>
-          {daftar.map((baris) => (
+        <TabelSaring
+          kolom={['Penyewa', 'Unit', 'Bulan Tagihan', 'Jumlah', 'Bukti Bayar', 'Diunggah', 'Status', 'Aksi']}
+          baris={daftar}
+          urut={{
+            banding: {
+              Penyewa: (a, b) => a.renter_name.localeCompare(b.renter_name),
+              Unit: (a, b) => a.unit_title.localeCompare(b.unit_title),
+              'Bulan Tagihan': (a, b) => a.month.localeCompare(b.month),
+              Jumlah: (a, b) => a.amount - b.amount,
+              'Bukti Bayar': (a, b) => namaBerkas(a.proof_url).localeCompare(namaBerkas(b.proof_url)),
+              Diunggah: (a, b) => (a.created_at ?? '').localeCompare(b.created_at ?? ''),
+              Status: (a, b) => a.status.localeCompare(b.status),
+            },
+          }}
+          saringan={[
+            { nilai: (baris) => baris.renter_name },
+            { nilai: (baris) => baris.unit_title },
+            { nilai: (baris) => formatBulan(baris.month) },
+            { nilai: (baris) => formatRupiah(baris.amount) },
+            { nilai: (baris) => namaBerkas(baris.proof_url) },
+            { nilai: (baris) => formatTanggal(baris.created_at ?? '') },
+            { jenis: 'pilihan', nilai: (baris) => baris.status, pilihan: ['Belum Bayar', 'Menunggu Verifikasi', 'Lunas', 'Ditolak'] },
+          ]}
+          kolomAkhirKanan
+        >
+          {(tampil) => tampil.map((baris) => (
             <tr key={baris.id}>
               <td className="p-4 font-bold text-brand-text">{baris.renter_name}</td>
-              <td className="p-4">
-                <span className="block font-semibold text-brand-text">{baris.unit_title}</span>
-                <span className="text-micro text-brand-text-subtle">Tagihan {formatBulan(baris.month)}</span>
-              </td>
+              <td className="p-4 font-semibold text-brand-text">{baris.unit_title}</td>
+              <td className="p-4 text-brand-text-muted">{formatBulan(baris.month)}</td>
               <td className="p-4 font-extrabold text-brand-accent">{formatRupiah(baris.amount)}</td>
-              {/* `proof_url` berisi jalur berkas dari API; layar menampilkan
-                  namanya saja, sama seperti layar tagihan penyewa. */}
-              <td className="p-4 text-brand-text-muted">{namaBerkas(baris.proof_url) || 'Belum ada berkas'}</td>
+              <td className="p-4 text-brand-text-muted"><TautanBukti url={baris.proof_url} /></td>
+              <td className="p-4 text-brand-text-muted">{formatTanggal(baris.created_at ?? '')}</td>
               <td className="p-4"><StatusChip nilai={baris.status} /></td>
               <td className="p-4 text-right">
                 {baris.status === 'Menunggu Verifikasi' ? (
@@ -239,7 +261,7 @@ export function OwnerPaymentsPage() {
               </td>
             </tr>
           ))}
-        </Tabel>
+        </TabelSaring>
       )}
     </section>
   )

@@ -32,7 +32,9 @@ export function OwnerDashboardPage() {
   const { session } = useSession()
 
   const hariIni = tanggalHariIni()
-  const tagihan = susunTagihan(kontrak.data ?? [], pembayaran.data ?? [], hariIni)
+  /* `semuaKontrak`: tunggakan bulan sebelum penghentian tetap terhitung setelah
+     kontrak ditutup, bukan lenyap bersama statusnya. */
+  const tagihan = susunTagihan(kontrak.data ?? [], pembayaran.data ?? [], hariIni, { semuaKontrak: true })
   const tunggakan = tagihan.filter((baris) => baris.status === 'Belum Bayar')
   const batasHabis = tanggalMendatang(hariIni, HARI_INGAT)
   const akanHabis = (kontrak.data ?? []).filter(

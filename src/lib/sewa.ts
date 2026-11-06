@@ -1,3 +1,24 @@
+import type { ContractRow, EndReason } from '@/api/types'
+
+/* Label alasan penghentian dipakai tiga tempat sekaligus — tabel pemilik,
+   riwayat penyewa, dan pilihan pada panel penghentian — supaya satu alasan tidak
+   tertulis dengan dua kata berbeda. */
+export const LABEL_ALASAN: Record<EndReason, string> = {
+  selesai_normal: 'Selesai normal',
+  berhenti_penyewa: 'Berhenti penyewa',
+  pelanggaran: 'Pelanggaran',
+  lainnya: 'Lainnya',
+}
+
+export const PILIHAN_ALASAN = Object.entries(LABEL_ALASAN) as [EndReason, string][]
+
+/* `Dibatalkan` tanpa `ended_at` adalah pengajuan yang ditolak, bukan sewa yang
+   berhenti (ADR 0002): chip, saringan, dan urutan tabel memakai label ini
+   supaya kedua peristiwa tidak lagi berbunyi sama. */
+export function labelStatusKontrak(k: Pick<ContractRow, 'status' | 'ended_at'>): string {
+  return k.status === 'Dibatalkan' && !k.ended_at ? 'Ditolak' : k.status
+}
+
 export function hitungSewa(mulai: string, bulan: number, harga: number): { akhir: string; total: number } {
   const [tahun, bulanAwal, tanggal] = mulai.split('-').map(Number)
   const sasaran = new Date(Date.UTC(tahun, bulanAwal - 1 + bulan, 1))

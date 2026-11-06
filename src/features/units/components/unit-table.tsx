@@ -1,9 +1,9 @@
 import { Link } from 'react-router'
-import type { UnitRow } from '@/api/types'
+import { TIPE_UNIT, type UnitRow } from '@/api/types'
 import { GambarUnit } from '@/features/units/components/gambar-unit'
-import { formatRupiah } from '@/lib/format'
+import { formatRupiah, formatTanggal } from '@/lib/format'
 import { StatusChip } from '@/ui/status-chip'
-import { Tabel } from '@/ui/tabel'
+import { TabelSaring } from '@/ui/tabel-saring'
 
 export function UnitTable({
   units,
@@ -18,25 +18,51 @@ export function UnitTable({
   onHapus: (unit: UnitRow) => void
   tampilkanPemilik?: boolean
 }) {
-  const kolom = ['Info Unit', ...(tampilkanPemilik ? ['Pemilik'] : []), 'Tipe & Lokasi', 'Harga / Bulan', 'Status Unit', 'Kelola Kalender', 'Aksi']
+  const kolom = ['Info Unit', ...(tampilkanPemilik ? ['Pemilik'] : []), 'Tipe', 'Lokasi', 'Harga / Bulan', 'Dibuat', 'Status Unit', 'Kelola Kalender', 'Aksi']
 
   return (
     <div className="rounded-2xl border border-brand-border bg-brand-surface shadow-sm">
-      <Tabel kolom={kolom} kolomAkhirKanan>
-        {units.map((unit) => (
+      <TabelSaring
+        kolom={kolom}
+        baris={units}
+        /* Terbaru lebih dulu; tiap judul kolom menjadi tombol pembalik arah. */
+        urut={{
+          awal: { judul: 'Dibuat', arah: 'turun' },
+          banding: {
+            'Info Unit': (a, b) => a.name.localeCompare(b.name),
+            ...(tampilkanPemilik ? { Pemilik: (a: UnitRow, b: UnitRow) => a.owner_name.localeCompare(b.owner_name) } : {}),
+            Tipe: (a, b) => a.type.localeCompare(b.type),
+            Lokasi: (a, b) => a.address.localeCompare(b.address),
+            'Harga / Bulan': (a, b) => a.price - b.price,
+            Dibuat: (a, b) => (a.created_at ?? '').localeCompare(b.created_at ?? ''),
+            'Status Unit': (a, b) => a.status.localeCompare(b.status),
+          },
+        }}
+        saringan={[
+          { nilai: (unit) => unit.name },
+          ...(tampilkanPemilik ? [{ nilai: (unit: UnitRow) => unit.owner_name }] : []),
+          { jenis: 'pilihan', nilai: (unit) => unit.type, pilihan: TIPE_UNIT },
+          { nilai: (unit) => unit.address },
+          { nilai: (unit) => formatRupiah(unit.price) },
+          { nilai: (unit) => formatTanggal(unit.created_at ?? '') },
+          { jenis: 'pilihan', nilai: (unit) => unit.status, pilihan: ['Tersedia', 'Terisi', 'Perawatan'] },
+        ]}
+        kolomAkhirKanan
+      >
+        {(tampil) =>
+          tampil.map((unit) => (
           <tr key={unit.id} className="hover:bg-brand-bg">
             <td className="p-4">
               <div className="flex items-center gap-3">
                 <GambarUnit src={unit.image} alt="" className="h-12 w-12 shrink-0 rounded-lg border border-brand-border object-cover" />
-                <span className="text-ui font-bold text-brand-text">{unit.name}</span>
+                <Link to={`/pemilik/unit/${unit.id}`} className="text-ui font-bold text-brand-text hover:text-brand-accent">{unit.name}</Link>
               </div>
             </td>
             {tampilkanPemilik && <td className="p-4 font-medium text-brand-text-muted">{unit.owner_name}</td>}
-            <td className="p-4">
-              <span className="block font-semibold text-brand-text">{unit.type}</span>
-              <span className="text-micro text-brand-text-subtle">{unit.address}</span>
-            </td>
+            <td className="p-4 font-semibold text-brand-text">{unit.type}</td>
+            <td className="p-4 text-brand-text-muted">{unit.address}</td>
             <td className="p-4 font-extrabold text-brand-accent">{formatRupiah(unit.price)}</td>
+            <td className="p-4 text-brand-text-muted">{formatTanggal(unit.created_at ?? '')}</td>
             <td className="p-4">
               {/* Tombol pembungkus tanpa gaya; bentuk pilnya milik StatusChip,
                   supaya status tidak tampil sebagai dua lapis badge. */}
@@ -55,8 +81,9 @@ export function UnitTable({
               </button>
             </td>
           </tr>
-        ))}
-      </Tabel>
+          ))
+        }
+      </TabelSaring>
     </div>
   )
 }

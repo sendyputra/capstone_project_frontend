@@ -85,6 +85,11 @@ export function UnitDetailPage({ mode = 'penyewa' }: { mode?: 'penyewa' | 'pemil
             <div>
               <h1 className="text-heading-m font-bold text-brand-text">{unit.data.name}</h1>
               <p className="mt-1 text-micro text-brand-text-muted">{unit.data.address}</p>
+              {/* Katalog publik menyebut pemiliknya; layar pemilik tidak perlu
+                  mengulang identitasnya sendiri. */}
+              {mode === 'penyewa' && unit.data.owner_name && (
+                <p className="mt-1 text-micro text-brand-text-muted">Pemilik: {unit.data.owner_name}</p>
+              )}
             </div>
             <span className="text-body font-extrabold text-brand-accent">{formatRupiah(unit.data.price)} / bln</span>
           </div>

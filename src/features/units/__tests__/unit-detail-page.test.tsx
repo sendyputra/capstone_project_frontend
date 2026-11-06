@@ -94,6 +94,14 @@ describe('UnitDetailPage', () => {
     expect(screen.getByTestId(`tanggal-${bulan}-01`)).toHaveClass('bg-brand-success-soft')
   })
 
+  /* Katalog publik harus menyebut siapa pemiliknya; API mengirim `owner_name`
+     hasil join, dan adaptor sudah memetakannya ke `UnitRow`. */
+  it('menampilkan nama pemilik di katalog', async () => {
+    renderDetail()
+
+    expect(await screen.findByText('Pemilik: Pak Wahyu')).toBeInTheDocument()
+  })
+
   it('pemilik melihat panel blokir', async () => {
     renderDetail('1', 'pemilik')
 
@@ -107,6 +115,10 @@ describe('UnitDetailPage', () => {
     expect(screen.queryByLabelText('Mulai blokir')).not.toBeInTheDocument()
   })
 
+  /* Tanggal dipakai dari bulan depan: data contoh memblokir beberapa hari di
+     bulan berjalan, dan rentang tetap seperti "10–12" bisa jatuh di hari yang
+     sudah terisi — tes merah bukan karena kode berubah, melainkan karena
+     kalender bergerak. */
   it('pemilik memblokir rentang dan baris muncul', async () => {
     renderDetail('1', 'pemilik')
     await screen.findByRole('heading', { name: 'Kos Kamar 01' })
