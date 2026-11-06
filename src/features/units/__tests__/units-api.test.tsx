@@ -3,8 +3,8 @@ import { renderHook, waitFor } from '@testing-library/react'
 import { HttpResponse, http } from 'msw'
 import { describe, expect, it } from 'vitest'
 import { server } from '@/api/mocks/server'
-import { useCreateUnit, useMyUnits, usePublicUnits, useUbahStatusUnit, useUnit } from '@/features/units/api'
-import { pantauBadanForm, pantauMetode } from '@/test/metode'
+import { useCreateUnit, useMyUnits, usePublicUnits, useUbahStatusUnit, useUnit, useUpdateUnit } from '@/features/units/api'
+import { pantauBadanForm, pantauMetode, pantauPermintaan } from '@/test/metode'
 import { writeSession } from '@/features/auth/session'
 import type { ReactNode } from 'react'
 
@@ -60,6 +60,29 @@ describe('useMyUnits', () => {
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
     expect(result.current.data).toHaveLength(5)
     expect(result.current.data?.every((unit) => unit.owner_id === 403)).toBe(true)
+  })
+})
+
+describe('useUpdateUnit', () => {
+  /* PHP tidak mem-parse multipart pada PUT: `$request->validate()` melihat badan
+     kosong dan menolak "The name field is required". Unggahan tetap harus
+     multipart, jadi dikirim sebagai POST dengan `_method=PUT`, jalur yang
+     memang disediakan Laravel untuk spoofing metode. */
+  it('mengirim POST dengan _method=PUT, bukan PUT multipart', async () => {
+    writeSession({ token: 'mock.abc.tanda', user: { id: 402, name: 'Pak Wahyu', email: 'wahyu@umkm.id', role: 'pemilik' } })
+    const rekaman = pantauPermintaan()
+    const { result } = renderHook(() => useUpdateUnit(), { wrapper: pembungkus() })
+    result.current.mutate({
+      id: 1,
+      name: 'Kos Ubah Metode',
+      address: 'Bandung',
+      price: 1200000,
+      status: 'Tersedia',
+      image: new File(['x'], 'foto.jpg', { type: 'image/jpeg' }),
+    })
+    await waitFor(() => expect(result.current.isSuccess).toBe(true))
+    expect(rekaman.metode).toContain('POST /units/1')
+    expect(rekaman.badan.at(-1)?.get('_method')).toBe('PUT')
   })
 })
 

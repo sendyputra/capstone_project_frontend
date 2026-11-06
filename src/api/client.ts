@@ -73,6 +73,14 @@ export async function apiFetch<T>(
      disimpan di lokal supaya `unknown` bisa menyempit lewat `isFormData`. */
   const badan = options.body
   const isFormData = badan instanceof FormData
+  /* PHP tidak mem-parse multipart pada PUT/PATCH: badan terbaca kosong dan
+     validasi menolak seluruh bidang. Laravel menyediakan spoofing `_method`
+     pada POST, jadi unggahan berkas berubah metode di sini. */
+  let metode = options.method ?? 'GET'
+  if (isFormData && (metode === 'PUT' || metode === 'PATCH')) {
+    badan.set('_method', metode)
+    metode = 'POST'
+  }
   const headers: Record<string, string> = { Accept: 'application/json' }
   if (badan !== undefined && !isFormData) headers['Content-Type'] = 'application/json'
   if (sesi) headers.Authorization = `Bearer ${sesi.token}`
@@ -80,7 +88,7 @@ export async function apiFetch<T>(
   let respons: Response
   try {
     respons = await fetch(BASE_URL + path, {
-      method: options.method ?? 'GET',
+      method: metode,
       headers,
       body: badan === undefined ? undefined : isFormData ? badan : JSON.stringify(badan),
       signal: options.signal,

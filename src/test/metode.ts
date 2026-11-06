@@ -31,3 +31,19 @@ export function pantauBadanForm(): FormData[] {
   onTestFinished(() => pantau.mockRestore())
   return rekaman
 }
+
+/* Satu spy untuk metode sekaligus badan: memanggil `pantauMetode()` dan
+   `pantauBadanForm()` bersamaan membuat spy membungkus spy dan rekursi. */
+export function pantauPermintaan(): { metode: string[]; badan: FormData[] } {
+  const metode: string[] = []
+  const badan: FormData[] = []
+  const asli = globalThis.fetch
+  const pantau = vi.spyOn(globalThis, 'fetch').mockImplementation((input, init) => {
+    const jalur = typeof input === 'string' ? input : input instanceof URL ? input.pathname : input.url
+    metode.push(`${init?.method ?? 'GET'} ${jalur}`)
+    if (init?.body instanceof FormData) badan.push(init.body)
+    return asli(input, init)
+  })
+  onTestFinished(() => pantau.mockRestore())
+  return { metode, badan }
+}
