@@ -4,6 +4,8 @@ import { kirimCsv } from '@/api/mocks/csv'
 import { halamanLaravel } from '@/api/mocks/halaman'
 import { contracts, type ContractDto } from '@/api/mocks/data/contracts'
 import { namaPengguna, pemanggil, tenantById, tenantByUserId, termBulan, unitById } from '@/api/mocks/join'
+import { LABEL_ALASAN } from '@/lib/sewa'
+import { tanggalHariIni } from '@/lib/tanggal'
 import type { KtpStatus } from '@/api/types'
 
 /* Status verifikasi KTP milik penyewa ikut pada baris kontrak: layar pemilik
@@ -36,8 +38,58 @@ export function barisKontrak(kontrak: ContractDto): ContractDtoRow {
 const ubahKontrak: HttpResponseResolver<{ id: string }> = async ({ params, request }) => {
   const kontrak = contracts.find((kandidat) => kandidat.id === Number(params.id))
   if (!kontrak) return HttpResponse.json({ message: 'Kontrak tidak ditemukan.' }, { status: 404 })
-  const { status } = (await request.json()) as Pick<ContractDto, 'status'>
-  kontrak.status = status
+  const badan = (await request.json()) as Partial<ContractDto>
+  const status = String(badan.status ?? '')
+  if (!['pending', 'active', 'completed', 'cancelled'].includes(status)) {
+    return HttpResponse.json({ message: 'Periksa isian.' }, { status: 422 })
+  }
+
+  /* Aturan yang sama dengan backend: penghentian dini wajib beralasan, catatan
+     wajib untuk "lainnya", dan tanggalnya harus di dalam masa sewa. Mock yang
+     lebih longgar membuat tes UI lolos atas perilaku yang tidak mungkin terjadi. */
+  const sebelumnya = kontrak.status
+  const menutup = status === 'completed' || status === 'cancelled'
+  const dini = menutup && sebelumnya === 'active' && kontrak.end_date > tanggalHariIni()
+
+  if (dini) {
+    /* Kalimatnya disalin dari pesan validasi controller: `message` itulah yang
+       ditampilkan layar, jadi mock yang berbunyi lain membuat tes lolos atas
+       kalimat yang tidak pernah dikirim produksi. */
+    const galat: Record<string, string> = {}
+    if (!badan.ended_at) galat.ended_at = 'Tanggal penghentian wajib diisi.'
+    else if (badan.ended_at < kontrak.start_date) galat.ended_at = 'Tanggal penghentian tidak boleh sebelum masa sewa.'
+    else if (badan.ended_at > kontrak.end_date) galat.ended_at = 'Tanggal penghentian tidak boleh sesudah masa sewa.'
+    if (!badan.end_reason) galat.end_reason = 'Alasan penghentian wajib dipilih.'
+    else if (badan.end_reason === 'lainnya' && !String(badan.end_note ?? '').trim()) {
+      galat.end_note = 'Catatan wajib diisi bila alasannya Lainnya.'
+    }
+    if (Object.keys(galat).length > 0) {
+      return HttpResponse.json({ message: Object.values(galat)[0], errors: galat }, { status: 422 })
+    }
+  }
+
+  const unit = unitById(kontrak.unit_id)
+  kontrak.status = status as ContractDto['status']
+
+  if (dini) {
+    kontrak.ended_at = badan.ended_at
+    kontrak.end_reason = badan.end_reason
+    kontrak.end_note = badan.end_note
+  } else if (menutup && sebelumnya === 'active') {
+    kontrak.ended_at = kontrak.end_date
+    kontrak.end_reason = 'selesai_normal'
+    kontrak.end_note = undefined
+  } else if (status === 'active') {
+    kontrak.ended_at = undefined
+    kontrak.end_reason = undefined
+    kontrak.end_note = undefined
+  }
+
+  if (unit) {
+    if (status === 'active' && kontrak.start_date <= tanggalHariIni()) unit.status = 'rented'
+    else if (menutup) unit.status = 'available'
+  }
+
   return HttpResponse.json({ data: barisKontrak(kontrak) })
 }
 
@@ -124,11 +176,13 @@ export const contractHandlers = [
         kontrak.monthly,
         kontrak.total_price,
         kontrak.status,
+        kontrak.ended_at ?? '',
+        kontrak.end_reason ? LABEL_ALASAN[kontrak.end_reason] : '',
       ])
 
     return kirimCsv(
       'laporan-kontrak',
-      ['ID', 'Penyewa', 'Unit', 'Pemilik', 'Mulai', 'Selesai', 'Durasi', 'Harga per Bulan', 'Nilai Kontrak', 'Status'],
+      ['ID', 'Penyewa', 'Unit', 'Pemilik', 'Mulai', 'Selesai', 'Durasi', 'Harga per Bulan', 'Nilai Kontrak', 'Status', 'Berakhir Pada', 'Alasan'],
       baris,
     )
   }),

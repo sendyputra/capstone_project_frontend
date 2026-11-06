@@ -122,8 +122,14 @@ export const paymentHandlers = [
           ? contracts.filter((kontrak) => unitById(kontrak.unit_id)?.owner_id === sub)
           : []
 
-    const kontrak = terpilih.map((baris) => keKontrak(barisKontrak(baris)))
-    const tagihan = susunTagihan(kontrak, payments.map((baris) => kePembayaran(barisTagihan(baris))), tanggalHariIni())
+    const kontrak = terpilih
+      .filter((baris) => baris.status !== 'pending')
+      .map((baris) => keKontrak(barisKontrak(baris)))
+    /* `semuaKontrak`: laporan memuat bulan kontrak yang sudah selesai, sama
+       seperti backend; pengajuan tetap tidak punya tagihan. */
+    const tagihan = susunTagihan(kontrak, payments.map((baris) => kePembayaran(barisTagihan(baris))), tanggalHariIni(), {
+      semuaKontrak: true,
+    })
     const petaKontrak = new Map(kontrak.map((baris) => [baris.id, baris]))
 
     const kolom =

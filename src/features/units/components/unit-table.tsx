@@ -55,7 +55,7 @@ export function UnitTable({
             <td className="p-4">
               <div className="flex items-center gap-3">
                 <GambarUnit src={unit.image} alt="" className="h-12 w-12 shrink-0 rounded-lg border border-brand-border object-cover" />
-                <span className="text-ui font-bold text-brand-text">{unit.name}</span>
+                <Link to={`/pemilik/unit/${unit.id}`} className="text-ui font-bold text-brand-text hover:text-brand-accent">{unit.name}</Link>
               </div>
             </td>
             {tampilkanPemilik && <td className="p-4 font-medium text-brand-text-muted">{unit.owner_name}</td>}

@@ -71,6 +71,10 @@ export type UnitInput = Pick<Unit, 'name' | 'address' | 'price' | 'status'> & Pa
 export type ContractStatus = 'Menunggu' | 'Aktif' | 'Selesai' | 'Dibatalkan'
 export type ContractStatusDto = 'pending' | 'active' | 'completed' | 'cancelled'
 
+/* Alasan penghentian sewa, sama dengan enum validasi backend. Kontrak lama yang
+   belum punya jejak penghentian membiarkan ketiga bidang ini kosong. */
+export type EndReason = 'selesai_normal' | 'berhenti_penyewa' | 'pelanggaran' | 'lainnya'
+
 export type Contract = {
   id: number
   unit_id: number
@@ -79,6 +83,9 @@ export type Contract = {
   end_date: string
   total_price: number
   status: ContractStatus
+  ended_at?: string
+  end_reason?: EndReason
+  end_note?: string
 }
 
 /* `Belum Bayar` bukan nilai API: bulan yang belum dibayar tidak punya baris

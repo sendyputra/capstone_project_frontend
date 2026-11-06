@@ -101,6 +101,28 @@ describe('adaptor kontrak', () => {
     expect(keDaftarKontrak('bukan-daftar')).toEqual([])
   })
 
+  /* Penghentian sewa datang sebagai serialisasi UTC seperti tanggal lain, dan
+     alasannya enum tertutup. Nilai asing tidak diteruskan ke layar. */
+  it('memetakan tanggal berhenti dan alasan yang dikenal', () => {
+    const baris = keKontrak({
+      ...dto,
+      status: 'completed',
+      ended_at: '2026-10-14T17:00:00.000000Z',
+      end_reason: 'berhenti_penyewa',
+      end_note: 'Pindah kerja.',
+    })
+    expect(baris.ended_at).toBe('2026-10-15')
+    expect(baris.end_reason).toBe('berhenti_penyewa')
+    expect(baris.end_note).toBe('Pindah kerja.')
+  })
+
+  it('mengabaikan alasan dan catatan yang tidak dikenal', () => {
+    const baris = keKontrak({ ...dto, end_reason: 'entah', end_note: 123 })
+    expect(baris.ended_at).toBeUndefined()
+    expect(baris.end_reason).toBeUndefined()
+    expect(baris.end_note).toBeUndefined()
+  })
+
   it('menghitung masa sewa dan biaya bulanan dari nilai kontrak', () => {
     expect(keKontrak(dto)).toMatchObject({ term: '3 bulan', monthly: 1_500_000 })
     /* Tanggal tak terbaca: nol bulan, biaya bulanan memakai nilai kontrak. */
