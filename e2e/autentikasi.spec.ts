@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
-import { bukti, masukSebagai } from './bantuan'
+import { jepret, masukSebagai } from './bantuan'
 
 const AKAR_NASKAH = '../capstone_project_6'
 
@@ -14,21 +14,21 @@ test('BB-01 masuk pemilik', async ({ page }) => {
   await masukSebagai(page, 'wahyu@umkm.id')
   await expect(page).toHaveURL(/\/pemilik$/)
   await expect(page.getByRole('banner').getByText('Wahyu Pratama')).toBeVisible()
-  await page.screenshot({ path: bukti('bb-01-masuk-pemilik') })
+  await jepret(page, 'bb-01-masuk-pemilik')
 })
 
 test('BB-02 masuk penyewa', async ({ page }) => {
   await masukSebagai(page, 'bima@umkm.id')
   await expect(page).toHaveURL(/\/$/)
   await expect(page.locator('html[data-role="renter"]')).toHaveCount(1)
-  await page.screenshot({ path: bukti('bb-02-masuk-penyewa') })
+  await jepret(page, 'bb-02-masuk-penyewa')
 })
 
 test('BB-03 batas peran', async ({ page }) => {
   await masukSebagai(page, 'bima@umkm.id')
   await page.goto('/pemilik')
   await expect(page).toHaveURL(/\/403$/)
-  await page.screenshot({ path: bukti('bb-03-batas-peran') })
+  await jepret(page, 'bb-03-batas-peran')
 })
 
 test('BB-17 OCR ktp1', async ({ page }) => {
@@ -37,7 +37,7 @@ test('BB-17 OCR ktp1', async ({ page }) => {
   await tungguOcr(page)
   await expect(page.locator('#nik')).toHaveValue('7312042510720002')
   await expect(page.locator('#name')).toHaveValue('ABBURRAUF SPD MPD')
-  await page.screenshot({ path: bukti('bb-17-ocr-ktp1') })
+  await jepret(page, 'bb-17-ocr-ktp1')
 })
 
 test('BB-18 OCR ktp2', async ({ page }) => {
@@ -50,5 +50,5 @@ test('BB-18 OCR ktp2', async ({ page }) => {
   if ((await page.locator('#nik').inputValue()) === '') {
     await page.locator('#nik').fill('3175036109930002')
   }
-  await page.screenshot({ path: bukti('bb-18-ocr-ktp2') })
+  await jepret(page, 'bb-18-ocr-ktp2')
 })

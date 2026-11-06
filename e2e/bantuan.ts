@@ -1,6 +1,6 @@
 import { mkdirSync } from 'node:fs'
 import { resolve } from 'node:path'
-import type { Page } from '@playwright/test'
+import { expect, type Page } from '@playwright/test'
 
 /* ponytail: path tetangga diketik langsung sesuai tata letak workspace
    (repo naskah di ../capstone_project_6); naik kelas jadi env/arg bila
@@ -16,6 +16,15 @@ function direktoriBukti(): string {
 
 export function bukti(nama: string): string {
   return resolve(direktoriBukti(), `${nama}.png`)
+}
+
+/* Tangkapan layar bukti harus menampilkan seluruh halaman yang sudah selesai
+   dimuat: tunggu jaringan tenang dan skeleton pemuatan hilang, lalu jepret
+   dengan fullPage supaya isi di bawah lipatan tidak hilang. */
+export async function jepret(page: Page, nama: string): Promise<void> {
+  await page.waitForLoadState('networkidle')
+  await expect(page.locator('.animate-pulse')).toHaveCount(0)
+  await page.screenshot({ path: bukti(nama), fullPage: true })
 }
 
 export const SANDI_DEMO = 'demo12345'
