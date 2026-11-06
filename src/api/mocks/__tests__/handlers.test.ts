@@ -160,6 +160,15 @@ describe('data contoh', () => {
     expect(kontrak?.status).toBe('active')
   })
 
+  /* Pesan 422 mock harus sama dengan controller: layar pemilik menampilkan
+     `message` apa adanya, dan `ContractTerminationTest` mengunci kalimatnya. */
+  it('menolak penghentian dini tanpa alasan dengan pesan yang sama', async () => {
+    writeSession(pemilik)
+    await expect(
+      apiFetch('/contracts/201', { method: 'PUT', body: { status: 'completed', ended_at: '2026-12-15' } }),
+    ).rejects.toMatchObject({ kind: 'validation', message: 'Alasan penghentian wajib dipilih.' })
+  })
+
   it('membuat kontrak: menolak isian yang kurang, lalu menyimpan baris ber-enum', async () => {
     writeSession(penyewa)
     await expect(apiFetch('/contracts', { method: 'POST', body: { unit_id: 1 } })).rejects.toMatchObject({

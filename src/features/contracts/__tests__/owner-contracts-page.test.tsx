@@ -65,8 +65,11 @@ describe('OwnerContractsPage', () => {
     renderWithProviders(<OwnerContractsPage />)
 
     const tabel = await screen.findByRole('table')
-    /* Baris 0 adalah kepala tabel; baris 1 baris data pertama. */
-    const barisPertama = within(tabel).getAllByRole('row')[1]
+    /* Baris pertama dicari lewat tombol aksinya: kepala tabel sekarang dua
+       baris (judul dan saringan), jadi indeks tetap tidak lagi aman. */
+    const barisPertama = within(tabel)
+      .getAllByRole('row')
+      .find((baris) => within(baris).queryByRole('button', { name: 'Setujui' }))!
     expect(within(barisPertama).getByText('Menunggu')).toBeInTheDocument()
     expect(within(barisPertama).getByRole('button', { name: 'Setujui' })).toBeInTheDocument()
   })
@@ -193,5 +196,69 @@ describe('OwnerContractsPage', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Unduh CSV' }))
 
     expect(await screen.findByText('Laporan gagal dibuat.')).toBeInTheDocument()
+  })
+
+  /* Satu klik "Selesaikan" dulu langsung mengakhiri sewa tanpa sebab. Sekarang
+     alasan wajib dipilih dulu, dan catatan wajib saat alasannya "Lainnya". */
+  it('meminta alasan sebelum mengakhiri sewa berjalan', async () => {
+    masukSebagai(402, 'pemilik', 'Pak Wahyu')
+    renderWithProviders(<OwnerContractsPage />)
+    const baris = (await screen.findAllByText('Siti Sarah'))
+      .map((el) => el.closest('tr')!)
+      .find((tr) => within(tr).queryByRole('button', { name: 'Selesaikan' }))!
+
+    await userEvent.click(within(baris).getByRole('button', { name: 'Selesaikan' }))
+    const panel = screen.getByRole('form', { name: 'Akhiri kontrak' })
+
+    await userEvent.click(within(panel).getByRole('button', { name: 'Simpan penghentian' }))
+    expect(within(panel).getByRole('alert')).toHaveTextContent('Alasan penghentian wajib dipilih.')
+
+    await userEvent.selectOptions(within(panel).getByLabelText('Alasan'), 'lainnya')
+    await userEvent.click(within(panel).getByRole('button', { name: 'Simpan penghentian' }))
+    expect(within(panel).getByRole('alert')).toHaveTextContent('Catatan wajib diisi')
+
+    const rekaman = pantauBadan()
+    await userEvent.selectOptions(within(panel).getByLabelText('Alasan'), 'berhenti_penyewa')
+    fireEvent.change(within(panel).getByLabelText('Tanggal berhenti'), { target: { value: '2026-12-15' } })
+    await userEvent.click(within(panel).getByRole('button', { name: 'Simpan penghentian' }))
+
+    await waitFor(() =>
+      expect(rekaman).toContainEqual({
+        metode: 'PUT',
+        badan: expect.objectContaining({ status: 'completed', ended_at: '2026-12-15', end_reason: 'berhenti_penyewa' }),
+      }),
+    )
+    await waitFor(() => expect(screen.queryByRole('form', { name: 'Akhiri kontrak' })).not.toBeInTheDocument())
+  })
+
+  /* Kontrak lama yang sudah punya jejak penghentian menampilkan tanggal dan
+     alasannya di bawah status, tanpa menambah kolom baru. */
+  it('menampilkan tanggal berhenti dan alasannya di baris kontrak', async () => {
+    masukSebagai(402, 'pemilik', 'Pak Wahyu')
+    renderWithProviders(<OwnerContractsPage />)
+
+    const baris = (await screen.findAllByText('Bagas Nugroho'))
+      .map((el) => el.closest('tr')!)
+      .find((tr): tr is HTMLTableRowElement => Boolean(tr))!
+
+    expect(within(baris).getByText(/31 Jul 2026/)).toBeInTheDocument()
+    expect(within(baris).getByText(/Selesai normal/)).toBeInTheDocument()
+  })
+
+  /* Glosarium melarang "pembatalan" untuk penghentian dini: tombol pada kontrak
+     Aktif harus berbunyi "Hentikan sewa", dan statusnya tetap satu enum yang
+     sama di API (`cancelled`). */
+  it('menamai aksi kontrak aktif Hentikan sewa, bukan Batalkan', async () => {
+    masukSebagai(402, 'pemilik', 'Pak Wahyu')
+    renderWithProviders(<OwnerContractsPage />)
+    const baris = (await screen.findAllByText('Siti Sarah'))
+      .map((el) => el.closest('tr')!)
+      .find((tr) => within(tr).queryByRole('button', { name: 'Hentikan sewa' }))!
+
+    await userEvent.click(within(baris).getByRole('button', { name: 'Hentikan sewa' }))
+
+    const panel = screen.getByRole('form', { name: 'Akhiri kontrak' })
+    expect(within(panel).getByText(/Hentikan sewa Siti Sarah/)).toBeInTheDocument()
+    expect(within(panel).queryByText(/Batalkan sewa/)).not.toBeInTheDocument()
   })
 })

@@ -43,6 +43,7 @@ export function kePembayaran(dto: unknown): PaymentRow {
     proof_url: String(p.proof_url ?? ''),
     renter_name: String(p.renter_name ?? tenant.name ?? ''),
     unit_title: String(p.unit_title ?? unit.name ?? ''),
+    created_at: String(p.created_at ?? ''),
   }
 }
 

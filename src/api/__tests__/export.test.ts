@@ -65,7 +65,7 @@ describe('handler export', () => {
     const isi = await bacaCsv(respons)
 
     expect(isi.split('\r\n')[0]).toBe(
-      '\uFEFFID;Penyewa;Unit;Pemilik;Mulai;Selesai;Durasi;Harga per Bulan;Nilai Kontrak;Status',
+      '\uFEFFID;Penyewa;Unit;Pemilik;Mulai;Selesai;Durasi;Harga per Bulan;Nilai Kontrak;Status;Berakhir Pada;Alasan',
     )
     expect(isi).toContain(';Menunggu')
     expect(isi).toContain(';Aktif')

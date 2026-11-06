@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { hitungBulanSewa, hitungSewa, tanggalBentrok } from '@/lib/sewa'
+import { hitungBulanSewa, hitungSewa, labelStatusKontrak, tanggalBentrok } from '@/lib/sewa'
 
 describe('hitungSewa', () => {
   it('menambah bulan dan mengalikan harga', () => {
@@ -43,5 +43,19 @@ describe('hitungBulanSewa', () => {
   it('memberi nol untuk tanggal tak terbaca', () => {
     expect(hitungBulanSewa('', '')).toBe(0)
     expect(hitungBulanSewa('2026-11-15', 'bukan-tanggal')).toBe(0)
+  })
+})
+
+/* ADR 0002: `cancelled` memuat dua peristiwa. Yang tidak pernah punya tanggal
+   berhenti adalah pengajuan yang ditolak, dan layar harus menyebutnya begitu. */
+describe('labelStatusKontrak', () => {
+  it('menyebut pengajuan yang ditolak sebagai Ditolak', () => {
+    expect(labelStatusKontrak({ status: 'Dibatalkan' })).toBe('Ditolak')
+    expect(labelStatusKontrak({ status: 'Dibatalkan', ended_at: '2026-10-15' })).toBe('Dibatalkan')
+  })
+
+  it('meneruskan status lain apa adanya', () => {
+    expect(labelStatusKontrak({ status: 'Aktif' })).toBe('Aktif')
+    expect(labelStatusKontrak({ status: 'Selesai', ended_at: '2026-10-15' })).toBe('Selesai')
   })
 })

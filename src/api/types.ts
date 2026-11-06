@@ -71,6 +71,10 @@ export type UnitInput = Pick<Unit, 'name' | 'address' | 'price' | 'status'> & Pa
 export type ContractStatus = 'Menunggu' | 'Aktif' | 'Selesai' | 'Dibatalkan'
 export type ContractStatusDto = 'pending' | 'active' | 'completed' | 'cancelled'
 
+/* Alasan penghentian sewa, sama dengan enum validasi backend. Kontrak lama yang
+   belum punya jejak penghentian membiarkan ketiga bidang ini kosong. */
+export type EndReason = 'selesai_normal' | 'berhenti_penyewa' | 'pelanggaran' | 'lainnya'
+
 export type Contract = {
   id: number
   unit_id: number
@@ -79,6 +83,9 @@ export type Contract = {
   end_date: string
   total_price: number
   status: ContractStatus
+  ended_at?: string
+  end_reason?: EndReason
+  end_note?: string
 }
 
 /* `Belum Bayar` bukan nilai API: bulan yang belum dibayar tidak punya baris
@@ -98,13 +105,13 @@ export type Payment = {
 /* Bentuk yang dipakai komponen: baris hasil join dengan label tampilan, seperti
    peran `with()` pada API sungguhan, supaya komponen tidak perlu menyambung
    sendiri. Adaptor (bukan handler) yang menghasilkan bentuk ini dari DTO. */
-export type UnitRow = Unit & { owner_name: string }
+export type UnitRow = Unit & { owner_name: string; created_at?: string }
 /* `ktp` hanya ada bila server mengirimnya (baris kontrak menyertakan status
    verifikasi penyewanya); tanpanya kolom "KTP" tampil sebagai "Belum". */
-export type ContractRow = Contract & { renter_name: string; unit_title: string; owner_name: string; term: string; monthly: number } & {
+export type ContractRow = Contract & { renter_name: string; unit_title: string; owner_name: string; term: string; monthly: number; created_at?: string } & {
   ktp?: KtpStatus
 }
-export type PaymentRow = Payment & { renter_name: string; unit_title: string }
+export type PaymentRow = Payment & { renter_name: string; unit_title: string; created_at?: string }
 
 /* Penyewa yang dikelola pemilik: `user_id` null berarti belum punya akun.
    `contracts_count` dihitung server dan menentukan boleh-tidaknya menghapus. */
