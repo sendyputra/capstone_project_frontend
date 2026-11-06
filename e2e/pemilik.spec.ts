@@ -169,7 +169,9 @@ test('BB-23 pembayaran manual', async ({ page }) => {
 test('BB-10 setujui bukti', async ({ page }) => {
   await page.goto('/pemilik/pembayaran')
   await expect(page.getByText('7 Menunggu')).toBeVisible()
-  const baris = page.locator('tr', { hasText: 'Bima' }).filter({ hasText: 'Menunggu Verifikasi' }).first()
+  /* Bukan baris Bima: tagihan Menunggu milik Bima disisakan untuk kasus
+     BB-15 dan BB-16 di spec penyewa. */
+  const baris = page.locator('tr', { hasText: 'Menunggu Verifikasi' }).filter({ hasNotText: 'Bima' }).first()
   await baris.getByRole('button', { name: 'Setujui' }).click()
   await expect(page.getByRole('status').getByText(/diterima\./)).toBeVisible()
   await expect(page.getByText('6 Menunggu')).toBeVisible()
