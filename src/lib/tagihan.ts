@@ -10,11 +10,15 @@ export type Tagihan = {
   contract_id: number
   month: string
   amount: number
-  status: PaymentRow['status'] | 'Belum Bayar'
+  status: PaymentRow['status'] | 'Tagihan Belum Dibayar'
   proof_url: string
   /* Tanggal berkas bukti diunggah; kosong selama bulan itu belum dibayar. */
   dibuat: string
   unit_title: string
+  /* Baris pembayaran sumbernya; kosong untuk bulan yang belum dibayar. */
+  id?: number
+  /* Nama penyewa dari kontrak; dipakai tabel pemilik. */
+  renter_name?: string
 }
 
 /* `month` dan tanggal ERD memakai `YYYY-MM`/`YYYY-MM-DD`; bulan cukup dipotong
@@ -110,10 +114,12 @@ export function susunTagihan(
         /* Jumlah dari baris pembayaran bila ada (nilai yang benar-benar
            ditagih), selain itu biaya bulanan kontrak. */
         amount: cocok?.amount ?? k.monthly,
-        status: cocok?.status ?? 'Belum Bayar',
+        status: cocok?.status ?? 'Tagihan Belum Dibayar',
         proof_url: cocok?.proof_url ?? '',
         dibuat: cocok?.created_at ?? '',
         unit_title: k.unit_title,
+        id: cocok?.id,
+        renter_name: k.renter_name,
       })
     }
   }

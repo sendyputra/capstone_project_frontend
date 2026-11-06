@@ -30,13 +30,45 @@ function renderTagihan(sesi: { id: number; nama: string } = { id: 405, nama: 'Si
 }
 
 describe('TagihanPage', () => {
+  /* Satu panel di satu waktu: tab bawaan Pengajuan, tabel berjalan baru muncul
+     setelah tabnya diklik. */
+  it('menampilkan tiga tab dengan jumlah dan hanya panel tab aktif', async () => {
+    server.use(
+      http.get('/contracts', () =>
+        HttpResponse.json({
+          data: [
+            { id: 911, unit_id: 1, tenant_id: 2, start_date: '2026-11-01', end_date: '2027-04-30', total_price: 6000000, status: 'pending', tenant: { name: 'Dimas Prakoso' }, unit: { name: 'Kos Pending', owner: { name: 'Pak Wahyu' } } },
+            { id: 912, unit_id: 1, tenant_id: 2, start_date: '2026-08-01', end_date: '2027-07-31', total_price: 6000000, status: 'active', tenant: { name: 'Dimas Prakoso' }, unit: { name: 'Kos Jalan', owner: { name: 'Pak Wahyu' } } },
+            { id: 913, unit_id: 1, tenant_id: 2, start_date: '2026-01-01', end_date: '2026-04-30', total_price: 6000000, status: 'completed', ended_at: '2026-04-30', end_reason: 'selesai_normal', tenant: { name: 'Dimas Prakoso' }, unit: { name: 'Kos Lama', owner: { name: 'Pak Wahyu' } } },
+          ],
+        }),
+      ),
+    )
+    renderTagihan()
+
+    expect(await screen.findByRole('tab', { name: 'Pengajuan (1)' })).toHaveAttribute('aria-selected', 'true')
+    expect(screen.getByRole('tab', { name: 'Sewa Berjalan (1)' })).toHaveAttribute('aria-selected', 'false')
+    expect(screen.getByRole('tab', { name: 'Riwayat Sewa (1)' })).toHaveAttribute('aria-selected', 'false')
+
+    expect(screen.getByText('Kos Pending')).toBeInTheDocument()
+    expect(screen.queryByRole('table')).not.toBeInTheDocument()
+
+    await userEvent.click(screen.getByRole('tab', { name: 'Sewa Berjalan (1)' }))
+    expect(screen.getByRole('table')).toBeInTheDocument()
+    expect(screen.queryByText('Kos Pending')).not.toBeInTheDocument()
+
+    await userEvent.click(screen.getByRole('tab', { name: 'Riwayat Sewa (1)' }))
+    expect(screen.getByRole('region', { name: 'Riwayat sewa' })).toBeInTheDocument()
+  })
+
   it('menampilkan tagihan milik penyewa yang masuk saja', async () => {
     renderTagihan()
 
+    await userEvent.click(await screen.findByRole('tab', { name: /Sewa Berjalan/ }))
     const baris = (await screen.findByText('Oktober 2026')).closest('tr')!
     expect(within(baris).getByText('Kontrakan Rumah Asri Type 36')).toBeInTheDocument()
     expect(within(baris).getByText('Rp 2.500.000')).toBeInTheDocument()
-    expect(within(baris).getByText('Belum Bayar')).toBeInTheDocument()
+    expect(within(baris).getByText('Tagihan Belum Dibayar')).toBeInTheDocument()
     expect(screen.getByText('1 Belum Dibayar')).toBeInTheDocument()
     expect(screen.queryByText('Kontrakan Melati Type 45')).not.toBeInTheDocument()
   })
@@ -44,6 +76,7 @@ describe('TagihanPage', () => {
   it('unggah bukti: gagal sekali, lalu menunggu verifikasi', async () => {
     aktifkanSimulasi()
     renderTagihan()
+    await userEvent.click(await screen.findByRole('tab', { name: /Sewa Berjalan/ }))
     await screen.findByText('Oktober 2026')
 
     await userEvent.upload(screen.getByLabelText('Unggah Bukti'), new File(['x'], 'bukti-okt.jpg', { type: 'image/jpeg' }))
@@ -62,8 +95,9 @@ describe('TagihanPage', () => {
   it('menyaring tagihan lewat kolom status', async () => {
     renderTagihan()
 
+    await userEvent.click(await screen.findByRole('tab', { name: /Sewa Berjalan/ }))
     await screen.findByText('Oktober 2026')
-    await userEvent.selectOptions(screen.getByLabelText('Saring Status'), 'Belum Bayar')
+    await userEvent.selectOptions(screen.getByLabelText('Saring Status'), 'Tagihan Belum Dibayar')
 
     /* Label status juga hidup sebagai pilihan saringan, jadi yang diperiksa
        hanya isi baris data. */
@@ -76,6 +110,7 @@ describe('TagihanPage', () => {
     renderTagihan()
     const rekaman = pantauMetode()
     const unduh = stubUnduhan()
+    await userEvent.click(await screen.findByRole('tab', { name: /Sewa Berjalan/ }))
     await screen.findByText('Oktober 2026')
 
     await userEvent.click(screen.getByRole('button', { name: 'Unduh CSV' }))
@@ -91,6 +126,7 @@ describe('TagihanPage', () => {
     )
     renderTagihan()
     const unduh = stubUnduhan()
+    await userEvent.click(await screen.findByRole('tab', { name: /Sewa Berjalan/ }))
     await screen.findByText('Oktober 2026')
 
     await userEvent.click(screen.getByRole('button', { name: 'Unduh CSV' }))
@@ -105,14 +141,15 @@ describe('TagihanPage', () => {
   it('menampilkan masa sewa dan memisahkan pengajuan dari sewa berjalan', async () => {
     renderTagihan()
 
+    const pengajuan = await screen.findByRole('region', { name: 'Pengajuan sewa' })
+    expect(within(pengajuan).getByText('Kontrakan Rumah Asri Type 36')).toBeInTheDocument()
+    expect(within(pengajuan).getByText(/menunggu persetujuan pemilik/i)).toBeInTheDocument()
+
+    await userEvent.click(screen.getByRole('tab', { name: /Sewa Berjalan/ }))
     const berjalan = await screen.findByRole('region', { name: 'Sewa berjalan' })
     expect(within(berjalan).getAllByText('Kontrakan Rumah Asri Type 36').length).toBeGreaterThan(0)
     expect(within(berjalan).getByText(/1 Sep 2026 – 28 Feb 2027/)).toBeInTheDocument()
     expect(within(berjalan).getByText(/Rp 2\.500\.000 \/ bln/)).toBeInTheDocument()
-
-    const pengajuan = screen.getByRole('region', { name: 'Pengajuan sewa' })
-    expect(within(pengajuan).getByText('Kontrakan Rumah Asri Type 36')).toBeInTheDocument()
-    expect(within(pengajuan).getByText(/menunggu persetujuan pemilik/i)).toBeInTheDocument()
   })
 
   /* Kontrak 218 milik Dimas sudah `Selesai`. Sebelumnya seluruh barisnya lenyap
@@ -120,6 +157,7 @@ describe('TagihanPage', () => {
   it('tetap menampilkan riwayat bulan setelah kontrak selesai', async () => {
     renderTagihan({ id: 413, nama: 'Dimas Prakoso' })
 
+    await userEvent.click(await screen.findByRole('tab', { name: /Riwayat Sewa/ }))
     const riwayat = await screen.findByRole('region', { name: 'Riwayat sewa' })
     expect(within(riwayat).getByText('Kos Putri Melati Kamar B2')).toBeInTheDocument()
     expect(within(riwayat).getByText('Selesai')).toBeInTheDocument()
@@ -128,13 +166,14 @@ describe('TagihanPage', () => {
     expect(within(riwayat).getByText('Desember 2025')).toBeInTheDocument()
     expect(within(riwayat).getByText('April 2026')).toBeInTheDocument()
     expect(within(riwayat).getByText('Lunas')).toBeInTheDocument()
-    expect(within(riwayat).getAllByText('Belum Bayar').length).toBeGreaterThan(0)
+    expect(within(riwayat).getAllByText('Tagihan Belum Dibayar').length).toBeGreaterThan(0)
     expect(within(riwayat).queryByLabelText('Unggah Bukti')).not.toBeInTheDocument()
   })
 
   it('bisa melipat riwayat sewa', async () => {
     renderTagihan({ id: 413, nama: 'Dimas Prakoso' })
 
+    await userEvent.click(await screen.findByRole('tab', { name: /Riwayat Sewa/ }))
     const riwayat = await screen.findByRole('region', { name: 'Riwayat sewa' })
     expect(within(riwayat).getByText('Kos Putri Melati Kamar B2')).toBeInTheDocument()
 
@@ -170,6 +209,7 @@ describe('TagihanPage', () => {
     )
     renderTagihan({ id: 413, nama: 'Dimas Prakoso' })
 
+    await userEvent.click(await screen.findByRole('tab', { name: /Riwayat Sewa/ }))
     const riwayat = await screen.findByRole('region', { name: 'Riwayat sewa' })
     expect(within(riwayat).getByText('Agustus 2026')).toBeInTheDocument()
     expect(screen.getAllByText('Agustus 2026')).toHaveLength(1)

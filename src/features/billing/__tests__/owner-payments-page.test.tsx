@@ -9,6 +9,13 @@ import { masukSebagai } from '@/test/sesi'
 import { stubUnduhan } from '@/test/unduh'
 import { renderWithProviders } from '@/test/render'
 
+/* Waktu dipaku supaya bulan tagihan dan pilihan form tidak bergeser saat
+   kalender berjalan; patokannya awal November 2026. */
+vi.mock('@/lib/tanggal', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/lib/tanggal')>()),
+  tanggalHariIni: () => '2026-11-06',
+}))
+
 /* Pencatatan manual harus mengirim JSON, bukan `FormData`; rekaman badan
    membuktikan bentuk yang benar-benar pergi ke server. */
 function pantauBadan(): { metode: string; badan: unknown }[] {
@@ -30,6 +37,40 @@ async function bukaFormPembayaran() {
 }
 
 describe('OwnerPaymentsPage', () => {
+  /* Bulan tanpa baris pembayaran tidak pernah ada di /payments. Daftar pemilik
+     diturunkan dari kontrak seperti dashboard dan halaman penyewa, sehingga
+     'Tagihan Belum Dibayar' tetap terlihat dan bisa dicatat manual. */
+  it('menampilkan bulan belum bayar kontrak aktif tanpa baris pembayaran', async () => {
+    server.use(
+      http.get('/payments', () => HttpResponse.json({ data: [] })),
+      http.get('/contracts', () =>
+        HttpResponse.json({
+          data: [
+            {
+              id: 777,
+              unit_id: 1,
+              tenant_id: 1,
+              start_date: '2026-08-01',
+              end_date: '2027-01-31',
+              total_price: 15_000_000,
+              status: 'active',
+              tenant: { name: 'Bima Saputra' },
+              unit: { name: 'Kos Uji', owner: { name: 'Pak Wahyu' } },
+            },
+          ],
+        }),
+      ),
+    )
+    masukSebagai(402, 'pemilik', 'Pak Wahyu')
+    renderWithProviders(<OwnerPaymentsPage />)
+
+    const baris = (await screen.findAllByText('Kos Uji'))
+      .map((el) => el.closest('tr')!)
+      .find((tr) => within(tr).queryByText('Tagihan Belum Dibayar'))!
+    expect(within(baris).getByText('November 2026')).toBeInTheDocument()
+    expect(within(baris).getByText('Rp 2.500.000')).toBeInTheDocument()
+  })
+
   it('menyetujui bukti bayar yang menunggu verifikasi', async () => {
     masukSebagai(402, 'pemilik', 'Pak Wahyu')
     renderWithProviders(<OwnerPaymentsPage />)
@@ -156,7 +197,7 @@ describe('OwnerPaymentsPage', () => {
 })
 
 /* Tanpa daftar tagihan, form catat manual menghitung semua bulan sebagai
-   "Belum Bayar" dan mencatat tagihan ganda untuk bulan yang sudah lunas. */
+   "Tagihan Belum Dibayar" dan mencatat tagihan ganda untuk bulan yang sudah lunas. */
 describe('OwnerPaymentsPage saat daftar tagihan gagal', () => {
   it('menonaktifkan form catat pembayaran dan menampilkan galat', async () => {
     server.use(http.get('/payments', () => HttpResponse.json({ message: 'Gagal memuat tagihan.' }, { status: 500 })))

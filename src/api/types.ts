@@ -88,9 +88,9 @@ export type Contract = {
   end_note?: string
 }
 
-/* `Belum Bayar` bukan nilai API: bulan yang belum dibayar tidak punya baris
+/* `Tagihan Belum Dibayar` bukan nilai API: bulan yang belum dibayar tidak punya baris
    pembayaran, jadi status itu hanya ada di tampilan. */
-export type PaymentStatus = 'Belum Bayar' | 'Menunggu Verifikasi' | 'Lunas' | 'Ditolak'
+export type PaymentStatus = 'Tagihan Belum Dibayar' | 'Menunggu Verifikasi' | 'Lunas' | 'Ditolak'
 export type PaymentStatusDto = 'pending' | 'paid' | 'rejected'
 
 export type Payment = {

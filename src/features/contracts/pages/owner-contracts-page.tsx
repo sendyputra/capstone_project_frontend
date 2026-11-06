@@ -1,10 +1,12 @@
 import { useState, type FormEvent } from 'react'
 import type { ContractRow, EndReason } from '@/api/types'
 import { useBuatKontrak, useContracts, useUbahStatusKontrak, useUnduhLaporanKontrak } from '@/features/contracts/api'
+import { usePayments } from '@/features/billing/api'
 import { useTenants } from '@/features/tenants/api'
 import { useMyUnits } from '@/features/units/api'
-import { formatRupiah, formatTanggal, formatTanggalPendek } from '@/lib/format'
+import { formatRupiah, formatTanggal, formatTanggalPendek, formatWaktu } from '@/lib/format'
 import { hitungSewa, LABEL_ALASAN, labelStatusKontrak, PILIHAN_ALASAN } from '@/lib/sewa'
+import { susunTagihan } from '@/lib/tagihan'
 import { tanggalHariIni } from '@/lib/tanggal'
 import { ErrorState } from '@/ui/error-state'
 import { Skeleton } from '@/ui/skeleton'
@@ -26,6 +28,7 @@ function urutkanMenungguDulu(daftar: ContractRow[]): ContractRow[] {
 
 export function OwnerContractsPage() {
   const kontrak = useContracts()
+  const tagihan = usePayments()
   const ubah = useUbahStatusKontrak()
   const unduhLaporan = useUnduhLaporanKontrak()
   const buat = useBuatKontrak()
@@ -34,6 +37,14 @@ export function OwnerContractsPage() {
   const { tampilkan } = useToast()
   const daftar = urutkanMenungguDulu(kontrak.data ?? [])
   const aktif = daftar.filter((baris) => baris.status === 'Aktif').length
+  /* Status kontrak dan status tagihan dua sumbu berbeda: kontrak "Aktif" bisa
+     saja punya bulan yang belum dibayar. Badge ini membuat bedanya terlihat. */
+  const tunggakan = new Map<number, number>()
+  for (const baris of susunTagihan(kontrak.data ?? [], tagihan.data ?? [], tanggalHariIni(), { semuaKontrak: true })) {
+    if (baris.status === 'Tagihan Belum Dibayar') {
+      tunggakan.set(baris.contract_id, (tunggakan.get(baris.contract_id) ?? 0) + 1)
+    }
+  }
   const [bukaForm, setBukaForm] = useState(false)
   const [penyewaId, setPenyewaId] = useState('')
   const [unitId, setUnitId] = useState('')
@@ -347,7 +358,7 @@ export function OwnerContractsPage() {
             { nilai: (baris) => baris.renter_name },
             { nilai: (baris) => `${baris.unit_title} ${baris.owner_name}` },
             { nilai: (baris) => `${formatTanggal(baris.start_date)} ${formatTanggal(baris.end_date)}` },
-            { nilai: (baris) => formatTanggal(baris.created_at ?? '') },
+            { nilai: (baris) => formatWaktu(baris.created_at ?? '') },
             { nilai: (baris) => formatRupiah(baris.monthly) },
             { jenis: 'pilihan', nilai: (baris) => baris.ktp ?? 'Belum', pilihan: ['Terverifikasi', 'Menunggu', 'Belum'] },
             { jenis: 'pilihan', nilai: (baris) => labelStatusKontrak(baris), pilihan: ['Menunggu', 'Aktif', 'Selesai', 'Dibatalkan', 'Ditolak'] },
@@ -365,13 +376,18 @@ export function OwnerContractsPage() {
                 <span className="block">{formatTanggal(baris.start_date)} – {formatTanggal(baris.end_date)}</span>
                 <span className="text-micro text-brand-text-subtle">{baris.term}</span>
               </td>
-              <td className="p-4 text-brand-text-muted">{formatTanggal(baris.created_at ?? '')}</td>
+              <td className="p-4 text-brand-text-muted">{formatWaktu(baris.created_at ?? '')}</td>
               <td className="p-4 font-extrabold text-brand-accent">{formatRupiah(baris.monthly)} / bln</td>
               {/* Verifikasi KTP dulu tugas panel admin; sekarang pemilik yang
                   melihatnya di sini. Baris lama tanpa status dianggap "Belum". */}
               <td className="p-4"><StatusChip nilai={baris.ktp ?? 'Belum'} /></td>
               <td className="p-4">
                 <StatusChip nilai={labelStatusKontrak(baris)} />
+                {(tunggakan.get(baris.id) ?? 0) > 0 && (
+                  <span className="mt-1 block text-micro font-semibold text-brand-warning-soft-fg">
+                    {tunggakan.get(baris.id)} bulan belum dibayar
+                  </span>
+                )}
                 {baris.ended_at && (
                   <span className="mt-1 block text-micro text-brand-text-subtle">
                     {formatTanggalPendek(baris.ended_at)} · {baris.end_reason ? LABEL_ALASAN[baris.end_reason] : '—'}

@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { useCatatPembayaran, usePayments, useUnduhLaporanTagihan, useVerifikasiPembayaran } from '@/features/billing/api'
 import { useContracts } from '@/features/contracts/api'
-import { formatBulan, formatRupiah, formatTanggal, namaBerkas } from '@/lib/format'
+import { formatBulan, formatRupiah, formatWaktu, namaBerkas } from '@/lib/format'
 import { susunTagihan, urutkanTagihan } from '@/lib/tagihan'
 import { tanggalHariIni } from '@/lib/tanggal'
 import { ErrorState } from '@/ui/error-state'
@@ -20,9 +20,12 @@ export function OwnerPaymentsPage() {
   const catat = useCatatPembayaran()
   const kontrak = useContracts()
   const { tampilkan } = useToast()
-  /* Backend mengirim pembayaran urut `created_at`; tabel menyusunnya per
-     kontrak dengan bulan terbaru dulu supaya bulan tidak melompat-lompat. */
-  const daftar = urutkanTagihan(tagihan.data ?? [])
+  /* Bulan yang belum dibayar tidak punya baris di /payments, jadi daftar
+     diturunkan dari kontrak dengan penyusun yang sama seperti dashboard dan
+     halaman penyewa — tanpa ini, 'Tagihan Belum Dibayar' tak pernah terlihat pemilik. */
+  const daftar = urutkanTagihan(
+    susunTagihan(kontrak.data ?? [], tagihan.data ?? [], tanggalHariIni(), { semuaKontrak: true }),
+  )
   const menunggu = daftar.filter((baris) => baris.status === 'Menunggu Verifikasi').length
   const [bukaForm, setBukaForm] = useState(false)
   const [kontrakId, setKontrakId] = useState('')
@@ -35,8 +38,8 @@ export function OwnerPaymentsPage() {
   /* Hanya bulan tanpa pembayaran lunas/menunggu yang bisa dicatat ulang;
      `Ditolak` boleh diisi manual karena bukti lamanya sudah tidak berlaku. */
   const bulanTersedia = kontrakDipilih
-    ? susunTagihan([kontrakDipilih], daftar, tanggalHariIni()).filter(
-        (baris) => baris.status === 'Belum Bayar' || baris.status === 'Ditolak',
+    ? susunTagihan([kontrakDipilih], tagihan.data ?? [], tanggalHariIni()).filter(
+        (baris) => baris.status === 'Tagihan Belum Dibayar' || baris.status === 'Ditolak',
       )
     : []
 
@@ -53,8 +56,8 @@ export function OwnerPaymentsPage() {
     setGalatForm('')
     const dipilih = kontrakAktif.find((baris) => baris.id === Number(nilai))
     const tersedia = dipilih
-      ? susunTagihan([dipilih], daftar, tanggalHariIni()).filter(
-          (baris) => baris.status === 'Belum Bayar' || baris.status === 'Ditolak',
+      ? susunTagihan([dipilih], tagihan.data ?? [], tanggalHariIni()).filter(
+          (baris) => baris.status === 'Tagihan Belum Dibayar' || baris.status === 'Ditolak',
         )
       : []
     setBulan(tersedia[0]?.month ?? '')
@@ -137,7 +140,7 @@ export function OwnerPaymentsPage() {
             {unduhLaporan.isPending ? 'Mengunduh…' : 'Unduh CSV'}
           </button>
           {/* Tanpa daftar tagihan yang terbaca, bulan yang sudah lunas tampak
-              "Belum Bayar" dan formulir ini mencatat tagihan ganda. */}
+              "Tagihan Belum Dibayar" dan formulir ini mencatat tagihan ganda. */}
           <button
             type="button"
             disabled={!tagihan.isSuccess}
@@ -208,53 +211,60 @@ export function OwnerPaymentsPage() {
         </form>
       )}
 
-      {tagihan.isPending && <Skeleton className="h-40" />}
-      {tagihan.isError && <ErrorState message={(tagihan.error as Error).message} onRetry={() => tagihan.refetch()} />}
-      {tagihan.isSuccess && (
+      {(tagihan.isPending || kontrak.isPending) && <Skeleton className="h-40" />}
+      {(tagihan.isError || kontrak.isError) && (
+        <ErrorState
+          message={((tagihan.error ?? kontrak.error) as Error).message}
+          onRetry={() => { tagihan.refetch(); kontrak.refetch() }}
+        />
+      )}
+      {tagihan.isSuccess && kontrak.isSuccess && (
         <TabelSaring
           kolom={['Penyewa', 'Unit', 'Bulan Tagihan', 'Jumlah', 'Bukti Bayar', 'Diunggah', 'Status', 'Aksi']}
           baris={daftar}
           urut={{
             banding: {
-              Penyewa: (a, b) => a.renter_name.localeCompare(b.renter_name),
+              Penyewa: (a, b) => (a.renter_name ?? '').localeCompare(b.renter_name ?? ''),
               Unit: (a, b) => a.unit_title.localeCompare(b.unit_title),
               'Bulan Tagihan': (a, b) => a.month.localeCompare(b.month),
               Jumlah: (a, b) => a.amount - b.amount,
               'Bukti Bayar': (a, b) => namaBerkas(a.proof_url).localeCompare(namaBerkas(b.proof_url)),
-              Diunggah: (a, b) => (a.created_at ?? '').localeCompare(b.created_at ?? ''),
+              Diunggah: (a, b) => (a.dibuat ?? '').localeCompare(b.dibuat ?? ''),
               Status: (a, b) => a.status.localeCompare(b.status),
             },
           }}
           saringan={[
-            { nilai: (baris) => baris.renter_name },
+            { nilai: (baris) => baris.renter_name ?? '' },
             { nilai: (baris) => baris.unit_title },
             { nilai: (baris) => formatBulan(baris.month) },
             { nilai: (baris) => formatRupiah(baris.amount) },
             { nilai: (baris) => namaBerkas(baris.proof_url) },
-            { nilai: (baris) => formatTanggal(baris.created_at ?? '') },
-            { jenis: 'pilihan', nilai: (baris) => baris.status, pilihan: ['Belum Bayar', 'Menunggu Verifikasi', 'Lunas', 'Ditolak'] },
+            { nilai: (baris) => formatWaktu(baris.dibuat ?? '') },
+            { jenis: 'pilihan', nilai: (baris) => baris.status, pilihan: ['Tagihan Belum Dibayar', 'Menunggu Verifikasi', 'Lunas', 'Ditolak'] },
           ]}
           kolomAkhirKanan
         >
           {(tampil) => tampil.map((baris) => (
-            <tr key={baris.id}>
+            <tr key={baris.kunci}>
               <td className="p-4 font-bold text-brand-text">{baris.renter_name}</td>
               <td className="p-4 font-semibold text-brand-text">{baris.unit_title}</td>
               <td className="p-4 text-brand-text-muted">{formatBulan(baris.month)}</td>
               <td className="p-4 font-extrabold text-brand-accent">{formatRupiah(baris.amount)}</td>
               <td className="p-4 text-brand-text-muted"><TautanBukti url={baris.proof_url} /></td>
-              <td className="p-4 text-brand-text-muted">{formatTanggal(baris.created_at ?? '')}</td>
+              <td className="p-4 text-brand-text-muted">{formatWaktu(baris.dibuat ?? '')}</td>
               <td className="p-4"><StatusChip nilai={baris.status} /></td>
               <td className="p-4 text-right">
-                {baris.status === 'Menunggu Verifikasi' ? (
+                {baris.status === 'Menunggu Verifikasi' && baris.id !== undefined ? (
                   <span className="inline-flex gap-1">
-                    <button type="button" disabled={verifikasi.isPending} onClick={() => setujui(baris.id, baris.renter_name, baris.month)} className="rounded bg-brand-success px-3 py-1 text-micro font-semibold text-brand-success-fg">
+                    <button type="button" disabled={verifikasi.isPending} onClick={() => setujui(baris.id!, baris.renter_name ?? '', baris.month)} className="rounded bg-brand-success px-3 py-1 text-micro font-semibold text-brand-success-fg">
                       Setujui
                     </button>
-                    <button type="button" disabled={verifikasi.isPending} onClick={() => tolak(baris.id, baris.month)} className="rounded bg-brand-danger px-3 py-1 text-micro font-semibold text-brand-danger-fg">
+                    <button type="button" disabled={verifikasi.isPending} onClick={() => tolak(baris.id!, baris.month)} className="rounded bg-brand-danger px-3 py-1 text-micro font-semibold text-brand-danger-fg">
                       Tolak
                     </button>
                   </span>
+                ) : baris.status === 'Tagihan Belum Dibayar' ? (
+                  <span className="text-micro text-brand-text-subtle">Belum ada bukti</span>
                 ) : (
                   <span className="text-micro text-brand-text-subtle">Selesai</span>
                 )}

@@ -2,11 +2,12 @@ import { useState } from 'react'
 import type { ContractRow } from '@/api/types'
 import { usePayments, useUnduhLaporanTagihan, useUnggahBukti } from '@/features/billing/api'
 import { useContracts } from '@/features/contracts/api'
-import { formatBulan, formatRupiah, formatTanggal, formatTanggalPendek, namaBerkas } from '@/lib/format'
+import { formatBulan, formatRupiah, formatTanggalPendek, formatWaktu, namaBerkas } from '@/lib/format'
 import { LABEL_ALASAN, labelStatusKontrak } from '@/lib/sewa'
 import { kelompokkanSewa, susunTagihan, urutkanTagihan, type Tagihan } from '@/lib/tagihan'
 import { tanggalHariIni } from '@/lib/tanggal'
 import { ErrorState } from '@/ui/error-state'
+import { EmptyState } from '@/ui/empty-state'
 import { Skeleton } from '@/ui/skeleton'
 import { StatusChip } from '@/ui/status-chip'
 import { TabelSaring } from '@/ui/tabel-saring'
@@ -62,8 +63,14 @@ export function TagihanPage() {
   const riwayat = urutkanTagihan(
     susunTagihan(kelompok.riwayat, tagihan.data ?? [], hariIni, { semuaKontrak: true }),
   )
-  const belumBayar = daftar.filter((baris) => baris.status === 'Belum Bayar').length
+  const belumBayar = daftar.filter((baris) => baris.status === 'Tagihan Belum Dibayar').length
   const galatMuat = kontrak.error ?? tagihan.error
+  const tabBagian = [
+    { kunci: 'pengajuan', label: 'Pengajuan', jumlah: kelompok.pengajuan.length },
+    { kunci: 'berjalan', label: 'Sewa Berjalan', jumlah: kelompok.berjalan.length },
+    { kunci: 'riwayat', label: 'Riwayat Sewa', jumlah: kelompok.riwayat.length },
+  ] as const
+  const [tab, setTab] = useState<(typeof tabBagian)[number]['kunci']>('pengajuan')
 
   function kirim(masukan: MasukanUnggah) {
     setGalat('')
@@ -111,28 +118,55 @@ export function TagihanPage() {
 
       {kontrak.isSuccess && tagihan.isSuccess && (
         <>
-          {kelompok.pengajuan.length > 0 && (
-            <section aria-label="Pengajuan sewa" className="mb-6 space-y-3">
-              <h2 className="text-heading-s font-bold text-brand-text">Pengajuan</h2>
-              <ul className="space-y-2">
-                {kelompok.pengajuan.map((baris) => (
-                  <KartuSewa key={baris.id} kontrak={baris} keterangan="Menunggu persetujuan pemilik." />
-                ))}
-              </ul>
-            </section>
+          <div role="tablist" aria-label="Bagian sewa" className="mb-4 flex flex-wrap gap-2 border-b border-brand-border pb-2">
+            {tabBagian.map((t) => (
+              <button
+                key={t.kunci}
+                type="button"
+                role="tab"
+                id={`tab-${t.kunci}`}
+                aria-selected={tab === t.kunci}
+                aria-controls={`panel-${t.kunci}`}
+                onClick={() => setTab(t.kunci)}
+                className={`rounded-lg px-3 py-2 text-micro font-bold ${
+                  tab === t.kunci
+                    ? 'bg-brand-accent-soft text-brand-accent'
+                    : 'text-brand-text-muted hover:bg-brand-surface hover:text-brand-text'
+                }`}
+              >
+                {t.label} <span className="tabular-nums">({t.jumlah})</span>
+              </button>
+            ))}
+          </div>
+
+          {tab === 'pengajuan' && (
+            <div id="panel-pengajuan" role="tabpanel" aria-labelledby="tab-pengajuan">
+              <section aria-label="Pengajuan sewa" className="space-y-3">
+                {kelompok.pengajuan.length > 0 ? (
+                  <ul className="space-y-2">
+                    {kelompok.pengajuan.map((baris) => (
+                      <KartuSewa key={baris.id} kontrak={baris} keterangan="Menunggu persetujuan pemilik." />
+                    ))}
+                  </ul>
+                ) : (
+                  <EmptyState title="Tidak ada pengajuan sewa" description="Pengajuan sewa baru yang menunggu persetujuan pemilik akan tampil di sini." />
+                )}
+              </section>
+            </div>
           )}
 
-          <section aria-label="Sewa berjalan" className="space-y-3">
-            <h2 className="text-heading-s font-bold text-brand-text">Sewa Berjalan</h2>
-            {kelompok.berjalan.length > 0 ? (
-              <ul className="space-y-2">
-                {kelompok.berjalan.map((baris) => (
-                  <KartuSewa key={baris.id} kontrak={baris} />
-                ))}
-              </ul>
-            ) : (
-              <p className="text-ui text-brand-text-muted">Tidak ada sewa yang sedang berjalan.</p>
-            )}
+          {tab === 'berjalan' && (
+            <div id="panel-berjalan" role="tabpanel" aria-labelledby="tab-berjalan">
+              <section aria-label="Sewa berjalan" className="space-y-3">
+                {kelompok.berjalan.length > 0 ? (
+                  <ul className="space-y-2">
+                    {kelompok.berjalan.map((baris) => (
+                      <KartuSewa key={baris.id} kontrak={baris} />
+                    ))}
+                  </ul>
+                ) : (
+                  <EmptyState title="Tidak ada sewa berjalan" description="Sewa yang sudah disetujui dan sedang berjalan akan tampil di sini." />
+                )}
 
             <div className="rounded-2xl border border-brand-border bg-brand-surface shadow-sm">
               <TabelSaring
@@ -152,9 +186,9 @@ export function TagihanPage() {
                   { nilai: (baris) => baris.unit_title },
                   { nilai: (baris) => formatBulan(baris.month) },
                   { nilai: (baris) => formatRupiah(baris.amount) },
-                  { jenis: 'pilihan', nilai: (baris) => baris.status, pilihan: ['Belum Bayar', 'Menunggu Verifikasi', 'Lunas', 'Ditolak'] },
+                  { jenis: 'pilihan', nilai: (baris) => baris.status, pilihan: ['Tagihan Belum Dibayar', 'Menunggu Verifikasi', 'Lunas', 'Ditolak'] },
                   { nilai: (baris) => namaBerkas(baris.proof_url) },
-                  { nilai: (baris) => formatTanggal(baris.dibuat) },
+                  { nilai: (baris) => formatWaktu(baris.dibuat) },
                 ]}
                 kolomAkhirKanan
                 kosong="Belum ada tagihan bulan ini."
@@ -166,9 +200,9 @@ export function TagihanPage() {
                     <td className="p-4 font-extrabold text-brand-accent">{formatRupiah(baris.amount)}</td>
                     <td className="p-4"><StatusChip nilai={baris.status} /></td>
                     <td className="p-4 text-brand-text-muted"><TautanBukti url={baris.proof_url} /></td>
-                    <td className="p-4 text-brand-text-muted">{formatTanggal(baris.dibuat ?? '')}</td>
+                    <td className="p-4 text-brand-text-muted">{formatWaktu(baris.dibuat ?? '')}</td>
                     <td className="p-4 text-right">
-                      {(baris.status === 'Belum Bayar' || baris.status === 'Ditolak') && (
+                      {(baris.status === 'Tagihan Belum Dibayar' || baris.status === 'Ditolak') && (
                         <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-brand-accent-border bg-brand-accent-soft px-3 py-2 text-ui font-semibold text-brand-accent">
                           {baris.status === 'Ditolak' ? 'Unggah Ulang' : 'Unggah Bukti'}
                           <input
@@ -189,24 +223,29 @@ export function TagihanPage() {
                 ))}
               </TabelSaring>
             </div>
-          </section>
+              </section>
+            </div>
+          )}
 
-          {/* Riwayat sengaja tanpa tombol unggah: bulannya sudah lewat. Yang
-              disimpan adalah keadaannya, bukan kesempatan membayarnya lagi. */}
-          {kelompok.riwayat.length > 0 && (
-            <section aria-label="Riwayat sewa" className="mt-6 space-y-3">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <h2 className="text-heading-s font-bold text-brand-text">Riwayat Sewa</h2>
-                <button
-                  type="button"
-                  aria-expanded={riwayatTerbuka}
-                  onClick={() => setRiwayatTerbuka((lama) => !lama)}
-                  className="rounded-lg border border-brand-border bg-brand-surface px-3 py-1.5 text-micro font-semibold text-brand-text"
-                >
-                  {riwayatTerbuka ? 'Lipat riwayat' : 'Buka riwayat'}
-                </button>
-              </div>
-              {riwayatTerbuka && kelompok.riwayat.map((baris) => (
+          {tab === 'riwayat' && (
+            <div id="panel-riwayat" role="tabpanel" aria-labelledby="tab-riwayat">
+              <section aria-label="Riwayat sewa" className="space-y-3">
+                {kelompok.riwayat.length > 0 ? (
+                  <>
+                    {/* Riwayat sengaja tanpa tombol unggah: bulannya sudah lewat. Yang
+                        disimpan adalah keadaannya, bukan kesempatan membayarnya lagi. */}
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <h2 className="text-heading-s font-bold text-brand-text">Riwayat Sewa</h2>
+                      <button
+                        type="button"
+                        aria-expanded={riwayatTerbuka}
+                        onClick={() => setRiwayatTerbuka((lama) => !lama)}
+                        className="rounded-lg border border-brand-border bg-brand-surface px-3 py-1.5 text-micro font-semibold text-brand-text"
+                      >
+                        {riwayatTerbuka ? 'Lipat riwayat' : 'Buka riwayat'}
+                      </button>
+                    </div>
+                    {riwayatTerbuka && kelompok.riwayat.map((baris) => (
                 <article key={baris.id} className="rounded-2xl border border-brand-border bg-brand-surface p-4 shadow-sm">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <span className="font-semibold text-brand-text">{baris.unit_title}</span>
@@ -236,8 +275,13 @@ export function TagihanPage() {
                       ))}
                   </ul>
                 </article>
-              ))}
-            </section>
+                  ))}
+                  </>
+                ) : (
+                  <EmptyState title="Tidak ada riwayat sewa" description="Sewa yang sudah selesai atau berhenti akan tampil di sini." />
+                )}
+              </section>
+            </div>
           )}
         </>
       )}

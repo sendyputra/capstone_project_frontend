@@ -17,7 +17,7 @@ describe('susunTagihan', () => {
   it('menurunkan bulan dari kontrak dan menandai yang belum dibayar', () => {
     const hasil = susunTagihan([kontrak], [bayar], '2027-01-10')
     expect(hasil.map((t) => t.month)).toEqual(['2026-11', '2026-12', '2027-01'])
-    expect(hasil[0].status).toBe('Belum Bayar')
+    expect(hasil[0].status).toBe('Tagihan Belum Dibayar')
     expect(hasil[1].status).toBe('Lunas')
   })
 

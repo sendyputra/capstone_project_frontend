@@ -13,7 +13,9 @@ export const payments: PaymentDto[] = [
   { id: 302, contract_id: 202, month: '2026-10', amount: 3100000, status: 'pending', proof_url: 'bukti-transfer-202-okt.jpg' },
   { id: 303, contract_id: 201, month: '2026-09', amount: 2500000, status: 'paid', proof_url: 'bukti-transfer-201-sep.jpg' },
   { id: 304, contract_id: 202, month: '2026-09', amount: 3100000, status: 'rejected', proof_url: '' },
-  { id: 305, contract_id: 205, month: '2026-11', amount: 2500000, status: 'pending', proof_url: 'bukti-transfer-205-nov.jpg' },
+  /* Bukti menempel ke kontrak aktif: pengajuan (status pending) belum punya
+     masa tagihan, jadi di produksi tidak mungkin menerima unggahan bukti. */
+  { id: 305, contract_id: 201, month: '2026-11', amount: 2500000, status: 'pending', proof_url: 'bukti-transfer-201-nov.jpg' },
   { id: 306, contract_id: 202, month: '2026-07', amount: 3100000, status: 'paid', proof_url: 'bukti-transfer-202-jul.jpg' },
   { id: 307, contract_id: 202, month: '2026-08', amount: 3100000, status: 'paid', proof_url: 'bukti-transfer-202-agu.jpg' },
   { id: 308, contract_id: 206, month: '2026-06', amount: 1300000, status: 'paid', proof_url: 'bukti-transfer-206-jun.jpg' },

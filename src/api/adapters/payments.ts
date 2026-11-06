@@ -1,7 +1,7 @@
 import { buka } from '@/api/client'
 import type { PaymentRow, PaymentStatusDto } from '@/api/types'
 
-/* Dua tabel, satu per arah. `Belum Bayar` hanya ada di tampilan: backend tidak
+/* Dua tabel, satu per arah. `Tagihan Belum Dibayar` hanya ada di tampilan: backend tidak
    menyimpan status itu — bulan yang belum dibayar tidak punya baris pembayaran —
    jadi kalau label itu sampai terkirim, satu-satunya status "menunggu" yang sah
    adalah `pending`. */
@@ -13,7 +13,7 @@ const STATUS: Record<string, PaymentRow['status']> = {
 
 const DARI_STATUS: Record<PaymentRow['status'], PaymentStatusDto> = {
   'Menunggu Verifikasi': 'pending',
-  'Belum Bayar': 'pending',
+  'Tagihan Belum Dibayar': 'pending',
   Lunas: 'paid',
   Ditolak: 'rejected',
 }

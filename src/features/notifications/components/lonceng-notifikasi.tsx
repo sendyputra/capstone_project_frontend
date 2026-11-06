@@ -1,7 +1,7 @@
 import { Bell } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useNotifications, useTandaiNotifikasi, useTandaiSemua } from '@/features/notifications/api'
-import { formatTanggal } from '@/lib/format'
+import { formatWaktu } from '@/lib/format'
 import { useToast } from '@/ui/toast'
 
 /* Lonceng pengingat tagihan: badge jumlah belum dibaca, panel 50 notifikasi
@@ -81,7 +81,7 @@ export function LoncengNotifikasi() {
                 className={`block w-full py-2 text-left text-ui text-brand-text ${baris.read_at === null ? 'font-semibold' : 'text-brand-text-muted'}`}
               >
                 <span className="block">{baris.message}</span>
-                <span className="block text-micro font-normal text-brand-text-subtle">{formatTanggal(baris.created_at)}</span>
+                <span className="block text-micro font-normal text-brand-text-subtle">{formatWaktu(baris.created_at)}</span>
               </button>
             ))}
           </div>

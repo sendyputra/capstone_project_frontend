@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { formatBulan, formatRupiah, parseAmount } from '@/lib/format'
+import { formatBulan, formatRupiah, formatWaktu, parseAmount } from '@/lib/format'
 
 describe('parseAmount', () => {
   it('menerima angka utuh', () => {
@@ -23,6 +23,19 @@ describe('formatRupiah', () => {
 
   it('memformat string desimal dari backend', () => {
     expect(formatRupiah('1200000.00')).toBe('Rp 1.200.000')
+  })
+})
+
+describe('formatWaktu', () => {
+  it('menulis tanggal beserta jam, menit, dan detik dalam WIB', () => {
+    const tulisan = formatWaktu('2026-11-05T10:15:30Z')
+    expect(tulisan).toContain('5 November 2026')
+    expect(tulisan).toContain('17.15.30')
+  })
+
+  it('meneruskan nilai yang tidak terbaca sebagai garis', () => {
+    expect(formatWaktu('')).toBe('—')
+    expect(formatWaktu('bukan-tanggal')).toBe('—')
   })
 })
 

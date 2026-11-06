@@ -1,7 +1,7 @@
 import { Link } from 'react-router'
 import { TIPE_UNIT, type UnitRow } from '@/api/types'
 import { GambarUnit } from '@/features/units/components/gambar-unit'
-import { formatRupiah, formatTanggal } from '@/lib/format'
+import { formatRupiah, formatWaktu } from '@/lib/format'
 import { StatusChip } from '@/ui/status-chip'
 import { TabelSaring } from '@/ui/tabel-saring'
 
@@ -44,7 +44,7 @@ export function UnitTable({
           { jenis: 'pilihan', nilai: (unit) => unit.type, pilihan: TIPE_UNIT },
           { nilai: (unit) => unit.address },
           { nilai: (unit) => formatRupiah(unit.price) },
-          { nilai: (unit) => formatTanggal(unit.created_at ?? '') },
+          { nilai: (unit) => formatWaktu(unit.created_at ?? '') },
           { jenis: 'pilihan', nilai: (unit) => unit.status, pilihan: ['Tersedia', 'Terisi', 'Perawatan'] },
         ]}
         kolomAkhirKanan
@@ -62,7 +62,7 @@ export function UnitTable({
             <td className="p-4 font-semibold text-brand-text">{unit.type}</td>
             <td className="p-4 text-brand-text-muted">{unit.address}</td>
             <td className="p-4 font-extrabold text-brand-accent">{formatRupiah(unit.price)}</td>
-            <td className="p-4 text-brand-text-muted">{formatTanggal(unit.created_at ?? '')}</td>
+            <td className="p-4 text-brand-text-muted">{formatWaktu(unit.created_at ?? '')}</td>
             <td className="p-4">
               {/* Tombol pembungkus tanpa gaya; bentuk pilnya milik StatusChip,
                   supaya status tidak tampil sebagai dua lapis badge. */}

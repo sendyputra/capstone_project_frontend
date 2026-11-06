@@ -9,6 +9,12 @@ import { masukSebagai } from '@/test/sesi'
 import { stubUnduhan } from '@/test/unduh'
 import { renderWithProviders } from '@/test/render'
 
+/* Waktu dipaku supaya hitungan tunggakan tidak bergeser saat kalender berjalan. */
+vi.mock('@/lib/tanggal', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/lib/tanggal')>()),
+  tanggalHariIni: () => '2026-11-06',
+}))
+
 /* Badan permintaan ikut direkam supaya tes bisa memastikan `tenant_id` dan
    total hasil hitungan benar-benar terkirim, bukan hanya metodenya. */
 function pantauBadan(): { metode: string; badan: unknown }[] {
@@ -30,6 +36,42 @@ async function bukaFormKontrak() {
 }
 
 describe('OwnerContractsPage', () => {
+  /* Status kontrak dan status tagihan dua sumbu berbeda: kontrak tetap "Aktif"
+     meski ada bulannya yang belum dibayar. Bedanya ditandai badge jumlah
+     tunggakan supaya "Aktif" tidak dibaca sebagai lunas. */
+  it('menandai kontrak aktif yang punya bulan belum dibayar', async () => {
+    server.use(
+      http.get('/contracts', () =>
+        HttpResponse.json({
+          data: [
+            { id: 777, unit_id: 1, tenant_id: 2, start_date: '2026-08-01', end_date: '2026-11-30', total_price: 10_000_000, status: 'active', tenant: { name: 'Siti Sarah' }, unit: { name: 'Kos Lunas', owner: { name: 'Pak Wahyu' } } },
+            { id: 778, unit_id: 2, tenant_id: 3, start_date: '2026-08-01', end_date: '2026-11-30', total_price: 10_000_000, status: 'active', tenant: { name: 'Andi Pratama' }, unit: { name: 'Kos Tunggakan', owner: { name: 'Pak Wahyu' } } },
+          ],
+        }),
+      ),
+      http.get('/payments', () =>
+        HttpResponse.json({
+          data: [
+            { id: 401, contract_id: 777, month: '2026-08', amount: 2500000, status: 'paid', proof_url: 'a.jpg' },
+            { id: 402, contract_id: 777, month: '2026-09', amount: 2500000, status: 'paid', proof_url: 'b.jpg' },
+            { id: 403, contract_id: 777, month: '2026-10', amount: 2500000, status: 'paid', proof_url: 'c.jpg' },
+            { id: 404, contract_id: 777, month: '2026-11', amount: 2500000, status: 'paid', proof_url: 'd.jpg' },
+            { id: 405, contract_id: 778, month: '2026-08', amount: 2500000, status: 'paid', proof_url: 'e.jpg' },
+          ],
+        }),
+      ),
+    )
+    masukSebagai(402, 'pemilik', 'Pak Wahyu')
+    renderWithProviders(<OwnerContractsPage />)
+
+    const barisLunas = (await screen.findAllByText('Kos Lunas'))[0].closest('tr')!
+    expect(within(barisLunas).getByText('Aktif')).toBeInTheDocument()
+    expect(within(barisLunas).queryByText(/belum dibayar/)).not.toBeInTheDocument()
+
+    const barisTunggakan = (await screen.findAllByText('Kos Tunggakan'))[0].closest('tr')!
+    expect(within(barisTunggakan).getByText('3 bulan belum dibayar')).toBeInTheDocument()
+  })
+
   it('menampilkan kontrak dan menyetujui yang masih menunggu', async () => {
     masukSebagai(402, 'pemilik', 'Pak Wahyu')
     renderWithProviders(<OwnerContractsPage />)
