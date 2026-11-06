@@ -92,7 +92,9 @@ describe('TabelSaring', () => {
     await userEvent.type(screen.getByLabelText('Saring Nama'), 'tidak-ada')
 
     expect(screen.getByText('Tidak ada baris yang cocok.')).toBeInTheDocument()
-    expect(screen.queryByRole('table')).not.toBeInTheDocument()
+    /* Kepala dan saringan tetap ada supaya isian yang salah bisa dihapus. */
+    expect(screen.getByRole('table')).toBeInTheDocument()
+    expect(screen.getByLabelText('Saring Nama')).toBeInTheDocument()
   })
 
   it('memakai pesan kosong khusus bila diminta', () => {

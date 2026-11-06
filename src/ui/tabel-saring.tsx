@@ -57,7 +57,7 @@ export function TabelSaring<T>({
     ? [...tersaring].sort((a, b) => (sortir.arah === 'naik' ? pembanding(a, b) : pembanding(b, a)))
     : tersaring
 
-  if (!tampil.length) {
+  if (!baris.length) {
     return (
       <p className="rounded-xl border border-brand-border bg-brand-surface p-6 text-center text-ui text-brand-text-muted">{kosong}</p>
     )
@@ -125,7 +125,19 @@ export function TabelSaring<T>({
             })}
           </tr>
         </thead>
-        <tbody className="divide-y divide-brand-border">{children(tampil)}</tbody>
+        <tbody className="divide-y divide-brand-border">
+          {tampil.length ? (
+            children(tampil)
+          ) : (
+            /* Kepala dan kotak saringan tetap terlihat supaya pengguna bisa
+               menghapus isian yang membuat hasilnya kosong. */
+            <tr>
+              <td colSpan={kolom.length} className="p-6 text-center text-ui text-brand-text-muted">
+                Tidak ada baris yang cocok.
+              </td>
+            </tr>
+          )}
+        </tbody>
       </table>
     </div>
   )
