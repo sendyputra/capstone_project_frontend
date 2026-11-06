@@ -3,6 +3,39 @@
 Semua perubahan penting dicatat di sini. Format mengikuti [Conventional Commits](https://www.conventionalcommits.org/).
 
 
+## [0.5.0](https://github.com/sendyputra/capstone_project_frontend/compare/v0.4.1...v0.5.0) (2026-11-06)
+
+### Fitur
+
+* **tabel:** saringan per kolom dan kolom tanggal ([5d5c1c5](https://github.com/sendyputra/capstone_project_frontend/commit/5d5c1c52b4653f7d33adccc41f4b9496b122ae0c))
+* **tabel:** semua kolom bisa diurutkan ([6f99ac3](https://github.com/sendyputra/capstone_project_frontend/commit/6f99ac3a098e15e25b111d761f9ebd82de58c36e))
+* **tabel:** tombol urut pada judul kolom Dibuat ([e992af2](https://github.com/sendyputra/capstone_project_frontend/commit/e992af2992bd340f901a66b72568f8c07f9a2e4f))
+* **tagihan:** bukti bayar bisa dibuka dari daftar ([9401046](https://github.com/sendyputra/capstone_project_frontend/commit/9401046327e73e999e95e93384408f144fc2380c))
+* **tagihan:** riwayat sewa, penghentian dini, dan alasan yang terbaca ([9bb94eb](https://github.com/sendyputra/capstone_project_frontend/commit/9bb94eb1889711dc8d938784963e1d05b161184d))
+* **tagihan:** tab halaman tagihan, verifikasi turunan kontrak, label tunggakan ([578ee42](https://github.com/sendyputra/capstone_project_frontend/commit/578ee42f49af553ec706cf20155df3e61bce620e)), references [#305](https://github.com/sendyputra/capstone_project_frontend/issues/305)
+* **unit:** tampilkan nama pemilik di detail katalog ([88e70a0](https://github.com/sendyputra/capstone_project_frontend/commit/88e70a0c641635d4275b1b512d278e7234e54b8b))
+* **unit:** urutkan unit terbaru dulu dan saring tipe lewat pilihan ([65c6d89](https://github.com/sendyputra/capstone_project_frontend/commit/65c6d89b463a27daf21ce85fac59072df9ddcce5))
+
+### Perbaikan
+
+* **dashboard:** tunggakan dan kontrak akan habis memakai kalender WIB ([5cc4e9d](https://github.com/sendyputra/capstone_project_frontend/commit/5cc4e9dab0cdb0eaf88be907581568e878a1597f))
+* **tabel:** ensure filters remain visible when no rows match ([fc02650](https://github.com/sendyputra/capstone_project_frontend/commit/fc0265070217e9d5acc0501be0d90faa23cb90c1))
+* unggah KTP mendaftar memakai nama bagian id_card ([a923c28](https://github.com/sendyputra/capstone_project_frontend/commit/a923c28e428281980e6f5dc16c1d8215c887fac9))
+
+### Pemeliharaan
+
+* abaikan keluaran playwright ([42271f2](https://github.com/sendyputra/capstone_project_frontend/commit/42271f294fbc6e8adc496a18976e659060fbd34f))
+* **env:** update VITE_API_BASE_URL to new API endpoint ([671b920](https://github.com/sendyputra/capstone_project_frontend/commit/671b9209d8ca5d96c4fa709aec18d7e61096ab2a))
+
+### Pengujian
+
+* kasus autentikasi, batas peran, dan ocr ktp ([4e53542](https://github.com/sendyputra/capstone_project_frontend/commit/4e53542357cef175227549f3af3a59dbcd558834))
+* kasus sisi pemilik dengan tangkapan layar penuh ([ae79aac](https://github.com/sendyputra/capstone_project_frontend/commit/ae79aac904ad3631ee130ddb3bd992e576504075))
+* kasus sisi penyewa dan katalog ([9d16520](https://github.com/sendyputra/capstone_project_frontend/commit/9d165207d07bb0a655bcbb5a370e98ec01881ef5))
+* lepas empat tes dari tanggal berjalan ([7a00b6e](https://github.com/sendyputra/capstone_project_frontend/commit/7a00b6ea1260e209ff0726be14eeb44bdf826732))
+* perbaiki pemilih baris tagihan dan kecualikan e2e dari vitest ([400fc6e](https://github.com/sendyputra/capstone_project_frontend/commit/400fc6e35c76ae4f2ebba0a87c2b52e81b3b91d2))
+* siapkan playwright dan bantuan uji black box ([faac60c](https://github.com/sendyputra/capstone_project_frontend/commit/faac60c09953efcc37d0b2a59aac886228027bad))
+
 ## [0.4.1](https://github.com/sendyputra/capstone_project_frontend/compare/v0.4.0...v0.4.1) (2026-10-30)
 
 ### Perbaikan
